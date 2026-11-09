@@ -1,0 +1,10 @@
+{
+  "name": "platform-plugin-runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "docker build -t platform/plugin-runner:local .",
+    "test": "node smoke.mjs"
+  }
+}

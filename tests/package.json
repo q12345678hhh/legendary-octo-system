@@ -1,0 +1,11 @@
+{
+  "name": "@platform/tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "跨组件测试：契约三类覆盖、CI 门禁接线、破坏性变更阻断、端到端入口",
+  "scripts": {
+    "test": "node --test \"**/*.test.mjs\"",
+    "test:e2e": "node --test \"e2e/**/*.test.mjs\""
+  }
+}

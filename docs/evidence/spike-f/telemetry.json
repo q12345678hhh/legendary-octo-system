@@ -1,0 +1,196 @@
+{
+  "device_id": "8bea2b43755e1152",
+  "generated_at": "2026-11-09T08:18:07.9479445Z",
+  "policy_always_excluded": [
+    "WeChat",
+    "Weixin",
+    "WeChatAppEx",
+    "WeChatOCR",
+    "QQ",
+    "QQNT",
+    "TIM",
+    "Telegram",
+    "WhatsApp",
+    "DingTalk",
+    "Feishu",
+    "Lark",
+    "Slack",
+    "Discord"
+  ],
+  "segments": [
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "ThumbnailDeviceHelperWnd",
+      "title": ""
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "Shell_TrayWnd",
+      "title": ""
+    },
+    {
+      "process": "douyin",
+      "app": "unknown",
+      "window_class": "Chrome_WidgetWin_1",
+      "title": "\u6296\u97F3"
+    },
+    {
+      "process": "Trae CN",
+      "app": "unknown",
+      "window_class": "Chrome_WidgetWin_1",
+      "title": "Agent [\u7BA1\u7406\u5458]"
+    },
+    {
+      "process": "WeMeetApp",
+      "app": "unknown",
+      "window_class": "Qt680QWindowIcon",
+      "title": "\u90DD\u5F66\u98DE\u7684\u5FEB\u901F\u4F1A\u8BAE"
+    },
+    {
+      "process": "ChatGPT",
+      "app": "unknown",
+      "window_class": "Chrome_WidgetWin_1",
+      "title": "ChatGPT"
+    },
+    {
+      "process": "WeMeetApp",
+      "app": "unknown",
+      "window_class": "Qt680QWindowIcon",
+      "title": "\u817E\u8BAF\u4F1A\u8BAE"
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "CabinetWClass",
+      "title": "\u684C\u9762 - \u6587\u4EF6\u8D44\u6E90\u7BA1\u7406\u5668"
+    },
+    {
+      "process": "nano",
+      "app": "unknown",
+      "window_class": "FLUTTER_RUNNER_WIN32_WINDOW",
+      "title": "Nano"
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "CabinetWClass",
+      "title": "outputs - \u6587\u4EF6\u8D44\u6E90\u7BA1\u7406\u5668"
+    },
+    {
+      "process": "msedge",
+      "app": "edge",
+      "window_class": "Chrome_WidgetWin_1",
+      "title": "Superpowers Brainstorming - \u4E2A\u4EBA - Microsoft\u200B Edge"
+    },
+    {
+      "process": "dsh-pet-standalone-webm-chat",
+      "app": "unknown",
+      "window_class": "Qt6120QWindowToolSaveBits",
+      "title": "dsh-pet-standalone-webm-chat"
+    },
+    {
+      "process": "SystemSettings",
+      "app": "unknown",
+      "window_class": "Windows.UI.Core.CoreWindow",
+      "title": "\u8BBE\u7F6E"
+    },
+    {
+      "process": "ApplicationFrameHost",
+      "app": "unknown",
+      "window_class": "ApplicationFrameWindow",
+      "title": "\u8BBE\u7F6E"
+    },
+    {
+      "process": "ollama app",
+      "app": "unknown",
+      "window_class": "webview",
+      "title": "Ollama"
+    },
+    {
+      "process": "cmd",
+      "app": "unknown",
+      "window_class": "PseudoConsoleWindow",
+      "title": ""
+    },
+    {
+      "process": "WindowsTerminal",
+      "app": "unknown",
+      "window_class": "CASCADIA_HOSTING_WINDOW_CLASS",
+      "title": "C:\\Windows\\system32\\cmd.exe"
+    },
+    {
+      "process": "astrbot-launcher",
+      "app": "unknown",
+      "window_class": "Tauri Window",
+      "title": "AstrBot Launcher"
+    },
+    {
+      "process": "astrbot-launcher",
+      "app": "unknown",
+      "window_class": "com.github.raven95676.astrbot-launcher-sic",
+      "title": "com.github.raven95676.astrbot-launcher-siw"
+    },
+    {
+      "process": "astrbot-launcher",
+      "app": "unknown",
+      "window_class": "Tao Thread Event Target",
+      "title": ""
+    },
+    {
+      "process": "NVIDIA Overlay",
+      "app": "unknown",
+      "window_class": "CEF-OSC-WIDGET",
+      "title": "NVIDIA GeForce Overlay"
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "DummyDWMListenerWindow",
+      "title": ""
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "EdgeUiInputTopWndClass",
+      "title": ""
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "DummyDWMListenerWindow",
+      "title": ""
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "DummyDWMListenerWindow",
+      "title": ""
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "DummyDWMListenerWindow",
+      "title": ""
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "DummyDWMListenerWindow",
+      "title": ""
+    },
+    {
+      "process": "TextInputHost",
+      "app": "unknown",
+      "window_class": "Windows.UI.Core.CoreWindow",
+      "title": "Windows \u8F93\u5165\u4F53\u9A8C"
+    },
+    {
+      "process": "explorer",
+      "app": "unknown",
+      "window_class": "Progman",
+      "title": "Program Manager"
+    }
+  ]
+}

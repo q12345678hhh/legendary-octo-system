@@ -1,0 +1,18 @@
+﻿=== SPIKE F SELFTEST ===
+dotnet=8.0.33 os=Microsoft Windows NT 10.0.26200.0
+PASS  policy.hard-excluded  Weixin/QQ 命中硬排除
+PASS  policy.allowed  msedge 允许采集
+PASS  policy.tenant-excluded  租户强制排除生效（notepad）
+PASS  scan.exclusion-before-read  找到 5 个排除窗口，标题读取数=0
+PASS  scan.audit-trail  audit 记录：content_read=false 5 条，content_read=true 29 条
+PASS  scan.tenant-enforced-runtime  mspaint 窗口 1 个，全部排除且未读标题
+PASS  minimizer.redaction  联系 [phone] 邮箱 [email] 身份证 [id] 卡号 [card]
+PASS  minimizer.length-cap  len=201
+PASS  device.sign-verify  device_id=8bea2b43755e1152
+PASS  device.tamper-rejected  篡改载荷后验签失败
+PASS  audio.devices  capture devices=2: #0(2ch,unnamed) / #1(2ch,unnamed)
+PASS  audio.record-2s  wav bytes=64302
+PASS  telemetry.no-excluded-content  segments=29，其中排除应用=0
+PASS  telemetry.signature  上报载荷可由设备私钥签名并验签
+
+=== RESULT: 14 checks, 14 passed, 0 skipped, 0 failed ===

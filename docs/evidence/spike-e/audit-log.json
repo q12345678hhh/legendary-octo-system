@@ -1,0 +1,346 @@
+{
+  "generated_at": "2026-11-09T08:19:23Z",
+  "principal": {
+    "id": "ai:assistant-1",
+    "kind": "ai",
+    "delegated_tools": [
+      "read_payslip",
+      "search_knowledge",
+      "send_email"
+    ],
+    "data_scopes": [
+      "comm",
+      "hr.payroll.read",
+      "kb"
+    ]
+  },
+  "checks": [
+    {
+      "name": "registry.unknown-tool-denied",
+      "ok": true,
+      "detail": "{'status': 'denied', 'reason': 'unknown_tool'}"
+    },
+    {
+      "name": "injection.cannot-escalate",
+      "ok": true,
+      "detail": "意图 4 个，拒绝 2 个：['not_delegated', 'not_delegated']"
+    },
+    {
+      "name": "masking.model-input-clean",
+      "ok": true,
+      "detail": "手机/邮箱/卡号已替换为占位符"
+    },
+    {
+      "name": "params.tenant-id-not-parameter",
+      "ok": true,
+      "detail": "tenant_id 混入参数被 invalid_params 拒绝"
+    },
+    {
+      "name": "scope.data-scope-denied",
+      "ok": true,
+      "detail": "{'status': 'denied', 'reason': 'data_scope_denied'}"
+    },
+    {
+      "name": "approval.required-for-high-risk",
+      "ok": true,
+      "detail": "{'status': 'denied', 'reason': 'approval_required'}"
+    },
+    {
+      "name": "approval.bound-to-args",
+      "ok": true,
+      "detail": "{'status': 'denied', 'reason': 'approval_args_mismatch'}"
+    },
+    {
+      "name": "approval.separation-of-duties",
+      "ok": true,
+      "detail": "{'status': 'denied', 'reason': 'separation_of_duties'}"
+    },
+    {
+      "name": "approval.expired-denied",
+      "ok": true,
+      "detail": "{'status': 'denied', 'reason': 'approval_expired'}"
+    },
+    {
+      "name": "dlp.outbound-blocked",
+      "ok": true,
+      "detail": "{'status': 'denied', 'reason': 'dlp_blocked'}"
+    },
+    {
+      "name": "idempotency.retry-single-effect",
+      "ok": true,
+      "detail": "副作用增量=1, 第二次=duplicate, receipt=rcpt-f56ef376f322"
+    },
+    {
+      "name": "loop.tool-call-limit",
+      "ok": true,
+      "detail": "4 次调用中后 2 次被限流：['executed', 'executed', 'denied', 'denied']"
+    },
+    {
+      "name": "audit.receipt-complete",
+      "ok": true,
+      "detail": "allow=5 均有回执，deny=12 均有原因"
+    },
+    {
+      "name": "safety.no-privileged-side-effect",
+      "ok": true,
+      "detail": "update_salary 副作用数=0"
+    }
+  ],
+  "audit": [
+    {
+      "ts": 1794212363.0063262,
+      "correlation_id": "7d730a3d-28fb-4d1e-9b67-d734309affad",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "drop_database",
+      "args_fp": "44136fa355b3678a",
+      "decision": "DENY",
+      "reason": "unknown_tool",
+      "approver": null,
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.0064251,
+      "correlation_id": "8c44cc44-3945-4b7e-a396-7d95b0256731",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "search_knowledge",
+      "args_fp": "10ee0feda35ea6f0",
+      "decision": "ALLOW",
+      "reason": "executed",
+      "approver": null,
+      "receipt_id": "rcpt-c3b0eb7ba306"
+    },
+    {
+      "ts": 1794212363.0064404,
+      "correlation_id": "1b988400-c4f1-44bf-adbc-c48cf0565cd9",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "update_salary",
+      "args_fp": "be29bf24530d2c16",
+      "decision": "DENY",
+      "reason": "not_delegated",
+      "approver": null,
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.006452,
+      "correlation_id": "4a3f1a02-14cb-4096-aa61-acbafca0cccb",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "export_report",
+      "args_fp": "07d1158094507e71",
+      "decision": "DENY",
+      "reason": "not_delegated",
+      "approver": null,
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.0064738,
+      "correlation_id": "312d799d-2e30-44df-9559-356883f9eef4",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "read_payslip",
+      "args_fp": "4025f4c53238a899",
+      "decision": "ALLOW",
+      "reason": "executed",
+      "approver": null,
+      "receipt_id": "rcpt-049e2eaa0472"
+    },
+    {
+      "ts": 1794212363.0065002,
+      "correlation_id": "3176745b-fe73-4f38-8146-08705310f15a",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "read_payslip",
+      "args_fp": "52369482c8728f23",
+      "decision": "DENY",
+      "reason": "invalid_params",
+      "approver": null,
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.0065134,
+      "correlation_id": "6e9bfd3a-32d4-47fd-ae00-e96960666ec1",
+      "actor": "ai:writer",
+      "kind": "ai",
+      "tool": "update_salary",
+      "args_fp": "3f25bc033208e840",
+      "decision": "DENY",
+      "reason": "data_scope_denied",
+      "approver": null,
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.0065281,
+      "correlation_id": "395dec90-e7a3-457a-86f3-b261fffc349a",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "send_email",
+      "args_fp": "e006747ff460330e",
+      "decision": "DENY",
+      "reason": "approval_required",
+      "approver": null,
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.0065541,
+      "correlation_id": "5763b7e5-b119-459c-b375-57aa6bf11670",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "send_email",
+      "args_fp": "c2f6c954d8745030",
+      "decision": "DENY",
+      "reason": "approval_args_mismatch",
+      "approver": "mgr-1",
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.0065732,
+      "correlation_id": "8cecd4b3-acb3-40b7-b2c2-972ab10c88e2",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "send_email",
+      "args_fp": "e006747ff460330e",
+      "decision": "DENY",
+      "reason": "separation_of_duties",
+      "approver": "ai:assistant-1",
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.006591,
+      "correlation_id": "c65b92d1-4220-4c4f-9bf8-085c475662b9",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "send_email",
+      "args_fp": "e006747ff460330e",
+      "decision": "DENY",
+      "reason": "approval_expired",
+      "approver": "mgr-1",
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.0066183,
+      "correlation_id": "6cd6ac8b-c29d-4cbe-9312-b15b6f06330d",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "send_email",
+      "args_fp": "4bb341274019a60f",
+      "decision": "DENY",
+      "reason": "dlp_blocked",
+      "approver": "mgr-1",
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.006643,
+      "correlation_id": "322dcc73-4a9f-4050-a93c-cb6c3c1b80d2",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "send_email",
+      "args_fp": "e006747ff460330e",
+      "decision": "ALLOW",
+      "reason": "executed",
+      "approver": "mgr-1",
+      "receipt_id": "rcpt-f56ef376f322"
+    },
+    {
+      "ts": 1794212363.0066624,
+      "correlation_id": "e7e49595-3c7f-4185-a908-acdb5101697c",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "send_email",
+      "args_fp": "e006747ff460330e",
+      "decision": "ALLOW",
+      "reason": "duplicate",
+      "approver": "mgr-1",
+      "receipt_id": "rcpt-f56ef376f322"
+    },
+    {
+      "ts": 1794212363.0066857,
+      "correlation_id": "497f0290-8504-4512-997a-0d1908355929",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "search_knowledge",
+      "args_fp": "e56f98fac94e3a69",
+      "decision": "ALLOW",
+      "reason": "executed",
+      "approver": null,
+      "receipt_id": "rcpt-4ec9485bcad3"
+    },
+    {
+      "ts": 1794212363.0067084,
+      "correlation_id": "939c2794-77cf-446f-b3b2-d10aeca6046a",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "search_knowledge",
+      "args_fp": "3251c5cddf3b9610",
+      "decision": "ALLOW",
+      "reason": "executed",
+      "approver": null,
+      "receipt_id": "rcpt-9b629a726020"
+    },
+    {
+      "ts": 1794212363.00672,
+      "correlation_id": "7d953038-4864-435e-87ce-dd209803b64e",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "search_knowledge",
+      "args_fp": "d17d2d696f62edaa",
+      "decision": "DENY",
+      "reason": "tool_call_limit",
+      "approver": null,
+      "receipt_id": null
+    },
+    {
+      "ts": 1794212363.0067286,
+      "correlation_id": "28c56408-95a1-40ab-9c51-5b2d8a19687e",
+      "actor": "ai:assistant-1",
+      "kind": "ai",
+      "tool": "search_knowledge",
+      "args_fp": "a7d7e31d0e4da37d",
+      "decision": "DENY",
+      "reason": "tool_call_limit",
+      "approver": null,
+      "receipt_id": null
+    }
+  ],
+  "side_effects": [
+    {
+      "tool": "search_knowledge",
+      "args": {
+        "query": "差旅报销制度"
+      },
+      "receipt_id": "rcpt-c3b0eb7ba306"
+    },
+    {
+      "tool": "read_payslip",
+      "args": {
+        "employee_id": "E1"
+      },
+      "receipt_id": "rcpt-049e2eaa0472"
+    },
+    {
+      "tool": "send_email",
+      "args": {
+        "to": "a@example.com",
+        "subject": "周报",
+        "body": "本周完成 3 项"
+      },
+      "receipt_id": "rcpt-f56ef376f322"
+    },
+    {
+      "tool": "search_knowledge",
+      "args": {
+        "query": "q0"
+      },
+      "receipt_id": "rcpt-4ec9485bcad3"
+    },
+    {
+      "tool": "search_knowledge",
+      "args": {
+        "query": "q1"
+      },
+      "receipt_id": "rcpt-9b629a726020"
+    }
+  ]
+}

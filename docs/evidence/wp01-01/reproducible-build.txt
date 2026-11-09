@@ -1,0 +1,17 @@
+﻿# 可复现构建验证（WP01-01：清空缓存后构建结果必须一致）
+环境：Windows 11 / JDK Temurin 21 / Maven 3.8.8
+方法：连续两次 mvn -B -ntp -f backend/pom.xml clean verify，比对 jar 与 SBOM 的 SHA256
+
+第 1 次 EXIT=0
+  boot-api-0.1.0-SNAPSHOT.jar  3FD85916595F81581A45984A0EDD3CEE08176E62844032DB96109F71A95E4458
+  backend/target/bom.json     BC66F689D3C5BC3E60FA3F276CF032EAB5A9B2D404FD3DBB4C6E21AED7463D94
+
+第 2 次 EXIT=0
+  boot-api-0.1.0-SNAPSHOT.jar  3FD85916595F81581A45984A0EDD3CEE08176E62844032DB96109F71A95E4458
+  backend/target/bom.json     BC66F689D3C5BC3E60FA3F276CF032EAB5A9B2D404FD3DBB4C6E21AED7463D94
+
+结论：jar 一致=True，bom 一致=True
+
+干净检出验证：将工作区复制到 ASCII 路径 D:\DevCache\platform-build\wp01-01（排除 target/bin/obj/node_modules/.git），
+一次 mvn clean verify 成功并生成 JaCoCo 报告，见 backend-build-clean-ascii.txt 与 coverage-gate.txt。
+（说明：工作区路径含中文时 JaCoCo agent 无法落盘，故覆盖率证据取自 ASCII 路径副本。）

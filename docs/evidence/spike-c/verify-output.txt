@@ -1,0 +1,94 @@
+﻿# Spike C - workflow idempotency and compensation
+# date: 2026-11-09T15:44:46
+# server: PostgreSQL 16.15 (WSL pglab, port 5433)
+# command: sh tests/security/spike-c/run-all.sh
+N/ec localhost �Nt0
+
+=== APPLY SCHEMA ===
+psql:/mnt/c/新建文件夹/temp_20261109_01/tests/security/spike-c/01-schema.sql:2: NOTICE:  schema "spike_c" does not exist, skipping
+schema_exit=0
+=== VERIFY: idempotency and compensation ===
+=== CASE 1: same callback delivered twice (expect applied, duplicate) ===
+ first_call 
+------------
+ applied
+(1 row)
+
+ second_call 
+-------------
+ duplicate
+(1 row)
+
+=== CASE 1b: side effects must be exactly 1 (expect 1) ===
+ side_effects 
+--------------
+            1
+(1 row)
+
+=== CASE 2: timeout retry reuses the key after a timeout (expect duplicate, still 1) ===
+ original 
+----------
+ applied
+(1 row)
+
+ retry_after_timeout 
+---------------------
+ duplicate
+(1 row)
+
+ side_effects 
+--------------
+            1
+(1 row)
+
+=== CASE 2b: retry with a different key double-charges (expect 2: keys must be stable) ===
+ different_key 
+---------------
+ applied
+(1 row)
+
+ side_effects 
+--------------
+            2
+(1 row)
+
+=== CASE 3: compensation applied twice (expect compensated, replay-skipped) ===
+ first_compensation 
+--------------------
+ compensated
+(1 row)
+
+ replayed_compensation 
+-----------------------
+ replay-skipped
+(1 row)
+
+=== CASE 3b: net effect must be zero for cb-1 plus its compensation (expect 0) ===
+ net  
+------
+ 0.00
+(1 row)
+
+=== CASE 4: sequential stale transition (expect 0 rows, state unchanged) ===
+ first_advance 
+---------------
+             1
+(1 row)
+
+ stale_advance 
+---------------
+             0
+(1 row)
+
+  state  | version 
+---------+---------
+ running |       1
+(1 row)
+
+=== VERIFY: concurrency ===
+=== CASE 5: concurrent advance from version 0 (expect advance=1 for one, 0 for the other) ===
+session A: A advance=1
+session B: B advance=0
+=== CASE 5b: final state must be a single transition (expect version=1) ===
+running-A version=1
+concurrency_exit=0

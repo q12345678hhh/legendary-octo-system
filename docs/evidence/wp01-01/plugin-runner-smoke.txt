@@ -1,0 +1,10 @@
+﻿构建镜像 platform/plugin-runner:local（context=/mnt/c/新建文件夹/temp_20261109_01/plugin-runner）
+PASS 正常退出透传 0 -> exit=0
+PASS 监督进程在容器内是 PID 1 -> stderr 记录 is_pid1=true
+PASS 非零退出码透传 7 -> exit=7
+PASS SIGSEGV 映射为 139 而非 0 -> exit=139
+PASS 插件子进程不是 PID 1 -> child_pid=7
+PASS 无网络时外部连接失败 -> exit=1
+PASS 超出内存限额时失败 -> exit=125
+
+通过 7/7

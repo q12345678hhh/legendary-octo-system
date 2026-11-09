@@ -1,0 +1,143 @@
+{
+  "frozenAt": "2026-11-09T09:06:02.700Z",
+  "contracts": {
+    "openapi/platform-api.v1.json": {
+      "kind": "openapi",
+      "sha256": "e687a9a0848f3967156b21e804a1bd76b009230aaee10d4eb6d69732affb9c35",
+      "tokens": {
+        "operation:GET /api/v1/system/health": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/system/health:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/system/health:503": {
+          "defined": true
+        },
+        "schema:SystemHealth.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "DOWN",
+            "OUT_OF_SERVICE",
+            "UNKNOWN",
+            "UP"
+          ]
+        },
+        "schema:SystemHealth.service": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Problem.type": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Problem.title": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Problem.status": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:Problem.detail": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Problem.instance": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Problem.code": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Problem.correlationId": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "events/employee.hired.v1.json": {
+      "kind": "events",
+      "sha256": "beddadc36c7516c9206e2705230f8e26f08041caa4bd66551e2333a5d70c1afc",
+      "tokens": {
+        "event.data": {
+          "type": "object",
+          "required": true
+        },
+        "event.data.employee_id": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.hired_on": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.department_id": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.position_title": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "plugins/plugin-manifest.v1.json": {
+      "kind": "plugins",
+      "sha256": "fd92d3576264966965fcf84fde62ec695f5319e9a1a7aeb1f77327f5373ecffa",
+      "tokens": {
+        "manifest.name": {
+          "type": "string",
+          "required": true
+        },
+        "manifest.version": {
+          "type": "string",
+          "required": true
+        },
+        "manifest.protocol_version": {
+          "type": "integer",
+          "required": true
+        },
+        "manifest.entrypoint": {
+          "type": "string",
+          "required": true
+        },
+        "manifest.permissions": {
+          "type": "array",
+          "required": true
+        },
+        "manifest.limits": {
+          "type": "object",
+          "required": true
+        },
+        "manifest.limits.memory_mb": {
+          "type": "integer",
+          "required": true
+        },
+        "manifest.limits.cpu_seconds": {
+          "type": "integer",
+          "required": true
+        },
+        "manifest.limits.network": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "none"
+          ]
+        }
+      }
+    },
+    "events/event-catalog.json": {
+      "kind": "events-catalog",
+      "sha256": "d7c8840afa8ea747a167025158408c090d4793f44262b9d5b134b844ccd7e6fd",
+      "tokens": {
+        "catalog:employee.hired.v1": {
+          "version": 1,
+          "schema": "employee.hired.v1.json"
+        }
+      }
+    }
+  }
+}

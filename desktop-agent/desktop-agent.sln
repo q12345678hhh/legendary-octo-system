@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "privacy-engine", "privacy-engine", "{EA77FEE8-2959-49C0-8A7D-153DE424F028}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkAssistant.PrivacyEngine", "privacy-engine\WorkAssistant.PrivacyEngine\WorkAssistant.PrivacyEngine.csproj", "{79C51386-91C1-494E-9CE2-56E9AC46FD46}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkAssistant.PrivacyEngine.Checks", "privacy-engine\WorkAssistant.PrivacyEngine.Checks\WorkAssistant.PrivacyEngine.Checks.csproj", "{2E40F072-7FE7-49C6-A4A1-DB5B8AB7D44C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79C51386-91C1-494E-9CE2-56E9AC46FD46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79C51386-91C1-494E-9CE2-56E9AC46FD46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79C51386-91C1-494E-9CE2-56E9AC46FD46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79C51386-91C1-494E-9CE2-56E9AC46FD46}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E40F072-7FE7-49C6-A4A1-DB5B8AB7D44C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E40F072-7FE7-49C6-A4A1-DB5B8AB7D44C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E40F072-7FE7-49C6-A4A1-DB5B8AB7D44C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E40F072-7FE7-49C6-A4A1-DB5B8AB7D44C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{79C51386-91C1-494E-9CE2-56E9AC46FD46} = {EA77FEE8-2959-49C0-8A7D-153DE424F028}
+		{2E40F072-7FE7-49C6-A4A1-DB5B8AB7D44C} = {EA77FEE8-2959-49C0-8A7D-153DE424F028}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,101 @@
+﻿# Spike A - PostgreSQL RLS default-deny verification
+# date: 2026-11-09T15:30:08
+# server: PostgreSQL 16.15 (Alpine/musl, WSL docker-desktop distro, port 5433, PGDATA on /dev/shm)
+# roles: platform_owner=superuser (DDL only); spike_owner=non-superuser table owner; spike_app=runtime role
+# command: psql -U platform_owner -d platform -f 02-verify.sql
+
+initdb_exit=0
+pgctl_exit=0
+createdb_exit=0
+=== APPLY SCHEMA ===
+psql:/tmp/01.sql:3: NOTICE:  schema "spike_a" does not exist, skipping
+schema_exit=0
+=== VERIFY ===
+=== CONTROL 1: superuser + FORCE, no context (expect 3: superuser bypasses RLS) ===
+ visible_rows 
+--------------
+            3
+(1 row)
+
+=== CONTROL 2: non-superuser table owner + FORCE, no context (expect 0) ===
+SET
+ visible_rows 
+--------------
+            0
+(1 row)
+
+RESET
+=== CONTROL 3: non-superuser owner + NO FORCE (expect 3: FORCE is mandatory) ===
+ALTER TABLE
+SET
+ visible_rows 
+--------------
+            3
+(1 row)
+
+RESET
+ALTER TABLE
+=== CASE 1: app role, no context SELECT (expect 0) ===
+SET
+ visible_rows 
+--------------
+            0
+(1 row)
+
+=== CASE 1b: app role, no context INSERT (expect ERROR) ===
+psql:/tmp/02.sql:25: ERROR:  new row violates row-level security policy for table "employee"
+=== CASE 2: context=A, forged insert tenant_id=B (expect ERROR) ===
+SET
+psql:/tmp/02.sql:30: ERROR:  new row violates row-level security policy for table "employee"
+=== CASE 3: context=A, total visible (expect 2) ===
+ visible_rows 
+--------------
+            2
+(1 row)
+
+=== CASE 3b: context=A, filter on tenant B (expect 0) ===
+ b_rows 
+--------
+      0
+(1 row)
+
+=== CASE 4: session GUC persists across requests (expect 2, 1, 2) ===
+ before_txn 
+------------
+          2
+(1 row)
+
+BEGIN
+SET
+ inside_txn 
+------------
+          1
+(1 row)
+
+COMMIT
+ after_commit_reverts_to_session_value 
+---------------------------------------
+                                     2
+(1 row)
+
+=== CASE 5: RESET then query with hardened policy (expect 0, no error) ===
+RESET
+BEGIN
+ visible_rows_after_reset 
+--------------------------
+                        0
+(1 row)
+
+COMMIT
+=== CASE 6: plain SET inside txn survives COMMIT (expect 2: pooled connection leaks) ===
+BEGIN
+SET
+COMMIT
+ leaked_after_commit 
+---------------------
+                   2
+(1 row)
+
+RESET
+RESET
+verify_exit=0

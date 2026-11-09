@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>WorkAssistant.PrivacyEngine.Checks</RootNamespace>
+    <AssemblyName>WorkAssistant.PrivacyEngine.Checks</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\WorkAssistant.PrivacyEngine\WorkAssistant.PrivacyEngine.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.platform.local/events/employee.hired.v1.json",
+  "title": "员工入职事件 v1",
+  "x-event-name": "employee.hired.v1",
+  "x-event-version": 1,
+  "allOf": [
+    {
+      "$ref": "./envelope.v1.json"
+    },
+    {
+      "type": "object",
+      "required": ["data"],
+      "properties": {
+        "data": {
+          "type": "object",
+          "required": ["employee_id", "hired_on", "department_id"],
+          "properties": {
+            "employee_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "hired_on": {
+              "type": "string",
+              "format": "date"
+            },
+            "department_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "position_title": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

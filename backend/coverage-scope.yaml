@@ -1,0 +1,38 @@
+# 后端覆盖率范围与非回归门槛（WP01-01 接入，WP02 起收紧）
+#
+# 规则：候选提交的指令覆盖率不得低于主分支基线。这里只做非回归，不设绝对目标值；
+# 五域绝对门槛由 WP02 之后的验收标准单独定义。
+schema_version: 1
+baseline_ref: main
+baseline_instruction_ratio: 0.0
+tolerance: 0.0005
+
+# 纳入统计的模块（聚合报告由 backend/tools/coverage-gate.mjs 汇总全部 jacoco.xml）
+include_modules:
+  - boot-api
+  - boot-worker
+  - db
+  - test-support
+  - tenancy
+  - identity
+  - organization
+  - authorization
+  - department
+  - appcatalog
+  - lowcode
+  - workflow
+  - hr
+  - worklog
+  - collaboration
+  - integration
+  - plugin
+  - ai
+  - platform
+
+# 不参与统计：测试夹具与构建脚本
+exclude_packages:
+  - com.acme.platform.testsupport
+
+# 更新基线：在允许的发布提交上运行
+#   node backend/tools/coverage-gate.mjs --write-baseline
+# 更新后必须在 PR 中说明覆盖率变化原因。

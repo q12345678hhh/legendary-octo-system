@@ -1,0 +1,41 @@
+# Java / Maven
+target/
+*.class
+!.mvn/wrapper/maven-wrapper.jar
+
+# Node
+node_modules/
+dist/
+.pnpm-store/
+*.tsbuildinfo
+
+# .NET
+bin/
+obj/
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.user
+
+# 环境与日志
+.env
+.env.*
+!.env.example
+*.log
+
+# 系统
+Thumbs.db
+.DS_Store
+
+# 构建产物与生成物
+build/
+frontend/bom.cdx.json
+release-manifest.json
+repository.cdx.json
+
+# 本地证据与临时产物
+docs/evidence/tmp/
+tmp/
+.tools/

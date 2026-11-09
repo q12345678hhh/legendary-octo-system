@@ -1,0 +1,119 @@
+﻿# Spike B - 100k records dynamic field benchmark
+# date: 2026-11-09T15:51:08
+# server: PostgreSQL 16.15 (WSL pglab)
+N/ec localhost �Nt0
+
+=== BUILD DATA (100k records / 2M EAV rows) ===
+ eav_records | eav_values | json_records 
+-------------+------------+--------------
+      100000 |    2000000 |       100000
+(1 row)
+
+schema_exit=0
+=== BENCH ===
+########## Q1 list page (tenant A, newest first, 50 rows) ##########
+--- EAV ---
+Time: 1.937 ms
+Time: 0.400 ms
+Time: 0.427 ms
+--- JSONB ---
+Time: 0.530 ms
+Time: 0.238 ms
+Time: 0.162 ms
+########## Q2 single-field filter (status=active, 50 rows) ##########
+--- EAV ---
+Time: 109.264 ms
+Time: 89.408 ms
+Time: 86.694 ms
+--- JSONB ---
+Time: 1.354 ms
+Time: 0.379 ms
+Time: 0.249 ms
+########## Q3 two-field filter (status=active AND amount 1000..5000) ##########
+--- EAV ---
+Time: 100.403 ms
+Time: 96.708 ms
+Time: 101.440 ms
+--- JSONB ---
+Time: 4.549 ms
+Time: 2.239 ms
+Time: 2.851 ms
+########## Q4 aggregate (count by status, whole tenant) ##########
+--- EAV ---
+Time: 84.769 ms
+Time: 74.901 ms
+--- JSONB ---
+Time: 34.808 ms
+Time: 32.466 ms
+########## Q5 detail (one record, all 20 fields) ##########
+--- EAV ---
+Time: 0.910 ms
+Time: 0.298 ms
+--- JSONB ---
+Time: 0.238 ms
+Time: 0.188 ms
+    q    | count 
+---------+-------
+ Q2_eav  |    50
+ Q2_json |    50
+ Q3_eav  |    50
+ Q3_json |    50
+Time: 175.817 ms
+=== EXPLAIN ===
+--- EAV plan ---
+                                                          QUERY PLAN                                                          
+------------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=91.543..96.443 rows=50 loops=1)
+   Buffers: shared hit=173613 read=9724
+   ->  Sort (actual time=91.542..96.437 rows=50 loops=1)
+         Sort Key: r.created_at DESC
+         Sort Method: top-N heapsort  Memory: 28kB
+         Buffers: shared hit=173613 read=9724
+         ->  Gather (actual time=0.414..96.142 rows=666 loops=1)
+               Workers Planned: 2
+               Workers Launched: 2
+               Buffers: shared hit=173610 read=9724
+               ->  Nested Loop (actual time=2.779..89.011 rows=222 loops=3)
+                     Join Filter: (v1.record_id = v2.record_id)
+                     Buffers: shared hit=173610 read=9724
+                     ->  Nested Loop (actual time=0.047..70.632 rows=5555 loops=3)
+                           Buffers: shared hit=106944 read=9724
+                           ->  Parallel Seq Scan on field_value v1 (actual time=0.021..52.238 rows=11111 loops=3)
+                                 Filter: ((field_id = 1) AND (val_text = 'active'::text))
+                                 Rows Removed by Filter: 655556
+                                 Buffers: shared hit=6943 read=9724
+                           ->  Index Scan using record_eav_pkey on record_eav r (actual time=0.001..0.001 rows=0 loops=33333)
+                                 Index Cond: (id = v1.record_id)
+                                 Filter: (tenant_id = '11111111-1111-1111-1111-111111111111'::uuid)
+                                 Rows Removed by Filter: 1
+                                 Buffers: shared hit=100001
+                     ->  Index Scan using field_value_pkey on field_value v2 (actual time=0.003..0.003 rows=0 loops=16666)
+                           Index Cond: ((record_id = r.id) AND (field_id = 2))
+                           Filter: ((val_num >= '1000'::numeric) AND (val_num <= '5000'::numeric))
+                           Rows Removed by Filter: 1
+                           Buffers: shared hit=66666
+ Planning:
+   Buffers: shared hit=336 read=23
+ Planning Time: 1.058 ms
+ Execution Time: 96.503 ms
+(33 rows)
+Time: 99.124 ms
+--- JSONB plan ---
+                                                                                  QUERY PLAN                                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit (actual time=0.894..2.795 rows=50 loops=1)
+   Buffers: shared hit=469
+   ->  Index Scan using ix_json_tenant_time on record_json (actual time=0.892..2.787 rows=50 loops=1)
+         Index Cond: (tenant_id = '11111111-1111-1111-1111-111111111111'::uuid)
+         Filter: ((data @> '{"f01": "active"}'::jsonb) AND (((data ->> 'f02'::text))::numeric >= '1000'::numeric) AND (((data ->> 'f02'::text))::numeric <= '5000'::numeric))
+         Rows Removed by Filter: 3979
+         Buffers: shared hit=469
+ Planning:
+   Buffers: shared hit=116 read=12
+ Planning Time: 0.521 ms
+ Execution Time: 2.823 ms
+(11 rows)
+Time: 4.779 ms
+=== TABLE SIZES ===
+eav_records=12 MB|eav_values=416 MB|json_records=68 MB
+

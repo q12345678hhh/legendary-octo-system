@@ -1,0 +1,89 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "企业应用管理平台 API",
+    "version": "1.0.0",
+    "description": "首批契约：进程级存活检查与统一错误结构。业务契约随工作包冻结后追加。"
+  },
+  "servers": [
+    {
+      "url": "https://api.platform.local"
+    }
+  ],
+  "paths": {
+    "/api/v1/system/health": {
+      "get": {
+        "operationId": "getSystemHealth",
+        "summary": "进程级存活检查",
+        "description": "返回当前 API 进程名称与状态，不含业务数据，不要求认证。",
+        "responses": {
+          "200": {
+            "description": "服务可用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemHealth"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "服务不可用",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SystemHealth": {
+        "type": "object",
+        "required": ["status", "service"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["UP", "DOWN", "OUT_OF_SERVICE", "UNKNOWN"]
+          },
+          "service": {
+            "type": "string"
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "description": "RFC 9457 Problem Details",
+        "required": ["type", "title", "status"],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

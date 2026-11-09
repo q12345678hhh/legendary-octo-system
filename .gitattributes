@@ -1,0 +1,37 @@
+# 统一换行与文本/二进制判定，保证干净检出后构建结果一致
+* text=auto eol=lf
+
+*.java    text diff=java
+*.xml     text diff=xml
+*.md      text diff=markdown
+*.json    text
+*.yml     text
+*.yaml    text
+*.mjs     text
+*.js      text
+*.ts      text
+*.tsx     text
+*.cs      text diff=csharp
+*.csproj  text diff=xml
+*.sln     text eol=crlf
+*.ps1     text
+*.sh      text eol=lf
+Dockerfile text eol=lf
+
+# 二进制
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.wav     binary
+*.jar     binary
+*.dll     binary
+*.pdb     binary
+*.so      binary
+*.zip     binary
+*.gz      binary
+
+# 构建产物与依赖清单按语言突出显示差异
+pnpm-lock.yaml     text eol=lf
+docs/evidence/**   text

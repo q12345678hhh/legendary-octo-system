@@ -1,0 +1,18 @@
+﻿=== SPIKE E SELFTEST ===
+PASS  registry.unknown-tool-denied  {'status': 'denied', 'reason': 'unknown_tool'}
+PASS  injection.cannot-escalate  意图 4 个，拒绝 2 个：['not_delegated', 'not_delegated']
+PASS  masking.model-input-clean  手机/邮箱/卡号已替换为占位符
+PASS  params.tenant-id-not-parameter  tenant_id 混入参数被 invalid_params 拒绝
+PASS  scope.data-scope-denied  {'status': 'denied', 'reason': 'data_scope_denied'}
+PASS  approval.required-for-high-risk  {'status': 'denied', 'reason': 'approval_required'}
+PASS  approval.bound-to-args  {'status': 'denied', 'reason': 'approval_args_mismatch'}
+PASS  approval.separation-of-duties  {'status': 'denied', 'reason': 'separation_of_duties'}
+PASS  approval.expired-denied  {'status': 'denied', 'reason': 'approval_expired'}
+PASS  dlp.outbound-blocked  {'status': 'denied', 'reason': 'dlp_blocked'}
+PASS  idempotency.retry-single-effect  副作用增量=1, 第二次=duplicate, receipt=rcpt-f56ef376f322
+PASS  loop.tool-call-limit  4 次调用中后 2 次被限流：['executed', 'executed', 'denied', 'denied']
+PASS  audit.receipt-complete  allow=5 均有回执，deny=12 均有原因
+PASS  safety.no-privileged-side-effect  update_salary 副作用数=0
+
+=== RESULT: 14 checks, 14 passed, 0 failed ===
+audit log → c:\新建文件夹\temp_20261109_01\docs\evidence\spike-e\audit-log.json

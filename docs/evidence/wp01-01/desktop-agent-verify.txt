@@ -1,0 +1,37 @@
+﻿== build ==
+  正在确定要还原的项目…
+  所有项目均是最新的，无法还原。
+  WorkAssistant.PrivacyEngine -> C:\新建文件夹\temp_20261109_01\desktop-agent\privacy-engine\WorkAssistant.PrivacyEngine\bin\Release\net8.0\WorkAssistant.PrivacyEngine.dll
+  WorkAssistant.PrivacyEngine.Checks -> C:\新建文件夹\temp_20261109_01\desktop-agent\privacy-engine\WorkAssistant.PrivacyEngine.Checks\bin\Release\net8.0\WorkAssistant.PrivacyEngine.Checks.dll
+
+已成功生成。
+    0 个警告
+    0 个错误
+
+已用时间 00:00:03.75
+BUILD_EXIT=0
+== privacy checks ==
+PASS 未开始时采集量为 0
+PASS 开始后允许采集普通工作应用
+PASS 微信被强制排除
+PASS QQ 被强制排除
+PASS 未知进程按排除处理
+PASS 暂停时不采集
+PASS 私人模式不采集
+PASS 私人模式下提示必须可见
+PASS 退出私人模式回到暂停
+PASS 未开始时暂停被拒绝
+PASS 未开始时进入私人模式被拒绝
+PASS 停止后重复停止被拒绝
+PASS 停止后不再显示采集提示
+PASS 停止后不采集
+检查通过 14 项，失败 0 项
+CHECK_EXIT=0
+== vulnerable packages ==
+
+使用了以下源:
+   https://api.nuget.org/v3/index.json
+
+在给定当前源的情况下，给定项目“WorkAssistant.PrivacyEngine”没有易受攻击的包。
+在给定当前源的情况下，给定项目“WorkAssistant.PrivacyEngine.Checks”没有易受攻击的包。
+AUDIT_EXIT=0

@@ -1,0 +1,253 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '22'
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  # 秘密扫描：命中即失败，不接受「先上线后清理」
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_SUMMARY: true
+
+  # 提交规范：PR 上的每条提交都要符合 Conventional Commits
+  commit-lint:
+    name: commit-lint
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: commitlint
+        run: npx --yes --package @commitlint/cli@19 commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: 构建、静态检查、单测、模块边界（mvn verify）
+        run: mvn -B -ntp -f backend/pom.xml clean verify
+      - name: 覆盖率非回归门禁
+        run: node backend/tools/coverage-gate.mjs
+      - name: 依赖漏洞（OWASP dependency-check）
+        run: >-
+          mvn -B -ntp -f backend/pom.xml
+          org.owasp:dependency-check-maven:12.1.0:check
+          -DfailBuildOnCVSS=7
+          -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+      - name: 归档 SBOM 与覆盖率
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-artifacts
+          path: |
+            backend/target/bom.json
+            backend/*/target/site/jacoco/jacoco.xml
+          if-no-files-found: warn
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.3.4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: 静态检查（TypeScript strict）
+        run: pnpm run typecheck
+      - name: 单元测试
+        run: pnpm run test
+      - name: 构建
+        run: pnpm run build
+      - name: 依赖漏洞（高危及以上阻断）
+        run: pnpm audit --audit-level high
+      - name: 生成 SBOM
+        run: pnpm sbom --sbom-format cyclonedx --lockfile-only --out bom.cdx.json
+      - name: 归档产物与 SBOM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-artifacts
+          path: |
+            frontend/apps/web/dist
+            frontend/bom.cdx.json
+          if-no-files-found: warn
+
+  desktop-agent:
+    name: desktop-agent
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop-agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - name: 构建（警告即错误）
+        run: dotnet build desktop-agent.sln -c Release
+      - name: 隐私边界行为自检
+        run: dotnet run --project privacy-engine/WorkAssistant.PrivacyEngine.Checks -c Release --no-build
+      - name: 依赖漏洞
+        run: dotnet list desktop-agent.sln package --vulnerable --include-transitive
+      - name: 生成 SBOM
+        run: |
+          dotnet tool install --global CycloneDX
+          dotnet CycloneDX desktop-agent.sln -o sbom
+      - name: 归档 SBOM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-agent-artifacts
+          path: desktop-agent/sbom
+          if-no-files-found: warn
+
+  plugin-runner:
+    name: plugin-runner
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 构建镜像并执行隔离冒烟
+        run: node plugin-runner/smoke.mjs
+      - name: 容器镜像漏洞扫描
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: platform/plugin-runner:local
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+          ignore-unfixed: true
+      - name: 归档镜像 SBOM
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: platform/plugin-runner:local
+          format: cyclonedx
+          output: plugin-runner-image.cdx.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: plugin-runner-artifacts
+          path: plugin-runner-image.cdx.json
+          if-no-files-found: warn
+
+  contracts:
+    name: contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 三类契约覆盖与破坏性变更门禁
+        run: node contracts/tools/contract-check.mjs
+      - name: 门禁自测
+        run: node --test contracts/tools/contract-check.test.mjs
+
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 跨组件测试（契约覆盖、门禁接线、破坏性变更阻断）
+        run: node --test "tests/**/*.test.mjs"
+      - name: 端到端入口（需提供目标地址）
+        if: vars.PLATFORM_E2E_BASE_URL != ''
+        env:
+          PLATFORM_E2E_BASE_URL: ${{ vars.PLATFORM_E2E_BASE_URL }}
+        run: node --test tests/e2e
+
+  supply-chain:
+    name: supply-chain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 文件系统依赖漏洞扫描
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: '1'
+          ignore-unfixed: true
+          skip-dirs: node_modules,frontend/node_modules,backend/target,desktop-agent/bin,desktop-agent/obj
+      - name: 聚合依赖清单
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: cyclonedx
+          output: repository.cdx.json
+          skip-dirs: node_modules,frontend/node_modules,backend/target,desktop-agent/bin,desktop-agent/obj
+      - uses: actions/upload-artifact@v4
+        with:
+          name: repository-sbom
+          path: repository.cdx.json
+
+  artifacts:
+    name: artifacts
+    needs: [backend, frontend, desktop-agent, contracts, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: downloaded
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: 生成不可变版本与制品哈希清单
+        run: node tools/artifact-manifest.mjs --input downloaded --output release-manifest.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-manifest
+          path: release-manifest.json

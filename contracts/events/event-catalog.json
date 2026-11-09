@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "envelope": "envelope.v1.json",
+  "note": "领域事件目录。代码中发出的事件必须在此登记，且与 contracts/events/ 下的 schema 一一对应。",
+  "events": [
+    {
+      "name": "employee.hired.v1",
+      "version": 1,
+      "schema": "employee.hired.v1.json",
+      "producer": "hr",
+      "consumers": ["organization", "authorization"],
+      "introducedIn": "WP01-01"
+    }
+  ]
+}

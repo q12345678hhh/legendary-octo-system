@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.platform.local/events/envelope.v1.json",
+  "title": "领域事件信封 v1",
+  "description": "信封字段固定，不得增删或改名。事件名使用过去时并带主版本号。",
+  "type": "object",
+  "required": [
+    "event_id",
+    "event_name",
+    "occurred_at",
+    "tenant_id",
+    "correlation_id",
+    "producer",
+    "schema_version"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)*\\.v[0-9]+$"
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tenant_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "correlation_id": {
+      "type": "string"
+    },
+    "producer": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: platform-pg-dev
+    environment:
+      POSTGRES_DB: platform
+      POSTGRES_USER: platform_owner
+      POSTGRES_PASSWORD: dev_only_change_me
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform_owner -d platform"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pg_data:

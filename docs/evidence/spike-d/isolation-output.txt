@@ -1,0 +1,88 @@
+=== SETUP ===
+postgres socket: srwxrwxrwx 1 postgres postgres 0 Nov  9 16:07 /tmp/.s.PGSQL.5433
+plugin user: uid=1000(plugin) gid=1000(plugin) groups=1000(plugin)
+sandbox: drwxr-xr-x root root
+host secret perms: -rw------- root root
+
+=== CASES (each is a bypass attempt) ===
+--- read_host_secret ---
+cat: /srv/plugins/host/secret.txt: Permission denied
+exit=1
+leftover after reap: 0
+--- read_shadow ---
+head: cannot open '/etc/shadow' for reading: Permission denied
+exit=1
+leftover after reap: 0
+--- write_outside ---
+./plugin.sh: 1: cannot create /srv/plugins/host/evil.txt: Permission denied
+exit=2
+leftover after reap: 0
+--- network ---
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+  File "/usr/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+OSError: [Errno 101] Network is unreachable
+exit=1
+leftover after reap: 0
+--- memory ---
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+MemoryError
+exit=1
+leftover after reap: 0
+--- cpu_loop ---
+Killed
+exit=137
+leftover after reap: 0
+--- fork_bomb ---
+./plugin.sh: 0: Cannot fork
+exit=2
+leftover after reap: 0
+--- env_dump ---
+HOME=/srv/plugins/sandbox/env_dump
+PATH=/usr/bin:/bin
+PWD=/srv/plugins/sandbox/env_dump
+exit=0
+leftover after reap: 0
+--- write_huge ---
+File size limit exceeded (core dumped)
+size: 1048576
+exit=0
+leftover after reap: 0
+--- read_windows_mount ---
+; for 16-bit app support
+[fonts]
+WINDOWS-FS-READABLE
+exit=0
+leftover after reap: 0
+--- db_direct ---
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/socket.py", line 852, in create_connection
+    raise exceptions[0]
+  File "/usr/lib/python3.12/socket.py", line 837, in create_connection
+    sock.connect(sa)
+OSError: [Errno 101] Network is unreachable
+exit=1
+leftover after reap: 0
+--- db_unix_socket ---
+UNIX-SOCKET-CONNECTED
+exit=0
+leftover after reap: 0
+--- db_unix_login ---
+platform_owner
+exit=0
+leftover after reap: 0
+--- crash ---
+Segmentation fault (core dumped)
+exit=139
+leftover after reap: 0
+
+=== POST-CHECKS ===
+host secret still readable by host: HOST-SECRET-DO-NOT-READ
+host dir clean (no evil.txt)
+runner still alive after plugin SIGSEGV: yes (pid 12)
+leftover plugin processes: 0

@@ -1,0 +1,12 @@
+{
+  "name": "platform-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node tools/contract-check.mjs && node --test tools/contract-check.test.mjs",
+    "check": "node tools/contract-check.mjs",
+    "test": "node --test tools/contract-check.test.mjs",
+    "baseline": "node tools/contract-check.mjs --update"
+  }
+}
