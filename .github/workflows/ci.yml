@@ -163,7 +163,7 @@ jobs:
       - name: 构建镜像并执行隔离冒烟
         run: node plugin-runner/smoke.mjs
       - name: 容器镜像漏洞扫描
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: platform/plugin-runner:local
           format: table
@@ -171,7 +171,7 @@ jobs:
           exit-code: '1'
           ignore-unfixed: true
       - name: 归档镜像 SBOM
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: platform/plugin-runner:local
           format: cyclonedx
@@ -218,7 +218,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 文件系统依赖漏洞扫描
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -228,7 +228,7 @@ jobs:
           ignore-unfixed: true
           skip-dirs: node_modules,frontend/node_modules,backend/target,desktop-agent/bin,desktop-agent/obj
       - name: 聚合依赖清单
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: fs
           scan-ref: .

@@ -1,0 +1,6 @@
+# gitleaks 误报豁免清单（每行一个指纹）
+#
+# docs/evidence/spike-d/container-isolation-output.txt:48 是 `python:3.12-slim` 镜像
+# 自带的 GPG_KEY，用于校验 Python 源码包签名，属于公开公钥指纹，不是凭据。
+# 证据文件按原样留档，不改写运行输出。
+10527fab27a2a30b22712e69ed5e3cfa1b00bf4a:docs/evidence/spike-d/container-isolation-output.txt:generic-api-key:48
