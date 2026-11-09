@@ -37,5 +37,6 @@ repository.cdx.json
 
 # 本地证据与临时产物
 docs/evidence/tmp/
+.cache/
 tmp/
 .tools/

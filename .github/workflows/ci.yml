@@ -63,12 +63,19 @@ jobs:
         run: mvn -B -ntp -f backend/pom.xml clean verify
       - name: 覆盖率非回归门禁
         run: node backend/tools/coverage-gate.mjs
+      # NVD 漏洞库约数百 MB，缓存键固定；需要强制换库时把 v1 改成 v2
+      - name: 缓存 NVD 漏洞库
+        uses: actions/cache@v4
+        with:
+          path: .cache/dependency-check-data
+          key: nvd-data-v1
       - name: 依赖漏洞（OWASP dependency-check）
         run: >-
           mvn -B -ntp -f backend/pom.xml
           org.owasp:dependency-check-maven:12.1.0:check
           -DfailBuildOnCVSS=7
           -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+          -DdataDirectory=${{ github.workspace }}/.cache/dependency-check-data
       - name: 归档 SBOM 与覆盖率
         if: always()
         uses: actions/upload-artifact@v4
