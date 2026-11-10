@@ -6,7 +6,7 @@
  * 用法：node plugin-runner/smoke.mjs
  */
 import { spawnSync } from 'node:child_process';
-import { dirname, resolve } from 'node:path';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -21,8 +21,10 @@ function toWslPath(windowsPath) {
   return windowsPath.replace(/\\/g, '/').replace(/^([A-Za-z]):/, (_, drive) => `/mnt/${drive.toLowerCase()}`);
 }
 
-const contextPath = usingWsl ? toWslPath(here) : '.';
-const dockerfilePath = usingWsl ? `${contextPath}/Dockerfile` : 'Dockerfile';
+// 构建上下文必须锚定到本文件所在目录，不能依赖调用方的工作目录：
+// CI 从仓库根目录执行 `node plugin-runner/smoke.mjs`，根目录下没有 Dockerfile。
+const contextPath = usingWsl ? toWslPath(here) : here;
+const dockerfilePath = `${contextPath}/Dockerfile`;
 
 function docker(args, options = {}) {
   return spawnSync(dockerPrefix[0], [...dockerPrefix.slice(1), ...args], { encoding: 'utf8', ...options });
