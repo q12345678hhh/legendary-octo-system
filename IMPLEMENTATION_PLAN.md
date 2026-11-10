@@ -259,11 +259,11 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 | 仓库结构与概念 | `backend/`（20 个 reactor 模块）、`frontend/`、`desktop-agent/`、`plugin-runner/`、`contracts/`、`tests/` | `docs/evidence/wp01-01/backend-build-1.txt`、`frontend-verify.txt`、`desktop-agent-verify.txt`、`plugin-runner-smoke.txt` |
 | 分支保护与评审 | `docs/runbooks/ci-pipeline.md` §1、`.github/CODEOWNERS` | 同上手册；CI 断言见 `tests/ci/workflow-gates.test.mjs` |
 | 格式化与提交规范 | `.editorconfig`、`.gitattributes`、`commitlint.config.mjs` | `commit-lint` 任务 |
-| 六任务流水线 | `.github/workflows/ci.yml` | `tests/ci/workflow-gates.test.mjs` 断言六任务齐备且门禁不得降级 |
+| 六任务流水线 | `.github/workflows/ci.yml` | `tests/ci/workflow-gates.test.mjs` 断言六任务齐备且门禁不得降级；GitHub Actions 实跑记录见 `ci-runs-first-green.txt`（运行 #7 全绿） |
 | 模块边界 | `@ApplicationModule` 声明 + `ApplicationModules.verify()` | `backend/boot-api/src/test/.../ModuleStructureTest.java`（15 个模块） |
 | 依赖漏洞 | pnpm audit（high）、OWASP dependency-check（CVSS ≥ 7）、`dotnet list package --vulnerable` | `frontend-verify.txt`（升级 Vitest 4.1.12 后归零）；`dependency-check-before.txt` / `dependency-check-after.txt`（升级 Spring Boot 后 24 个高危 CVE 归零） |
 | SBOM | CycloneDX Maven 2.9.3、`pnpm sbom`、Trivy、`dotnet CycloneDX` | `release-manifest.json` 的 `dependencyManifests` |
-| 容器扫描 | Trivy image（CRITICAL/HIGH 阻断） | `plugin-runner` 任务 |
+| 容器扫描 | Trivy image（CRITICAL/HIGH 阻断） | `plugin-runner` 任务；`ci-runs-first-green.txt`（修复 zlib1g CVE-2026-76844 / CVE-2026-85091 后转绿） |
 | 秘密扫描 | gitleaks 全历史 | `secret-scan` 任务（`continue-on-error` 被断言禁止） |
 | 事件目录与版本规则 | `contracts/events/`（信封 7 字段 + `employee.hired.v1`） | `tests/contracts/three-category-coverage.test.mjs` |
 | 三类契约破坏性变更 | `contracts/tools/contract-check.mjs` + 基线 + 审批 | `contracts-gate.txt`；`tests/contracts/breaking-change-blocks.test.mjs`（四例均阻断） |

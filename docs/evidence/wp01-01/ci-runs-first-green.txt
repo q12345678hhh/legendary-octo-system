@@ -1,0 +1,57 @@
+# GitHub Actions 实跑证据：CI 首次全绿
+# 仓库：https://github.com/q12345678hhh/legendary-octo-system
+# 记录日期：2026-11-10
+
+## 运行 #6（f9b693a 的父提交 164957e）—— 唯一失败点：插件运行器镜像扫描
+
+backend          success  403s
+secret-scan      success   10s
+frontend         success   30s
+desktop-agent    success   45s
+contracts        success    8s
+tests            success    7s
+supply-chain     success   17s
+artifacts        success    9s
+commit-lint      skipped   （非 pull_request 事件，按设计跳过）
+plugin-runner    failure   21s
+
+后端 403 秒内完成 clean install（20 个 reactor 模块编译、单测、@ApplicationModule
+边界校验）、覆盖率非回归门禁、带 NVD_API_KEY 的 dependency-check 全量扫描，
+failBuildOnCVSS=7 零命中。验证了 WP01-01 中「24 个高危 CVE 归零」在 CI 上可复现。
+
+插件运行器失败原因（trivy 0.70.0，severity=CRITICAL,HIGH，ignore-unfixed=true）：
+
+  platform/plugin-runner:local (debian 13.7)
+  总计: 2 (高: 2, 暴击: 0)
+
+  zlib1g | CVE-2026-76844 | HIGH | fixed | 1:1.3.dfsg+really1.3.1-1+b1 -> 1:1.3.dfsg+really1.3.1-1+deb13u1
+  zlib1g | CVE-2026-85091 | HIGH | fixed | ZLIB 堆缓冲区溢出 gz_vacate() 允许任意代码执行
+
+## 运行 #7（f9b693a）—— 全绿
+
+backend          success
+plugin-runner    success
+secret-scan      success
+frontend         success
+desktop-agent    success
+contracts        success
+tests            success
+supply-chain     success
+artifacts        success
+commit-lint      skipped
+
+## 修复动作
+
+plugin-runner/Dockerfile 在 FROM python:3.12-slim 后增加：
+
+  RUN apt-get update \
+   && apt-get upgrade -y \
+   && apt-get autoremove -y \
+   && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man
+
+依据：两个 CVE 的 Fixed Version 均为 Debian 13 安全更新 deb13u1，apt-get upgrade 可取到。
+
+## 结论
+
+六类构建任务（backend/frontend/desktop-agent/plugin-runner/contracts/tests）在
+GitHub Actions 上全部通过，容器镜像扫描、依赖漏洞、秘密扫描、SBOM 归档门禁均未降级。
