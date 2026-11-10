@@ -1,19 +1,20 @@
-# 代码所有者：默认由平台核心组评审；契约与 ADR 与代码同等级别
-# 说明：个人开发者阶段用同一账号承担全部角色，团队成立后再按目录拆分审批人。
+# 代码所有者：默认由仓库所有者承担全部审批。
+# 说明：个人开发者阶段用同一账号承担全部角色。团队成立后再按目录拆分为
+# 独立审批组——团队必须先真实存在，否则 GitHub 会静默忽略该行，等于没有保护。
 
-*                                   @platform-core
+*                                   @q12345678hhh
 
 # 契约是跨边界真相，改动必须走契约评审
-/contracts/                         @platform-core @contract-owners
+/contracts/                         @q12345678hhh
 
 # 架构决策与治理规范
-/docs/adr/                          @platform-core @architecture-owners
-/docs/api/contract-governance.md    @platform-core @contract-owners
+/docs/adr/                          @q12345678hhh
+/docs/api/contract-governance.md    @q12345678hhh
 
 # CI 与仓库治理：只允许维护者修改，防止自降门禁
-/.github/                           @platform-core @release-managers
-/backend/coverage-scope.yaml        @platform-core @release-managers
+/.github/                           @q12345678hhh
+/backend/coverage-scope.yaml        @q12345678hhh
 
 # 隐私与安全边界
-/desktop-agent/                     @platform-core @security-owners
-/plugin-runner/                     @platform-core @security-owners
+/desktop-agent/                     @q12345678hhh
+/plugin-runner/                     @q12345678hhh
