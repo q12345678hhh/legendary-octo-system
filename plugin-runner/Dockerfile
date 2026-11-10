@@ -5,6 +5,13 @@
 #   - 以非 root 用户运行；网络与内存限制由编排层传入
 FROM python:3.12-slim
 
+# 基础镜像的 Debian 软件包落后于安全更新，trivy 会以 CRITICAL/HIGH 阻断构建。
+# 在安装业务内容前先升到当前安全补丁；清掉 apt 缓存与文档以控制体积。
+RUN apt-get update \
+ && apt-get upgrade -y \
+ && apt-get autoremove -y \
+ && rm -rf /var/lib/apt/lists/* /usr/share/doc /usr/share/man
+
 LABEL org.opencontainers.image.title="platform-plugin-runner" \
       org.opencontainers.image.description="隔离插件执行器：监督进程作为 PID 1，退出码按信号语义透传"
 
