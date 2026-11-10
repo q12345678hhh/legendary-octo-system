@@ -1,0 +1,6 @@
+# 依赖漏洞扫描：升级后（Spring Boot 4.0.9 / spring-framework 7.0.10）
+# 命令：mvn -f backend/pom.xml install org.owasp:dependency-check-maven:12.1.0:check -DskipTests -DfailBuildOnCVSS=7 ...
+# 结果：BUILD SUCCESS，无 CVSS >= 7 命中
+
+[INFO] BUILD SUCCESS
+[INFO] Total time:  01:03 min

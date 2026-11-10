@@ -261,7 +261,7 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 | 格式化与提交规范 | `.editorconfig`、`.gitattributes`、`commitlint.config.mjs` | `commit-lint` 任务 |
 | 六任务流水线 | `.github/workflows/ci.yml` | `tests/ci/workflow-gates.test.mjs` 断言六任务齐备且门禁不得降级 |
 | 模块边界 | `@ApplicationModule` 声明 + `ApplicationModules.verify()` | `backend/boot-api/src/test/.../ModuleStructureTest.java`（15 个模块） |
-| 依赖漏洞 | pnpm audit（high）、OWASP dependency-check（CVSS ≥ 7）、`dotnet list package --vulnerable` | `frontend-verify.txt`（升级 Vitest 4.1.12 后归零） |
+| 依赖漏洞 | pnpm audit（high）、OWASP dependency-check（CVSS ≥ 7）、`dotnet list package --vulnerable` | `frontend-verify.txt`（升级 Vitest 4.1.12 后归零）；`dependency-check-before.txt` / `dependency-check-after.txt`（升级 Spring Boot 后 24 个高危 CVE 归零） |
 | SBOM | CycloneDX Maven 2.9.3、`pnpm sbom`、Trivy、`dotnet CycloneDX` | `release-manifest.json` 的 `dependencyManifests` |
 | 容器扫描 | Trivy image（CRITICAL/HIGH 阻断） | `plugin-runner` 任务 |
 | 秘密扫描 | gitleaks 全历史 | `secret-scan` 任务（`continue-on-error` 被断言禁止） |

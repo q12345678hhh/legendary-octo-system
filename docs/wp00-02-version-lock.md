@@ -13,8 +13,8 @@
 |---|---|---|---|
 | JDK | Java 21 | Temurin 21（LTS） | 必须为 LTS，禁用预览特性 |
 | 构建 | Maven | 3.9.x | 与 JDK 21 兼容 |
-| 框架 | Spring Boot | 3.3.x 或 3.4.x 中仍受安全支持的补丁版 | **已锁定 3.4.13**（`spring-boot-starter-parent`，3.4 线最新补丁） |
-| 模块化 | Spring Modulith + Maven 多模块 | 与 Spring Boot 版本对齐 | **已锁定 1.3.12**（与 Boot 3.4 对齐），以 BOM import 管理 |
+| 框架 | Spring Boot | 3.3.x 或 3.4.x 中仍受安全支持的补丁版 | **已锁定 4.0.9**（`spring-boot-starter-parent`）。原定 3.4.13 命中 24 个 CVSS ≥ 7 的 CVE 且 3.4 线已无补丁；3.5.16 所带 Framework 6.2.19 仍在受影响区间、6.2.20 尚未发布，故取带 Framework 7.0.10 的 4.0.9 |
+| 模块化 | Spring Modulith + Maven 多模块 | 与 Spring Boot 版本对齐 | **已锁定 2.0.9**（与 Boot 4.0 对齐），以 BOM import 管理 |
 | 安全 | Spring Security / OAuth2 Resource Server | 随 Boot BOM | 不自选版本 |
 | 数据访问 | Spring Data JPA + jOOQ/JdbcClient | 随 Boot BOM | 禁止动态拼接 SQL |
 | 数据库 | PostgreSQL | 16.x | RLS 为必需能力，不用低版本替代 |
@@ -46,7 +46,7 @@
 
 ## 4. 安装前必须回填的项
 
-1. Spring Boot 具体补丁版本——已回填 3.4.13（WP01-01）。
+1. Spring Boot 具体补丁版本——已回填 4.0.9（WP01-01，由 3.4.13 经 3.5.16 升级以修复高危 CVE）。
 2. PostgreSQL 小版本与是否启用 `pgvector`——小版本已回填 16.15；`pgvector` 未启用（尖峰 B 未使用）。
 3. Node 22 的补丁版本与 pnpm 主版本——已回填为 Node 24.22.1 / pnpm 12.3.4。
 4. React 与 Ant Design 的兼容组合——已回填 React 18.3.1 + antd 5.29.3（WP01-01）。

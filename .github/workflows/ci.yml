@@ -60,7 +60,9 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
       - name: 构建、静态检查、单测、模块边界（mvn verify）
-        run: mvn -B -ntp -f backend/pom.xml clean verify
+        # 用 install 而非 verify：依赖漏洞扫描是独立的 mvn 调用，
+        # 需要在本地仓库找到各模块 jar，否则会报 Could not resolve dependencies。
+        run: mvn -B -ntp -f backend/pom.xml clean install
       - name: 覆盖率非回归门禁
         run: node backend/tools/coverage-gate.mjs
       # NVD 漏洞库约数百 MB，缓存键固定；需要强制换库时把 v1 改成 v2
@@ -69,6 +71,8 @@ jobs:
         with:
           path: .cache/dependency-check-data
           key: nvd-data-v1
+      # OSS Index 已停止匿名访问，未配凭据时返回 401 并中断整个分析，故关闭该分析器；
+      # 漏洞判定完全基于 NVD 数据（通过 NVD_API_KEY 提升配额）。
       - name: 依赖漏洞（OWASP dependency-check）
         run: >-
           mvn -B -ntp -f backend/pom.xml
@@ -76,6 +80,7 @@ jobs:
           -DfailBuildOnCVSS=7
           -DnvdApiKey=${{ secrets.NVD_API_KEY }}
           -DdataDirectory=${{ github.workspace }}/.cache/dependency-check-data
+          -DossindexAnalyzerEnabled=false
       - name: 归档 SBOM 与覆盖率
         if: always()
         uses: actions/upload-artifact@v4
