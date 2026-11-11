@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- DPAPI 只在 Windows 上可用；显式标成 windows 目标，避免跨平台误用。 -->
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>WorkAssistant.Storage</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <ProjectReference Include="..\..\core\WorkAssistant.Core\WorkAssistant.Core.csproj" />
+  </ItemGroup>
+
+</Project>

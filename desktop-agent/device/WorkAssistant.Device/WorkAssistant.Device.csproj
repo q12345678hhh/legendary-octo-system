@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>WorkAssistant.Device</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\core\WorkAssistant.Core\WorkAssistant.Core.csproj" />
+    <ProjectReference Include="..\..\storage\WorkAssistant.Storage\WorkAssistant.Storage.csproj" />
+  </ItemGroup>
+
+</Project>

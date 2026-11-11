@@ -355,13 +355,28 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP01-05 Windows 工作助手技术骨架
 
-- [ ] 建立托盘状态、显式开始/暂停/结束、私人模式和不可隐藏的采集提示。
-- [ ] 建立设备注册、设备密钥、策略签名验证、版本报告、撤销和更新回滚。
-- [ ] 使用 Windows 安全存储保护本地缓存；定义离线队列、过期删除和崩溃恢复。
-- [ ] 不提供管理员远程秘密开启接口；任何策略只能收窄或增加排除。
+- [x] 建立托盘状态、显式开始/暂停/结束、私人模式和不可隐藏的采集提示。
+- [x] 建立设备注册、设备密钥、策略签名验证、版本报告、撤销和更新回滚。
+- [x] 使用 Windows 安全存储保护本地缓存；定义离线队列、过期删除和崩溃恢复。
+- [x] 不提供管理员远程秘密开启接口；任何策略只能收窄或增加排除。
 
 **交付物：** 工作助手最小壳、设备协议和升级运行手册。  
 **验收证据：** 撤销设备后无法上传；员工未开始或已暂停时采集量为 0；状态始终可见。
+
+**完成情况（WP01-05）：**
+
+| 项目 | 落点 | 证据 |
+| --- | --- | --- |
+| 托盘壳与状态机 | `desktop-agent/windows-app/WorkAssistant.WindowsApp`（WinForms `NotifyIcon` + 置顶提示窗）、`WorkAssistant.Core/TrayStatePresenter`、`PrivacyEngine` 状态机 | `docs/evidence/wp01-05/indicator.txt`（6 项）、`capture-gating.txt`（采集门禁与提示，含真实链路暂停零采集） |
+| 采集门禁 | `WorkAssistant.Core/CaptureGate`、`PrivacyEngine/ForbiddenApplicationPolicy` | `offline-checks.txt` 中未开始/暂停/私人模式/上传关闭四类零采集断言 |
+| 设备协议 | 7 个 `/api/v1/work-assistant/...` 端点（`contracts/openapi/platform-api.v1.json`）、`worklog/device`+`policy`+`update`、`DeviceIdentity`/`DeviceApiClient`/`AgentRuntime` | `device-registration.txt`（注册、策略验签、版本心跳与最低版本门禁）、`policy-signature.txt`（未知字段/整体覆盖 422、无签名 400、无远程开始端点 404） |
+| 撤销 | `POST /devices/{id}/revoke`、客户端 `HandleRevoked` | `device-revocation.txt`（上传 403 `DEVICE_REVOKED`、队列清空、采集停止） |
+| 安全存储与离线 | `Storage/DpapiVault`（CurrentUser + 设备熵、原子写）、`OfflineQueue`（72h TTL、隔离区）、`LocalStateStore` | `secure-storage.txt`、`offline-queue.txt`、`crash-recovery.txt`（重传由 `client_segment_id` 去重） |
+| 升级与回滚 | `UpdateService`（清单验签、包 SHA-256、拒绝降级、健康检查失败回滚） | `update-rollback.txt`；运行手册 `docs/runbooks/work-assistant-upgrade.md` |
+| 数据库 | `V5__work_assistant_device.sql`（三表 + RLS FORCE）、`tests/db/40-integrity.sql`、`db-verify.ps1` 版本数 5 | `db-migration.txt`（三表 `rows=1 rls=true force=true`）、`db-verify.txt` |
+| 构建与自检 | `desktop-agent.sln`（core/storage/device/checks/windows-app）、CI 增加 `Device.Checks` 与托盘壳 `--self-check` | `desktop-build.txt`（零警告）、`offline-checks.txt`（53 项） |
+
+**遗留与说明（WP01-05）：** ①真实窗口/进程采集器尚未接入，门禁与排除策略已可独立验证，接入时复用同一入口；②更新安装器只有 `IUpdateInstaller` 编排，不含真实安装包执行；③托盘图标暂用系统默认图标；④服务端策略固定 `uploadEnabled=true`，关闭上传为客户端本地止损能力；⑤同机多租户设备密钥按租户分目录存放，切换租户需重新注册。
 
 **Phase 1 退出标准：** 环境、构建、迁移、备份、追踪、异步和设备最小链路均有自动证据；阻断缺陷为 0。
 

@@ -1,0 +1,10 @@
+flyway 版本序列：
+1
+2
+3
+4
+5
+新表 RLS 状态：
+work_assistant_device rows=1 rls=true force=true
+work_assistant_policy rows=1 rls=true force=true
+work_assistant_segment rows=1 rls=true force=true

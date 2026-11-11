@@ -1,0 +1,86 @@
+﻿powershell.exe : wsl: 检测到 localhost 代理配置，但未镜像到 WSL。NAT 模式下的 WSL 不支持 localhost 代理。
+所在位置 行:15 字符: 2664
++ ... M = 'dumb'; & powershell -ExecutionPolicy Bypass -File .\scripts\db-v ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (wsl: 检测到 localh...持 localhost 代理。:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+psql 客户端：WSL(pglab) 容器 platform-pg-dev
+目标：172.25.122.187:5432  owner=platform_owner  app=platform_app
+
+== 1 空库升级：DROP/CREATE 演练库 → migrate → validate
+  校验和（空库）：
+    1|-421171951
+    2|-1218073849
+    3|-1157903501
+    4|-2118030789
+    5|-2137171414
+
+== 2 RLS 正向与负例（platform_app 身份）
+DO
+DO
+BEGIN
+SET
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+BEGIN
+
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+DO
+SET
+DO
+RESET
+DO
+DO
+RLS 用例全部通过（9/9）
+
+== 3 并发认领：两个独立会话同时 FOR UPDATE SKIP LOCKED
+  会话 1 持有：00000000-0000-0000-0000-000000000001
+  会话 2 取得：00000000-0000-0000-0000-000000000002（不同行，通过）
+
+== 4 上一受支持版本升级：migrate 到 V2 → 灌 50 万行 → migrate 到最新
+  V2 时的校验和：
+    1|-421171951
+    2|-1218073849
+  已灌入 outbox 行数：500000（6s）
+  迁移耗时 4.7s；探针执行 1501 条语句，最慢 45.2 ms，超过 1s 的语句 0 条
+  升级后的校验和：
+    1|-421171951
+    2|-1218073849
+    3|-1157903501
+    4|-2118030789
+    5|-2137171414
+
+== 5 迁移后结构与一致性、索引执行计划
+DO
+结构与一致性断言全部通过
+Limit
+  ->  Index Scan using platform_outbox_dispatch_idx on platform_outbox
+        Index Cond: (available_at <= now())
+
+== 6 校验和门禁：篡改历史 checksum 后 validate 必须失败
+  flyway:validate 按预期失败（exit=1）
+  篡改被拦截，还原后 validate 通过
+
+== 7 连接池：租户上下文随连接复用不得残留
+  Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.533 s -- in com.acme.platform.db.ConnectionPoolTenantContextTest
+  事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户
+
+全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、并发、索引、锁等待评估、连接池隔离。

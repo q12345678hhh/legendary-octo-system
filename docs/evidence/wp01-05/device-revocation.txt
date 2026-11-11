@@ -1,0 +1,12 @@
+DEVICE 7af7cb15-a0e7-59af-7067-1dbe207dfd38
+PASS live/revoke/撤销前生成待上传片段
+PASS live/revoke/撤销后上传被服务端拒绝
+PASS live/revoke/撤销后清空离线队列
+PASS live/revoke/撤销后采集立即停止
+PASS live/revoke/撤销后直接上传返回 403 DEVICE_REVOKED
+live/revoke: 全部通过（5 项）
+
+# 数据库断言
+work_assistant_segment 行数=3（注册两条 + 崩溃一条，重传被去重）
+work_assistant_device=revoked|true|11111111-1111-4111-8111-111111111111
+work_assistant_policy version=2

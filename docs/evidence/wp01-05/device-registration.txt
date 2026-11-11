@@ -1,0 +1,10 @@
+DEVICE 7af7cb15-a0e7-59af-7067-1dbe207dfd38
+PASS live/enroll/注册返回可验签策略
+PASS live/enroll/注册后设备状态为 active
+PASS live/enroll/开始后产生两条离线片段
+PASS live/enroll/补传成功后清空离线队列
+PASS live/enroll/暂停后采集量为 0
+PASS live/enroll/暂停后采集提示仍可见
+PASS live/enroll/心跳上报版本且当前版本无需更新
+PASS live/enroll/低于最低支持版本时要求更新
+live/enroll: 全部通过（8 项）

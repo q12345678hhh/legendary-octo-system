@@ -304,6 +304,201 @@
           "422": { "$ref": "#/components/responses/Problem" }
         }
       }
+    },
+    "/api/v1/work-assistant/devices/register": {
+      "post": {
+        "operationId": "registerWorkAssistantDevice",
+        "summary": "注册工作助手设备",
+        "description": "客户端提交本地生成的 ECDSA P-256 公钥；同一主体同一公钥重复注册是幂等的。响应下发签名策略与验签公钥，管理员无法通过本接口开启采集。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterDeviceRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "注册成功或幂等命中",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WorkAssistantRegistration" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/work-assistant/devices/{deviceId}/heartbeat": {
+      "post": {
+        "operationId": "workAssistantHeartbeat",
+        "summary": "设备心跳与版本报告",
+        "description": "设备签名后上报应用与策略版本；被撤销的设备返回 403 DEVICE_REVOKED。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/WorkAssistantDeviceId" },
+          { "$ref": "#/components/parameters/DeviceTimestamp" },
+          { "$ref": "#/components/parameters/DeviceSignature" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/HeartbeatRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "心跳已记录",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HeartbeatResult" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/work-assistant/devices/{deviceId}/policy": {
+      "get": {
+        "operationId": "getWorkAssistantPolicy",
+        "summary": "拉取签名策略",
+        "description": "返回基线 ∪ 租户追加项的签名信封；客户端必须验签并拒绝旧版本。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/WorkAssistantDeviceId" },
+          { "$ref": "#/components/parameters/DeviceTimestamp" },
+          { "$ref": "#/components/parameters/DeviceSignature" }
+        ],
+        "responses": {
+          "200": {
+            "description": "当前签名策略",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SignedPolicy" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "503": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/work-assistant/devices/{deviceId}/revoke": {
+      "post": {
+        "operationId": "revokeWorkAssistantDevice",
+        "summary": "撤销设备",
+        "description": "撤销后该设备的上传、心跳与策略拉取一律 403，必须先由管理员重新登记。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/WorkAssistantDeviceId" }
+        ],
+        "responses": {
+          "200": {
+            "description": "已撤销",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RevokeResult" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/work-assistant/segments": {
+      "post": {
+        "operationId": "uploadWorkAssistantSegment",
+        "summary": "上传最小化片段元数据",
+        "description": "必须先通过设备签名与策略版本校验；相同 clientSegmentId 重传返回 duplicate=true，不产生重复行。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/DeviceTimestamp" },
+          { "$ref": "#/components/parameters/DeviceSignature" },
+          { "$ref": "#/components/parameters/WorkAssistantDeviceIdRequired" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SegmentUploadRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已接收或幂等命中",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SegmentUploadResult" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/work-assistant/update-manifest": {
+      "get": {
+        "operationId": "getWorkAssistantUpdateManifest",
+        "summary": "获取签名更新清单",
+        "description": "客户端用注册时固定的公钥验签并校验包哈希；未配置签名密钥时返回 503。",
+        "responses": {
+          "200": {
+            "description": "签名更新清单",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UpdateManifest" }
+              }
+            }
+          },
+          "503": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/work-assistant/policies/current": {
+      "put": {
+        "operationId": "appendWorkAssistantPolicy",
+        "summary": "追加租户排除项",
+        "description": "只接受 additional_exclusions；出现任何未知字段（删除列表、采集开关等）返回 422。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PolicyAppendRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "追加后的签名策略",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SignedPolicy" }
+              }
+            }
+          },
+          "422": { "$ref": "#/components/responses/Problem" },
+          "503": { "$ref": "#/components/responses/Problem" }
+        }
+      }
     }
   },
   "components": {
@@ -352,6 +547,33 @@
         "in": "path",
         "required": true,
         "schema": { "type": "string", "format": "uuid" }
+      },
+      "WorkAssistantDeviceId": {
+        "name": "deviceId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "WorkAssistantDeviceIdRequired": {
+        "name": "X-Device-Id",
+        "in": "header",
+        "required": true,
+        "description": "设备 ID；必须与请求体中的 deviceId 一致，签名覆盖请求体",
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "DeviceTimestamp": {
+        "name": "X-Device-Timestamp",
+        "in": "header",
+        "required": true,
+        "description": "Unix 秒；与服务器时钟偏差超过 5 分钟拒绝",
+        "schema": { "type": "string", "pattern": "^[0-9]{1,12}$" }
+      },
+      "DeviceSignature": {
+        "name": "X-Device-Signature",
+        "in": "header",
+        "required": true,
+        "description": "ECDSA P-256 签名（IEEE P1363，base64），规范串为方法、路径、时间戳与请求体 SHA-256",
+        "schema": { "type": "string" }
       }
     },
     "responses": {
@@ -540,6 +762,141 @@
         "properties": {
           "eventId": { "type": "string", "format": "uuid" },
           "status": { "type": "string", "enum": ["pending"] }
+        }
+      },
+      "RegisterDeviceRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceId", "deviceName", "publicKeySpki", "appVersion"],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "客户端由 MachineGuid + tenantId 派生，重装系统后变化"
+          },
+          "deviceName": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "publicKeySpki": {
+            "type": "string",
+            "description": "ECDSA P-256 公钥，X.509 SubjectPublicKeyInfo base64；私钥不出本机"
+          },
+          "appVersion": { "type": "string", "minLength": 1, "maxLength": 64 }
+        }
+      },
+      "SignedPolicy": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "封闭字段集合：没有 capture_enabled、auto_start 一类控制位，客户端拒收未知字段。",
+        "required": ["policyVersion", "issuedAt", "keyId", "processes", "titleKeywords", "uploadEnabled", "signature"],
+        "properties": {
+          "policyVersion": { "type": "integer", "minimum": 1 },
+          "issuedAt": { "type": "string", "format": "date-time" },
+          "keyId": { "type": "string" },
+          "processes": {
+            "type": "array",
+            "description": "基线 ∪ 租户追加项，客户端再与本地硬编码下限取并集",
+            "items": { "type": "string" }
+          },
+          "titleKeywords": { "type": "array", "items": { "type": "string" } },
+          "uploadEnabled": { "type": "boolean", "description": "只能关停上传；没有任何字段能启动采集" },
+          "signature": {
+            "type": "string",
+            "description": "ECDSA P-256（P1363，base64），规范串见 CanonicalForms.policy"
+          }
+        }
+      },
+      "WorkAssistantRegistration": {
+        "type": "object",
+        "required": ["deviceId", "status", "policy", "policyPublicKeySpki", "policyKeyId", "serverTime"],
+        "properties": {
+          "deviceId": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["active", "revoked"] },
+          "policy": { "$ref": "#/components/schemas/SignedPolicy" },
+          "policyPublicKeySpki": { "type": "string" },
+          "policyKeyId": { "type": "string" },
+          "updatePublicKeySpki": { "type": ["string", "null"] },
+          "updateKeyId": { "type": ["string", "null"] },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "HeartbeatRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["appVersion", "policyVersion"],
+        "properties": {
+          "appVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "policyVersion": { "type": "integer", "minimum": 0 }
+        }
+      },
+      "HeartbeatResult": {
+        "type": "object",
+        "required": ["status", "minSupportedVersion", "updateRequired"],
+        "properties": {
+          "status": { "type": "string", "enum": ["active", "revoked"] },
+          "minSupportedVersion": { "type": "string" },
+          "updateRequired": { "type": "boolean" },
+          "updateManifest": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/UpdateManifest" },
+              { "type": "null" }
+            ]
+          }
+        }
+      },
+      "UpdateManifest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["version", "packageSha256", "packageUrl", "minSupportedVersion", "releasedAt", "keyId", "signature"],
+        "properties": {
+          "version": { "type": "string" },
+          "packageSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "packageUrl": { "type": "string", "format": "uri" },
+          "minSupportedVersion": { "type": "string" },
+          "releasedAt": { "type": "string", "format": "date-time" },
+          "keyId": { "type": "string" },
+          "signature": { "type": "string" }
+        }
+      },
+      "SegmentUploadRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceId", "clientSegmentId", "capturedFrom", "capturedTo", "sourceType", "policyVersion"],
+        "properties": {
+          "deviceId": { "type": "string", "format": "uuid" },
+          "clientSegmentId": { "type": "string", "format": "uuid" },
+          "capturedFrom": { "type": "string", "format": "date-time" },
+          "capturedTo": { "type": "string", "format": "date-time" },
+          "sourceType": { "type": "string", "enum": ["window", "manual", "voice"] },
+          "summary": { "type": ["string", "null"], "maxLength": 2000 },
+          "policyVersion": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "SegmentUploadResult": {
+        "type": "object",
+        "required": ["accepted", "duplicate"],
+        "properties": {
+          "accepted": { "type": "boolean" },
+          "duplicate": { "type": "boolean" }
+        }
+      },
+      "PolicyAppendRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["additional_exclusions"],
+        "properties": {
+          "additional_exclusions": {
+            "type": "array",
+            "description": "只追加进程名；没有删除或覆盖字段",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" }
+          }
+        }
+      },
+      "RevokeResult": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string", "enum": ["revoked"] }
         }
       }
     }

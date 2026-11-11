@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>WorkAssistant.WindowsApp</RootNamespace>
+    <AssemblyName>WorkAssistant.WindowsApp</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\device\WorkAssistant.Device\WorkAssistant.Device.csproj" />
+  </ItemGroup>
+
+</Project>

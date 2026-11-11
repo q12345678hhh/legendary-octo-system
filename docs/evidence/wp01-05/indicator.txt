@@ -1,0 +1,6 @@
+PASS windows/未记录状态只提供开始与退出
+PASS windows/记录中提示可见且不提供退出
+PASS windows/暂停后提示仍可见且文案声明不采集
+PASS windows/私人模式提示可见且只能退出私人模式或结束
+PASS windows/结束后提示隐藏并重新提供退出
+PASS windows/托盘菜单不含隐藏或静默入口

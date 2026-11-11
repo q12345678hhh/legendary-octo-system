@@ -1,0 +1,7 @@
+# 来源：WorkAssistant.Device.Checks 离线自检（加密队列与恢复）
+PASS offline/离线条目可写入并读回
+PASS offline/离线条目超过 72 小时后删除
+PASS offline/崩溃恢复删除未完成写入的临时文件
+PASS offline/崩溃恢复隔离损坏条目并保留有效条目
+PASS offline/隔离区保留损坏条目供排查
+PASS offline/不同租户设备身份隔离

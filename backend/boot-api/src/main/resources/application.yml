@@ -55,6 +55,20 @@ platform:
   smoke:
     # 冒烟端点只在本地验证「请求 → outbox → Worker」链路时打开
     enabled: ${PLATFORM_SMOKE_ENABLED:false}
+  work-assistant:
+    # 策略与更新清单签名密钥只从环境变量注入；缺失时相关端点 503，绝不签发未签名策略。
+    # WP01-05 本地脚本会临时生成一对 ECDSA P-256 密钥并通过环境变量传入。
+    policy-private-key: ${PLATFORM_WA_POLICY_KEY:}
+    policy-public-key-spki: ${PLATFORM_WA_POLICY_PUBLIC_KEY:}
+    policy-key-id: ${PLATFORM_WA_POLICY_KEY_ID:local-policy-1}
+    update-private-key: ${PLATFORM_WA_UPDATE_KEY:}
+    update-public-key-spki: ${PLATFORM_WA_UPDATE_PUBLIC_KEY:}
+    update-key-id: ${PLATFORM_WA_UPDATE_KEY_ID:local-update-1}
+    clock-skew: ${PLATFORM_WA_CLOCK_SKEW:5m}
+    min-supported-version: ${PLATFORM_WA_MIN_VERSION:0.1.0}
+    update-version: ${PLATFORM_WA_UPDATE_VERSION:0.1.1}
+    update-package-url: ${PLATFORM_WA_UPDATE_URL:}
+    update-package-sha256: ${PLATFORM_WA_UPDATE_SHA256:}
 
 logging:
   # 结构化日志：每行 JSON，MDC 里的 trace/correlation/tenant/subject 可直接被日志平台检索。
