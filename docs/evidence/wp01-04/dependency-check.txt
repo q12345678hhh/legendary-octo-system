@@ -1,0 +1,71 @@
+WP01-04 依赖漏洞门禁：Prometheus 服务端 CPE 误报的处置
+==========================================================
+
+一、失败现象（CI backend 作业「依赖漏洞（OWASP dependency-check）」）
+--------------------------------------------------------------------
+[ERROR] One or more dependencies were identified with vulnerabilities that have a CVSS score greater than or equal to '7.0':
+[ERROR] micrometer-registry-prometheus-1.16.8.jar
+        (pkg:maven/io.micrometer/micrometer-registry-prometheus@1.16.8,
+         cpe:2.3:a:prometheus:prometheus:1.16.8:*:*:*:*:*:*:*): CVE-2026-42154(7.5)
+
+该步骤在 CI 上约 47–51s 失败，排除 NVD 同步超时（数据走 nvd-data-v1 缓存）。
+
+二、本地复现
+------------
+用全新 NVD 数据目录按 CI 同一命令复现（约 36 分钟完成同步），得到与 CI 完全一致的一行：
+
+  mvn -B -ntp -f backend/pom.xml org.owasp:dependency-check-maven:12.1.0:check
+      -DfailBuildOnCVSS=7
+      -DdataDirectory=<fresh>
+      -DnvdApiDelay=6000 -DossindexAnalyzerEnabled=false
+
+结论：不是网络或缓存问题，是 NVD 对 micrometer-registry-prometheus 1.16.8 给出了
+cpe:2.3:a:prometheus:prometheus 的 CPE 匹配。
+
+三、判定为误报的依据
+--------------------
+CVE-2026-42154 的描述对象是 Prometheus 服务端（Go 二进制）的远程读接口：
+
+  "Prior to versions 3.5.3 and 3.11.3, the remote read endpoint (/api/v1/read)
+   does not validate the declared decoded length in a snappy-compressed request body
+   before allocating memory."
+
+micrometer-registry-prometheus 是 JVM 侧的指标编码器（把 Micrometer 指标写成
+Prometheus 文本/OpenMetrics 格式交给 /actuator/prometheus），既不实现 /api/v1/read，
+也不监听 Prometheus 端口，不受该 CVE 影响。
+
+四、修复方式（不放宽门禁阈值）
+------------------------------
+新增 backend/dependency-check-suppressions.xml，抑制条件同时限定 Maven 坐标与 CPE：
+
+  packageUrl = ^pkg:maven/io\.micrometer/micrometer-registry-prometheus@.*$
+  cpe        = cpe:/a:prometheus:prometheus
+  packageUrl = ^pkg:maven/io\.prometheus/prometheus-metrics-.*@.*$
+  cpe        = cpe:/a:prometheus:prometheus
+
+每条带 notes 说明误报依据与复核日期（2026-11-11）。failBuildOnCVSS=7 保持不变，
+CVSS ≥ 7 的其他漏洞仍然阻断构建；抑制只作用于「Prometheus 服务端 CPE × 这两个坐标」。
+
+五、复测（本地，命中已缓存的 NVD 数据）
+--------------------------------------
+命令：
+  mvn -B -ntp -f backend/pom.xml org.owasp:dependency-check-maven:12.1.0:check
+      -DfailBuildOnCVSS=7
+      -DdataDirectory=C:\Users\Administrator\AppData\Local\Temp\nvd-data
+      -DsuppressionFiles=c:\新建文件夹\temp_20261109_01\backend\dependency-check-suppressions.xml
+      -DautoUpdate=false -DossindexAnalyzerEnabled=false
+
+结果：
+  [INFO] BUILD SUCCESS
+  [INFO] Total time:  49.938 s
+
+报告 boot-api/target/dependency-check-report.html 中的对应条目：
+  Highest Suppressed Identifiers
+    cpe:2.3:a:prometheus:prometheus:1.16.8:*:*:*:*:*:*:*  suppressed (Confidence: Highest)
+    Notes: micrometer-registry-prometheus 被 CPE 匹配到 Prometheus 服务端。
+           CVE-2026-42154 影响服务端 /api/v1/read，与 JVM 指标导出无关。
+  Suppressed Vulnerabilities
+    CVE-2026-42154  suppressed
+
+即：漏洞仍被识别，只是按「已判定误报」计入 suppressed，而不是从报告里消失。
+其余 CVSS ≥ 7 的条目（如报告里列出的 hibernate-validator CVE-2025-15104）不受影响。

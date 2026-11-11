@@ -73,6 +73,8 @@ jobs:
           key: nvd-data-v1
       # OSS Index 已停止匿名访问，未配凭据时返回 401 并中断整个分析，故关闭该分析器；
       # 漏洞判定完全基于 NVD 数据（通过 NVD_API_KEY 提升配额）。
+      # 抑制清单只收「按 CPE 误匹配」的条目（Prometheus 服务端 CPE ↔ JVM 指标库），
+      # 每条都写明了误报依据与复核日期，不放宽 failBuildOnCVSS。
       - name: 依赖漏洞（OWASP dependency-check）
         run: >-
           mvn -B -ntp -f backend/pom.xml
@@ -80,6 +82,7 @@ jobs:
           -DfailBuildOnCVSS=7
           -DnvdApiKey=${{ secrets.NVD_API_KEY }}
           -DdataDirectory=${{ github.workspace }}/.cache/dependency-check-data
+          -DsuppressionFiles=${{ github.workspace }}/backend/dependency-check-suppressions.xml
           -DossindexAnalyzerEnabled=false
       - name: 归档 SBOM 与覆盖率
         if: always()

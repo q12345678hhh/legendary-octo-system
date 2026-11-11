@@ -17,6 +17,7 @@
 | `log-hygiene.txt` | 载荷标记不得落日志 | 作业载荷里的 `PAYLOAD_MARK` 在两个进程日志中出现 0 次 |
 | `frontend-verify.txt` | 前端 `pnpm -r typecheck / test / build` | 四个包全部通过：`lowcode-runtime` 3、`design-system` 3、`api-client` 6、`apps/web` 15 个用例；`dist/index.html` 存在 |
 | `db-verify.txt` | `scripts/db-verify.ps1` 全量输出（含 V4） | 空库安装 4 个版本（`4|-2118030789`）、RLS 9/9、并发认领不同行、V2→V4 迁移 3.9s、50 万行下探针最慢 33.6ms 且超 1s 的 0 条、索引命中 `platform_outbox_dispatch_idx`、篡改 checksum 后 validate 退出码 1 |
+| `dependency-check.txt` | 依赖漏洞门禁对 Prometheus 服务端 CPE 误报的复现、判定与复测 | 本地复现得到与 CI 一致的 `CVE-2026-42154(7.5)` 行；加抑制后 `BUILD SUCCESS`，报告中该条目转入 `Suppressed Vulnerabilities`，`failBuildOnCVSS=7` 未放宽 |
 | `ci-run.txt` | 该提交在 GitHub Actions 的结果 | 见文末（提交后补录） |
 
 复现命令（需要 WSL 里的 PostgreSQL 与 MinIO 容器、JDK 21、pnpm）：
@@ -65,6 +66,12 @@ platform_jobs_state_total{state="queued"} 1.0
 **4. 密钥扫描把取证产物当成泄露**
 
 `idempotency.txt` 里的 `key=<uuid>` 命中 gitleaks 的 generic-api-key 规则（关键字 `key` + 等号 + 高熵值），`log-hygiene.txt` 的 `SECRET_MARKER_…` 也贴着实测凭据的命名习惯。产物里没有任何真实凭据，但门禁应当保持严格，所以改写成中文标签 `幂等键=` 与 `PAYLOAD_MARK_…`，而不是给扫描规则加白名单。
+
+**5. 依赖漏洞扫描把 Java 指标库当成 Prometheus 服务端**
+
+CI 的 `backend` 作业只在「依赖漏洞」一步失败：`micrometer-registry-prometheus-1.16.8.jar` 被 CPE 匹配成 `cpe:2.3:a:prometheus:prometheus`，命中 `CVE-2026-42154`（7.5）。用全新 NVD 数据目录按 CI 原命令复现（约 36 分钟），得到逐字一致的一行，排除同步超时与缓存问题。该 CVE 描述的是 Prometheus 服务端 `/api/v1/read` 的 snappy 内存放大，而 Micrometer 只是 JVM 的指标编码器，不实现该接口。
+
+修复：`backend/dependency-check-suppressions.xml` 只抑制「这两个 Maven 坐标 × Prometheus 服务端 CPE」，每条写清误报依据与复核日期；`failBuildOnCVSS=7` 不动，其他高危仍然阻断。复测 `BUILD SUCCESS`，报告里该 CVE 进入 `Suppressed Vulnerabilities` 而不是消失，详见 `dependency-check.txt`。这里没有选择「把阈值调高」或「跳过该步骤」，因为那会同时放过真实高危依赖。
 
 ## 口径说明
 - 占位认证（`X-Tenant-Id` / `X-Subject-Id`）只用于骨架与负例演示，**禁止在共享环境启用**；真实身份在 WP02-02 替换。
