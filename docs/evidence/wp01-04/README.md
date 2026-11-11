@@ -8,13 +8,13 @@
 | 文件 | 内容 | 关键结果 |
 |---|---|---|
 | `db-migration.txt` | 真实库上的 Flyway 版本与四张新表 RLS 状态 | 启动前后均为 `1 2 3 4`；`platform_idempotency`、`platform_job`、`platform_file`、`platform_outbox_replay` 各 1 条策略且 `rls=true force=true` |
-| `idempotency.txt` | 同一 `Idempotency-Key` 连发两次 + 同键换载荷 | 两次 `201` 且 `jobId=f54c201c…` 相同、`Idempotent-Replayed: true`；`platform_job` 仅 1 行；换载荷 `422 IDEMPOTENCY_KEY_REUSED` |
-| `jobs.txt` | 作业成功与取消 | `1a291da2…` 到 `succeeded`、`progress=100`、`traceId=0b6989a6…`；`9a547d56…` 到 `cancelled`、`cancelRequested=true` |
+| `idempotency.txt` | 同一 `Idempotency-Key` 连发两次 + 同键换载荷 | 两次 `201` 且 `jobId=938cd5c8…` 相同、`Idempotent-Replayed: true`；`platform_job` 仅 1 行；换载荷 `422 IDEMPOTENCY_KEY_REUSED` |
+| `jobs.txt` | 作业成功与取消 | `938cd5c8…` 到 `succeeded`、`progress=100`、`traceId=426e6601…`；`a7ebce8d…` 到 `cancelled`、`cancelRequested=true` |
 | `dead-letter-replay.txt` | `fail-demo` 重试耗尽进死信 → 无原因回放被拒 → 带原因回放 | `attempts=2`、`lastError=IllegalStateException: 演示失败…`；短原因 `422 REPLAY_REASON_REQUIRED`；有效原因 `202 status=pending`；`platform_outbox_replay` 审计 1 行 |
 | `files.txt` | 预签名 PUT → complete → 扫描 → 下载 → 越权尝试 → URL 过期 | PUT `200`、`uploaded`/`clean`/`available`；下载内容与原文件一致；跨主体 `403 FILE_NOT_OWNED`；跨租户 `404 FILE_NOT_FOUND`；10s 后 MinIO 返回 `403 AccessDenied: Request has expired` |
-| `metrics.txt` | `/actuator/prometheus` 与 Worker 周期汇总日志 | `platform_jobs_submitted_total 3.0`、`platform_jobs_state_total{state="queued"} 3.0`、`platform_http_requests_total` 6 个状态、`platform_idempotency_total` 3 个结果；Worker 汇总 `outbox.dispatched=5 failed=6 files.scanned=1 jobs.state=4` |
-| `trace.txt` | 同一 trace 的跨进程关联 | `trace_id=0b6989a6…` 同时出现在 `platform_job` 行、API 日志（4 次）与 Worker 日志（3 次） |
-| `log-hygiene.txt` | 载荷标记不得落日志 | 作业载荷里的 `SECRET_MARKER` 在两个进程日志中出现 0 次 |
+| `metrics.txt` | `/actuator/prometheus` 与 Worker 周期汇总日志 | `platform_jobs_submitted_total 3.0`、`platform_jobs_state_total{state="queued"} 3.0`、`platform_http_requests_total` 6 个状态、`platform_idempotency_total` 3 个结果；Worker 汇总 `outbox.dispatched=3 failed=6 files.scanned=1 jobs.state=2` |
+| `trace.txt` | 同一 trace 的跨进程关联 | `trace_id=426e6601…` 同时出现在 `platform_job` 行、API 日志（4 次）与 Worker 日志（3 次） |
+| `log-hygiene.txt` | 载荷标记不得落日志 | 作业载荷里的 `PAYLOAD_MARK` 在两个进程日志中出现 0 次 |
 | `frontend-verify.txt` | 前端 `pnpm -r typecheck / test / build` | 四个包全部通过：`lowcode-runtime` 3、`design-system` 3、`api-client` 6、`apps/web` 15 个用例；`dist/index.html` 存在 |
 | `db-verify.txt` | `scripts/db-verify.ps1` 全量输出（含 V4） | 空库安装 4 个版本（`4|-2118030789`）、RLS 9/9、并发认领不同行、V2→V4 迁移 3.9s、50 万行下探针最慢 33.6ms 且超 1s 的 0 条、索引命中 `platform_outbox_dispatch_idx`、篡改 checksum 后 validate 退出码 1 |
 | `ci-run.txt` | 该提交在 GitHub Actions 的结果 | 见文末（提交后补录） |
@@ -62,8 +62,11 @@ platform_jobs_state_total{state="queued"} 1.0
 
 `Add-Evidence 'frontend-verify.txt' (@(... ($tests -split …) -join "`n" …) -join "`n")` 里先 `-join` 再塞进数组，PowerShell 把它当成嵌套对象，产物末尾出现 `dist/index.html exists=trueSystem.Object[]`。改为先算出 `$testLines` 再与固定行相加；同时把 `pnpm -r build` 加进脚本，避免 `dist` 是上一次的旧产物。
 
-## 口径说明
+**4. 密钥扫描把取证产物当成泄露**
 
+`idempotency.txt` 里的 `key=<uuid>` 命中 gitleaks 的 generic-api-key 规则（关键字 `key` + 等号 + 高熵值），`log-hygiene.txt` 的 `SECRET_MARKER_…` 也贴着实测凭据的命名习惯。产物里没有任何真实凭据，但门禁应当保持严格，所以改写成中文标签 `幂等键=` 与 `PAYLOAD_MARK_…`，而不是给扫描规则加白名单。
+
+## 口径说明
 - 占位认证（`X-Tenant-Id` / `X-Subject-Id`）只用于骨架与负例演示，**禁止在共享环境启用**；真实身份在 WP02-02 替换。
 - 预签名 URL 是 bearer 凭证：跨主体防护靠「签发前再授权 + 短 TTL + 对象键隔离」，无法做到单次使用；URL 过期由 MinIO 判定，应用侧不二次校验。
 - 死信回放只重投事件，不做业务补偿；`reason` 与操作人写审计表，是否可安全重投由操作人确认（处理器必须幂等）。

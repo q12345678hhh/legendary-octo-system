@@ -1,4 +1,4 @@
-﻿marker=SECRET_MARKER_44f824dcaab5
+﻿marker=PAYLOAD_MARK_5bcd8b6b20db
 api log contains marker=false
 worker log contains marker=false
 规则：只记录 ID/状态/错误类型，不记录请求体、文件内容与业务正文。

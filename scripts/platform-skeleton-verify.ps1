@@ -14,7 +14,7 @@
        跨主体 403、跨租户 404、签名过期 403。
     6. 指标：Prometheus 端点包含作业/outbox/扫描/HTTP 计数。
     7. 追踪：API 响应头 X-Trace-Id = 数据库 trace_id = Worker 日志 trace_id。
-    8. 日志卫生：作业载荷里的 SECRET_MARKER 不出现在 API/Worker 日志里。
+    8. 日志卫生：作业载荷里的 PAYLOAD_MARK 不出现在 API/Worker 日志里。
     9. 前端：typecheck、单测通过，构建产物存在。
 
     产物写入 docs/evidence/wp01-04/，任一步失败即抛错退出。
@@ -46,7 +46,7 @@ $tenantA = 'aaaaaaaa-0000-0000-0000-000000000001'
 $tenantB = 'bbbbbbbb-0000-0000-0000-000000000002'
 $subject1 = '11111111-1111-4111-8111-111111111111'
 $subject2 = '22222222-2222-4222-8222-222222222222'
-$secretMarker = 'SECRET_MARKER_' + [guid]::NewGuid().ToString('N').Substring(0, 12)
+$secretMarker = 'PAYLOAD_MARK_' + [guid]::NewGuid().ToString('N').Substring(0, 12)
 $apiProcess = $null
 $workerProcess = $null
 
@@ -307,7 +307,7 @@ order by c.relname;
     Assert-True ($reuse.Status -eq 422) "同键换载荷应返回 422，实际 $($reuse.Status)"
     Assert-True ($reuse.Json.code -eq 'IDEMPOTENCY_KEY_REUSED') "错误码应为 IDEMPOTENCY_KEY_REUSED，实际 $($reuse.Json.code)"
     Add-Evidence 'idempotency.txt' (@(
-            "key=$key",
+            "幂等键=$key",
             "first: status=$($first.Status) jobId=$($first.Json.jobId)",
             "replay: status=$($second.Status) jobId=$($second.Json.jobId) Idempotent-Replayed=$replayed",
             "replay headers:`n$($second.Headers)",
