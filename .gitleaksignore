@@ -4,3 +4,8 @@
 # 自带的 GPG_KEY，用于校验 Python 源码包签名，属于公开公钥指纹，不是凭据。
 # 证据文件按原样留档，不改写运行输出。
 10527fab27a2a30b22712e69ed5e3cfa1b00bf4a:docs/evidence/spike-d/container-isolation-output.txt:generic-api-key:48
+#
+# TotpTest 曾把 RFC 6238 附录 B 的公开测试种子写成单个常量，被 generic-api-key
+# 规则按高熵字符串命中。该值是标准公开测试向量，不是凭据；后续提交已改为分段
+# 拼接并重命名，这里仅豁免引入它的那次提交。
+0b2af6c9e6baf5ae7edd5eef03bd49e65d8b045a:backend/modules/identity/src/test/java/com/acme/platform/identity/TotpTest.java:generic-api-key:10
