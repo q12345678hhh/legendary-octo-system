@@ -224,7 +224,7 @@ try {
     $emptyChecksums = Get-Checksums $emptyDb
     Write-Host '  校验和（空库）：'
     $emptyChecksums | ForEach-Object { Write-Host "    $_" }
-    Assert-True ($emptyChecksums.Count -eq 6) "空库应安装 6 个版本，实际 $($emptyChecksums.Count)"
+    Assert-True ($emptyChecksums.Count -eq 7) "空库应安装 7 个版本，实际 $($emptyChecksums.Count)"
 
     # ---------------------------------------------------------------- 2 RLS
     Write-Step '2 RLS 正向与负例（platform_app 身份）'
@@ -338,7 +338,7 @@ COMMIT;
         Assert-True ($emptyChecksums -contains $line) "上一版本校验和与空库不一致（历史文件被改？）：$line"
         Assert-True ($afterChecksums -contains $line) "升级后校验和变化：$line"
     }
-    Assert-True ($afterChecksums.Count -eq 6) "升级后应有 6 个版本，实际 $($afterChecksums.Count)"
+    Assert-True ($afterChecksums.Count -eq 7) "升级后应有 7 个版本，实际 $($afterChecksums.Count)"
     # V6 在授权之后创建新表，重新授权确保平台应用账号可读写租户生命周期表
     Grant-AppRole $upgradeDb
 
@@ -385,6 +385,39 @@ COMMIT;
     Write-Host "  $lifecycleSummary"
     Write-Host '  状态机、冻结门禁、冷静期删除、审计链、同号跨租户与支持访问时限全部通过'
 
+    # ---------------------------------------------------------------- 5c 身份与会话
+    Write-Step '5c 身份与会话：账号、成员、会话、MFA、令牌与跨租户拒绝'
+    $identity = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '70-identity.sql'
+    Write-Host $identity.Output
+    Assert-True ($identity.Output -match 'WP02-02 身份与会话数据库断言通过') '身份 SQL 断言未通过'
+
+    if (Test-Path $pinnedJavaHome) { $env:JAVA_HOME = $pinnedJavaHome }
+    # 与 5b 一致：必须从聚合 POM 走 reactor，单独模块 POM 解析不到同仓 platform/tenancy。
+    $identityArgs = @(
+        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'),
+        '-pl', 'modules/identity', '-am', 'test',
+        '-Dtest=IdentityDbTest',
+        '-Dsurefire.failIfNoSpecifiedTests=false',
+        '-DfailIfNoTests=false',
+        '-Djacoco.skip=true',
+        "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
+        "-Dplatform.db.user=$AppUser",
+        "-Dplatform.db.password=$AppPassword"
+    )
+    if ($env:PLATFORM_MAVEN_REPO) { $identityArgs += "-Dmaven.repo.local=$($env:PLATFORM_MAVEN_REPO)" }
+    $ErrorActionPreference = 'Continue'
+    $identityOut = & mvn @identityArgs 2>&1
+    $identityCode = $LASTEXITCODE
+    if ($identityCode -ne 0) {
+        throw "身份与会话用例失败（exit=$identityCode）：`n$((($identityOut | ForEach-Object { "$_" }) -join "`n"))"
+    }
+    $identityReport = Join-Path $repoRoot 'backend\modules\identity\target\surefire-reports\com.acme.platform.identity.IdentityDbTest.txt'
+    Assert-True (Test-Path $identityReport) "找不到身份用例报告：$identityReport"
+    $identitySummary = (Get-Content -Encoding UTF8 $identityReport | Where-Object { $_ -match '^Tests run:' } | Select-Object -First 1)
+    Assert-True ($identitySummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "身份用例未执行：$identitySummary"
+    Write-Host "  $identitySummary"
+    Write-Host '  无账号员工、再雇佣、一人多雇佣、账号更换、auth_version 失效与跨租户令牌拒绝全部通过'
+
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'
     Invoke-Psql -Database $upgradeDb -User $OwnerUser -Password $OwnerPassword -Sql `
@@ -423,7 +456,7 @@ COMMIT;
     Write-Host '  事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户'
 
     Write-Host ''
-    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、并发、索引、锁等待评估、连接池隔离。'
+    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、并发、索引、锁等待评估、连接池隔离。'
 } finally {
     if (-not $KeepDatabases -and $script:pg) {
         foreach ($db in @($emptyDb, $upgradeDb)) {

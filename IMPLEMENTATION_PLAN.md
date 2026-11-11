@@ -414,12 +414,29 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP02-02 身份与会话
 
-- [ ] 建立 User、TenantMember、Actor、Person 和 Employment 分离模型。
-- [ ] 完成邀请、激活、密码策略、MFA、会话、设备、API 令牌、服务账号和撤销。
-- [ ] 高权限强制 MFA；主体禁用或 auth_version 变化后会话及时失效。
-- [ ] 预留 OIDC/SAML/SCIM 模型，但不让 P1 连接器阻塞 P0。
+- [x] 建立 User、TenantMember、Actor、Person 和 Employment 分离模型。
+- [x] 完成邀请、激活、密码策略、MFA、会话、设备、API 令牌、服务账号和撤销。
+- [x] 高权限强制 MFA；主体禁用或 auth_version 变化后会话及时失效。
+- [x] 预留 OIDC/SAML/SCIM 模型，但不让 P1 连接器阻塞 P0。
 
 **验收证据：** 无账号员工、再雇佣、一人多雇佣和账号更换场景通过；过期、撤销和跨租户令牌全部拒绝。
+
+**完成情况（WP02-02）：**
+
+| 项目 | 落点 | 证据 |
+| --- | --- | --- |
+| 分离模型 | `organization_person`/`organization_employment`；`identity_user_account`/`identity_tenant_member`/`identity_actor`；`identity_member_account_history` | `docs/evidence/wp02-02/identity-scenarios.txt`（无账号员工、再雇佣、一人多雇佣、账号更换） |
+| 邀请与激活 | `InvitationService`、`identity_invitation`（只存哈希、一次性）、首成员自动 owner 并强制 MFA | `identity-scenarios.txt`；运行手册 §5 |
+| 密码策略 | `PasswordPolicy`（12–128、四类中三类、弱口令、邮箱本地部分、最近 5 次） | `backend-tests.txt`（`PasswordPolicyTest` 3/3） |
+| MFA | RFC 6238 TOTP + AES-256-GCM 密钥、10 个一次性恢复码、挑战 5 分钟/10 次；高权限强制 | `identity-scenarios.txt`（注册/确认/挑战/禁止关闭） |
+| 会话与撤销 | 32 字节令牌 + SHA-256、绝对 8h/空闲 30m、`plt_session` HttpOnly、CSRF 双提交、`auth_version` 代际失效 | `auth-negative.txt`（401/403/CSRF）、`identity-scenarios.txt`（撤销/过期/代换/跨租户） |
+| 服务账号与令牌 | `ServiceAccountService`、Bearer 令牌（≤90 天、只存哈希、停用即撤销） | `identity-scenarios.txt`（跨租户 `TOKEN_INVALID`、撤销 `TOKEN_REVOKED`） |
+| 身份提供商预留 | `identity_identity_provider`、`IdentityProviderService`（oidc/saml/scim，active → 409） | `backend-tests.txt`（`IdentityProviderServiceTest`） |
+| 数据库与 RLS | `V7__identity_and_session.sql`（16 张租户表，全部 FORCE RLS） | `db-verify.txt`（RLS 31/31、`70-identity.sql`、`IdentityDbTest`） |
+| API 与契约 | `/api/v1/auth/**`、`/members/**`、`/service-accounts/**`、`/identity-providers/**`、`/people/**`；OpenAPI 1.3.0 新增 34 条路径、14 个 schema，删除 `X-Subject-Id` | `contract-check.txt`（7 份契约 PASS，基线已重冻结） |
+| 运行手册与证据 | `docs/runbooks/identity-session.md`、`docs/evidence/wp02-02/` | `backend-tests.txt`、`db-verify.txt`、`coverage-gate.txt` |
+
+**遗留与说明（WP02-02）：** ①P0 无邮件服务，邀请/重置令牌由接口一次性返回，P1 接邮件后改为只投递；②OIDC/SAML/SCIM 只落模型与配置，`active` 返回 409，不建立外部连接；③平台域 `/platform/**` 仍用运营占位头，独立认证域属 WP02-07；④`/api/v1/people/**` 读接口只要求登录，细粒度数据范围与字段权限由 WP02-04 收口；⑤`X-Subject-Id` 已删除（破坏性变更），基线重冻结后门禁通过。
 
 ### WP02-03 组织和生效日期
 

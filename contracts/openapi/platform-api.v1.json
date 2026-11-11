@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.2.0",
-    "description": "平台骨架契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期与支持访问。业务契约随工作包冻结后追加。"
+    "version": "1.3.0",
+    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问，以及身份与会话（登录、MFA、邀请、成员管理、服务账号令牌、自然人雇佣）。认证主体自 1.3.0 起只来自会话 Cookie 或 Bearer 令牌，X-Subject-Id 已废弃。"
   },
   "servers": [
     {
@@ -46,7 +46,6 @@
         "summary": "列出当前租户的异步作业",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/Limit" }
         ],
         "responses": {
@@ -70,7 +69,6 @@
         "description": "作业与 outbox 事件同事务落库；带 Idempotency-Key 时重复提交只建一个作业。",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/IdempotencyKey" }
         ],
         "requestBody": {
@@ -102,7 +100,6 @@
         "summary": "查询作业状态与进度",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/JobId" }
         ],
         "responses": {
@@ -125,7 +122,6 @@
         "description": "只置取消标记，由 Worker 在下一个进度点停止并置为 cancelled。",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/JobId" },
           { "$ref": "#/components/parameters/IdempotencyKey" }
         ],
@@ -149,7 +145,6 @@
         "summary": "列出当前租户的文件元数据",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/Limit" }
         ],
         "responses": {
@@ -174,7 +169,6 @@
         "summary": "创建上传会话并返回预签名 PUT URL",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/IdempotencyKey" }
         ],
         "requestBody": {
@@ -204,7 +198,6 @@
         "summary": "确认对象已上传，触发扫描",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/FileId" },
           { "$ref": "#/components/parameters/IdempotencyKey" }
         ],
@@ -229,7 +222,6 @@
         "description": "每次下载都校验当前主体；只有 clean 的文件才会签发，URL 不能跨主体复用。",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/FileId" }
         ],
         "responses": {
@@ -253,7 +245,6 @@
         "summary": "列出当前租户的死信事件",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/Limit" }
         ],
         "responses": {
@@ -279,7 +270,6 @@
         "description": "必须提供 8-500 字符的原因，写入 platform_outbox_replay 审计表；只把事件重置为 pending。",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/EventId" },
           { "$ref": "#/components/parameters/IdempotencyKey" }
         ],
@@ -311,8 +301,7 @@
         "summary": "注册工作助手设备",
         "description": "客户端提交本地生成的 ECDSA P-256 公钥；同一主体同一公钥重复注册是幂等的。响应下发签名策略与验签公钥，管理员无法通过本接口开启采集。",
         "parameters": [
-          { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" }
+          { "$ref": "#/components/parameters/TenantHeader" }
         ],
         "requestBody": {
           "required": true,
@@ -401,7 +390,6 @@
         "description": "撤销后该设备的上传、心跳与策略拉取一律 403，必须先由管理员重新登记。",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/WorkAssistantDeviceId" }
         ],
         "responses": {
@@ -475,8 +463,7 @@
         "summary": "追加租户排除项",
         "description": "只接受 additional_exclusions；出现任何未知字段（删除列表、采集开关等）返回 422。",
         "parameters": [
-          { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" }
+          { "$ref": "#/components/parameters/TenantHeader" }
         ],
         "requestBody": {
           "required": true,
@@ -529,8 +516,7 @@
         "summary": "更新品牌、语言、时区与功能开关",
         "description": "注销冷静期与已删除状态下配置锁定，返回 423 TENANT_CONFIG_LOCKED。",
         "parameters": [
-          { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" }
+          { "$ref": "#/components/parameters/TenantHeader" }
         ],
         "requestBody": {
           "required": true,
@@ -560,8 +546,7 @@
         "summary": "申请注销并进入冷静期",
         "description": "写入 closing_requested_at 与 cooling_off_until；冷静期内仍可撤回、导出与申诉。",
         "parameters": [
-          { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" }
+          { "$ref": "#/components/parameters/TenantHeader" }
         ],
         "requestBody": {
           "required": true,
@@ -591,8 +576,7 @@
         "summary": "冷静期内撤回注销",
         "description": "该路径在冻结/注销写阻断中放行，保证用户始终能撤回。",
         "parameters": [
-          { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" }
+          { "$ref": "#/components/parameters/TenantHeader" }
         ],
         "requestBody": {
           "required": true,
@@ -622,8 +606,7 @@
         "summary": "受控导出租户配置与生命周期数据",
         "description": "冻结与注销冷静期仍可用；导出只含配置、配额、审计与申诉，不含业务正文，并写入 exported 审计。",
         "parameters": [
-          { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" }
+          { "$ref": "#/components/parameters/TenantHeader" }
         ],
         "responses": {
           "200": {
@@ -655,8 +638,7 @@
         "summary": "冻结或注销冷静期内提交申诉",
         "description": "只有 frozen 与 closing 可申诉；该路径在写阻断中放行。",
         "parameters": [
-          { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" }
+          { "$ref": "#/components/parameters/TenantHeader" }
         ],
         "requestBody": {
           "required": true,
@@ -711,7 +693,6 @@
         "description": "条件更新保证 used + amount 不超过 limit；冻结状态返回 423，超限返回 429。",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/QuotaKey" }
         ],
         "requestBody": {
@@ -747,7 +728,6 @@
         "description": "编号按租户独立递增，不同租户可以出现相同编号；冻结状态返回 423。",
         "parameters": [
           { "$ref": "#/components/parameters/TenantHeader" },
-          { "$ref": "#/components/parameters/SubjectHeader" },
           { "$ref": "#/components/parameters/BusinessScope" }
         ],
         "responses": {
@@ -1226,22 +1206,1035 @@
         }
       }
     }
+,
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "summary": "邮箱密码登录",
+        "description": "成功下发 plt_session 与 plt_csrf Cookies；已启用 MFA 时返回 202 与一次性 mfaToken，不下发会话。失败 5 次锁定 15 分钟。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 12, "maxLength": 128 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已登录",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "202": {
+            "description": "需要 MFA，返回一次性 mfaToken",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "423": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/verify": {
+      "post": {
+        "operationId": "verifyMfaChallenge",
+        "summary": "用 TOTP 或恢复码完成登录挑战",
+        "description": "票据 5 分钟有效、最多 10 次尝试，成功后下发会话 Cookie。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["mfaToken", "code"],
+                "properties": {
+                  "mfaToken": { "type": "string" },
+                  "code": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "验证通过并下发会话",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "429": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/invitations/accept": {
+      "post": {
+        "operationId": "acceptInvitation",
+        "summary": "接受邀请并设置密码",
+        "description": "邀请令牌一次性使用，库中只存哈希；成功后直接签发会话。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["tenantId", "activationToken", "password"],
+                "properties": {
+                  "tenantId": { "type": "string", "format": "uuid" },
+                  "activationToken": { "type": "string" },
+                  "password": { "type": "string", "minLength": 12, "maxLength": 128 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已激活并登录",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LoginResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "summary": "登出并撤销当前会话",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "204": { "description": "已登出并清除 Cookies" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "getCurrentIdentity",
+        "summary": "当前认证主体与成员权限",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "当前主体",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MeView" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/password/change": {
+      "post": {
+        "operationId": "changeOwnPassword",
+        "summary": "修改自己的密码",
+        "description": "必须校验当前密码；新密码不得与最近 5 次重复；成功后撤销全部会话，需重新登录。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["currentPassword", "newPassword"],
+                "properties": {
+                  "currentPassword": { "type": "string" },
+                  "newPassword": { "type": "string", "minLength": 12, "maxLength": 128 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "已修改并撤销全部会话" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "get": {
+        "operationId": "listOwnSessions",
+        "summary": "列出自己的活跃会话",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "活跃会话",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SessionView" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/sessions/{sessionId}": {
+      "delete": {
+        "operationId": "revokeOwnSession",
+        "summary": "撤销自己的某个会话",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SessionIdPath" }
+        ],
+        "responses": {
+          "204": { "description": "已撤销" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/sessions/revoke-all": {
+      "post": {
+        "operationId": "revokeAllOwnSessions",
+        "summary": "撤销自己的全部会话",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "204": { "description": "已撤销并清除 Cookies" },
+          "401": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/mfa": {
+      "get": {
+        "operationId": "getMfaStatus",
+        "summary": "查询 MFA 状态与剩余恢复码数量",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "MFA 状态",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MfaStatusView" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/totp/start": {
+      "post": {
+        "operationId": "startTotpEnrollment",
+        "summary": "开始 TOTP 绑定",
+        "description": "返回 Base32 密钥与 otpauth URI；密钥在库中以 AES-256-GCM 加密，未配置密钥时返回 503 MFA_UNAVAILABLE。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "待确认的绑定信息",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MfaEnrollment" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "503": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/totp/confirm": {
+      "post": {
+        "operationId": "confirmTotpEnrollment",
+        "summary": "确认 TOTP 并领取恢复码",
+        "description": "返回 10 个一次性恢复码明文，库中只存哈希；同时把当前会话标记为已完成 MFA。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code"],
+                "properties": {
+                  "code": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "恢复码明文，仅此一次返回",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/auth/mfa/disable": {
+      "post": {
+        "operationId": "disableMfa",
+        "summary": "关闭 MFA",
+        "description": "必须已完成一次 MFA 验证；被强制 MFA 的成员返回 409 MFA_REQUIRED_FOR_PRIVILEGED。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "204": { "description": "已关闭" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/members": {
+      "get": {
+        "operationId": "listMembers",
+        "summary": "成员列表",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "成员",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MemberView" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/members/invitations": {
+      "post": {
+        "operationId": "inviteMember",
+        "summary": "邀请成员",
+        "description": "要求管理员且已完成 MFA。首个成员自动成为 owner 并强制 MFA。P0 无邮件服务，激活令牌在响应中一次性返回。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "displayName": { "type": "string", "maxLength": 200 },
+                  "personId": { "type": "string", "format": "uuid" },
+                  "admin": { "type": "boolean" },
+                  "mfaRequired": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已创建邀请",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InvitationIssued" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/members/{memberId}": {
+      "patch": {
+        "operationId": "updateMember",
+        "summary": "启停成员或调整管理员 / 强制 MFA 标志",
+        "description": "停用会同时停用账号与主体、撤销全部会话并递增 auth_version；不允许停用自己。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/MemberIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "enum": ["invited", "active", "suspended", "disabled"] },
+                  "admin": { "type": "boolean" },
+                  "mfaRequired": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的成员",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MemberView" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/members/{memberId}/account": {
+      "patch": {
+        "operationId": "replaceMemberAccount",
+        "summary": "更换成员绑定的登录账号",
+        "description": "旧账号停用并撤销会话，变更写入 identity_member_account_history；新账号继承成员的强制 MFA 标志。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/MemberIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["newUserId", "reason"],
+                "properties": {
+                  "newUserId": { "type": "string", "format": "uuid" },
+                  "reason": { "type": "string", "maxLength": 500 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更换后的成员",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MemberView" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/members/{memberId}/reset-password": {
+      "post": {
+        "operationId": "resetMemberPassword",
+        "summary": "管理员重置成员密码",
+        "description": "撤销全部会话、递增 auth_version、作废旧邀请，返回一次性重置令牌。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/MemberIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "一次性重置令牌",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/InvitationIssued" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/service-accounts": {
+      "get": {
+        "operationId": "listServiceAccounts",
+        "summary": "服务账号列表",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "服务账号",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ServiceAccount" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "createServiceAccount",
+        "summary": "创建服务账号",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string", "maxLength": 100 },
+                  "description": { "type": "string", "maxLength": 500 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已创建",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ServiceAccount" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/service-accounts/{serviceAccountId}": {
+      "delete": {
+        "operationId": "disableServiceAccount",
+        "summary": "停用服务账号并撤销全部令牌",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/ServiceAccountIdPath" }
+        ],
+        "responses": {
+          "204": { "description": "已停用" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/service-accounts/{serviceAccountId}/tokens": {
+      "get": {
+        "operationId": "listServiceTokens",
+        "summary": "服务账号令牌列表",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/ServiceAccountIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "令牌（不含明文与哈希）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/ApiTokenView" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "issueServiceToken",
+        "summary": "签发服务账号令牌",
+        "description": "有效期 1-90 天；明文只在本次响应出现一次，库中只存 SHA-256。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/ServiceAccountIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string", "maxLength": 100 },
+                  "scopes": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  "ttlDays": { "type": "integer", "minimum": 1, "maximum": 90, "default": 30 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "新令牌，明文仅此一次",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ApiTokenIssued" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/service-accounts/{serviceAccountId}/tokens/{tokenId}": {
+      "delete": {
+        "operationId": "revokeServiceToken",
+        "summary": "撤销服务账号令牌",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/ServiceAccountIdPath" },
+          { "$ref": "#/components/parameters/TokenIdPath" }
+        ],
+        "responses": {
+          "204": { "description": "已撤销" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/identity-providers": {
+      "get": {
+        "operationId": "listIdentityProviders",
+        "summary": "身份提供商预留配置列表",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "身份提供商",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/IdentityProvider" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "createIdentityProvider",
+        "summary": "创建 OIDC/SAML/SCIM 预留配置",
+        "description": "P0 未接连接器，status 只允许 draft 或 disabled；传 active 返回 409 CONNECTOR_NOT_AVAILABLE。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["providerType", "name"],
+                "properties": {
+                  "providerType": { "type": "string", "enum": ["oidc", "saml", "scim"] },
+                  "name": { "type": "string", "maxLength": 100 },
+                  "config": { "type": "object", "additionalProperties": true },
+                  "status": { "type": "string", "enum": ["draft", "disabled", "active"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已创建",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IdentityProvider" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/identity-providers/{providerId}": {
+      "patch": {
+        "operationId": "updateIdentityProvider",
+        "summary": "更新身份提供商配置或状态",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/ProviderIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "config": { "type": "object", "additionalProperties": true },
+                  "status": { "type": "string", "enum": ["draft", "disabled", "active"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的配置",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/IdentityProvider" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/people": {
+      "get": {
+        "operationId": "listPeople",
+        "summary": "自然人列表",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "自然人",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Person" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "createPerson",
+        "summary": "新建自然人与首个雇佣关系",
+        "description": "无账号员工只建 Person + Employment，不创建登录账号。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["displayName", "employmentNo", "effectiveFrom"],
+                "properties": {
+                  "displayName": { "type": "string", "maxLength": 200 },
+                  "primaryEmail": { "type": "string", "format": "email" },
+                  "employmentNo": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" },
+                  "effectiveFrom": { "type": "string", "format": "date" },
+                  "jobTitle": { "type": "string", "maxLength": 200 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已创建",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Person" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/people/{personId}": {
+      "get": {
+        "operationId": "getPerson",
+        "summary": "自然人详情",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/PersonIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "自然人",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Person" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/people/{personId}/employments": {
+      "get": {
+        "operationId": "listEmployments",
+        "summary": "自然人的雇佣历史",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/PersonIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "雇佣记录（含已结束）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Employment" }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "addEmployment",
+        "summary": "新增雇佣关系（一人多雇佣 / 再雇佣）",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/PersonIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["employmentNo", "effectiveFrom"],
+                "properties": {
+                  "employmentNo": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$" },
+                  "effectiveFrom": { "type": "string", "format": "date" },
+                  "jobTitle": { "type": "string", "maxLength": 200 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已新增",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Employment" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/employments/{employmentId}/end": {
+      "patch": {
+        "operationId": "endEmployment",
+        "summary": "结束雇佣关系",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/EmploymentIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["effectiveTo"],
+                "properties": {
+                  "effectiveTo": { "type": "string", "format": "date" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已结束",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Employment" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    }
   },
   "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "plt_session",
+        "description": "浏览器会话 Cookie，HttpOnly；写操作还必须带与 plt_csrf 一致的 X-CSRF-Token 头"
+      },
+      "serviceToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "服务账号 API 令牌，明文只在创建响应出现一次，最长 90 天"
+      }
+    },
     "parameters": {
+      "SessionIdPath": {
+        "name": "sessionId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "MemberIdPath": {
+        "name": "memberId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "ServiceAccountIdPath": {
+        "name": "serviceAccountId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "TokenIdPath": {
+        "name": "tokenId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "ProviderIdPath": {
+        "name": "providerId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "PersonIdPath": {
+        "name": "personId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "EmploymentIdPath": {
+        "name": "employmentId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
       "TenantHeader": {
         "name": "X-Tenant-Id",
         "in": "header",
         "required": true,
         "description": "租户 ID（骨架阶段由网关注入，WP02-02 起改为会话解析）",
         "schema": { "type": "string", "format": "uuid" }
-      },
-      "SubjectHeader": {
-        "name": "X-Subject-Id",
-        "in": "header",
-        "required": true,
-        "description": "认证主体占位，仅用于骨架与越权负例，共享环境必须关闭",
-        "schema": { "type": "string" }
       },
       "IdempotencyKey": {
         "name": "Idempotency-Key",
@@ -1353,6 +2346,196 @@
       }
     },
     "schemas": {
+      "SessionPrincipal": {
+        "type": "object",
+        "required": ["tenantId", "actorId", "actorType", "mfaSatisfied", "owner", "admin", "mfaRequired"],
+        "properties": {
+          "tenantId": { "type": "string", "format": "uuid" },
+          "actorId": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "memberId": { "type": "string", "format": "uuid" },
+          "sessionId": { "type": "string", "format": "uuid" },
+          "actorType": { "type": "string", "enum": ["user", "service", "ai", "external"] },
+          "email": { "type": "string" },
+          "displayName": { "type": "string" },
+          "mfaSatisfied": { "type": "boolean" },
+          "owner": { "type": "boolean" },
+          "admin": { "type": "boolean" },
+          "mfaRequired": { "type": "boolean" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": { "type": "string", "enum": ["session", "mfa_required"] },
+          "principal": { "$ref": "#/components/schemas/SessionPrincipal" },
+          "mfaToken": { "type": "string" },
+          "mfaExpiresAt": { "type": "string", "format": "date-time" },
+          "sessionExpiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "MeView": {
+        "type": "object",
+        "required": ["tenantId", "actorId", "actorType", "mfaSatisfied", "owner", "admin", "mfaRequired", "mfaEnabled"],
+        "properties": {
+          "tenantId": { "type": "string", "format": "uuid" },
+          "actorId": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "memberId": { "type": "string", "format": "uuid" },
+          "actorType": { "type": "string" },
+          "email": { "type": "string" },
+          "displayName": { "type": "string" },
+          "owner": { "type": "boolean" },
+          "admin": { "type": "boolean" },
+          "mfaRequired": { "type": "boolean" },
+          "mfaSatisfied": { "type": "boolean" },
+          "mfaEnabled": { "type": "boolean" }
+        }
+      },
+      "SessionView": {
+        "type": "object",
+        "required": ["id", "current"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "deviceId": { "type": "string", "format": "uuid" },
+          "deviceLabel": { "type": "string" },
+          "ip": { "type": "string" },
+          "userAgent": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "lastSeenAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "current": { "type": "boolean" }
+        }
+      },
+      "MfaStatusView": {
+        "type": "object",
+        "required": ["enabled", "remainingRecoveryCodes"],
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "remainingRecoveryCodes": { "type": "integer" }
+        }
+      },
+      "MfaEnrollment": {
+        "type": "object",
+        "required": ["secret", "otpauthUri"],
+        "properties": {
+          "secret": { "type": "string" },
+          "otpauthUri": { "type": "string" }
+        }
+      },
+      "MemberView": {
+        "type": "object",
+        "required": ["id", "status", "owner", "admin", "mfaRequired"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "personId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" },
+          "displayName": { "type": "string" },
+          "status": { "type": "string", "enum": ["invited", "active", "suspended", "disabled"] },
+          "owner": { "type": "boolean" },
+          "admin": { "type": "boolean" },
+          "mfaRequired": { "type": "boolean" }
+        }
+      },
+      "InvitationIssued": {
+        "type": "object",
+        "required": ["memberId", "userId", "email", "activationToken", "expiresAt", "owner", "admin", "mfaRequired"],
+        "properties": {
+          "memberId": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" },
+          "activationToken": { "type": "string", "description": "一次性令牌，仅本响应返回" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "owner": { "type": "boolean" },
+          "admin": { "type": "boolean" },
+          "mfaRequired": { "type": "boolean" }
+        }
+      },
+      "ServiceAccount": {
+        "type": "object",
+        "required": ["id", "actorId", "name", "status"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "actorId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ApiTokenIssued": {
+        "type": "object",
+        "required": ["id", "name", "expiresAt", "token"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "scopes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "token": { "type": "string", "description": "明文令牌，仅本响应返回" }
+        }
+      },
+      "ApiTokenView": {
+        "type": "object",
+        "required": ["id", "name", "prefix"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "prefix": { "type": "string" },
+          "scopes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "revokedAt": { "type": "string", "format": "date-time" },
+          "lastUsedAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "IdentityProvider": {
+        "type": "object",
+        "required": ["id", "providerType", "name", "status"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "providerType": { "type": "string", "enum": ["oidc", "saml", "scim"] },
+          "name": { "type": "string" },
+          "status": { "type": "string", "enum": ["draft", "disabled", "active"] },
+          "config": { "type": "object", "additionalProperties": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Person": {
+        "type": "object",
+        "required": ["id", "tenantId", "displayName", "status"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "displayName": { "type": "string" },
+          "primaryEmail": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "inactive"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Employment": {
+        "type": "object",
+        "required": ["id", "tenantId", "personId", "employmentNo", "status", "effectiveFrom"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "personId": { "type": "string", "format": "uuid" },
+          "employmentNo": { "type": "string" },
+          "status": { "type": "string", "enum": ["active", "ended"] },
+          "effectiveFrom": { "type": "string", "format": "date" },
+          "effectiveTo": { "type": "string", "format": "date" },
+          "jobTitle": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
       "SystemHealth": {
         "type": "object",
         "required": ["status", "service"],

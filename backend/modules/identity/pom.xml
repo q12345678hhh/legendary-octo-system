@@ -22,5 +22,42 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+    <!-- 账号、会话、MFA 与令牌都在租户事务内读写 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>platform</artifactId>
+    </dependency>
+    <!-- 登录前必须确认租户状态，不直接读 tenancy 模块内部表 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>tenancy</artifactId>
+    </dependency>
+    <!-- 成员与自然人/雇佣关联，identity 不保存员工业务档案 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>organization</artifactId>
+    </dependency>
+    <!-- 只使用密码哈希能力，不引入 Spring Security 过滤链 -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-crypto</artifactId>
+    </dependency>
+    <!-- 身份提供商配置为 jsonb -->
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- 真实 PostgreSQL 用例：仅在 -Dplatform.db.url 存在时执行 -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

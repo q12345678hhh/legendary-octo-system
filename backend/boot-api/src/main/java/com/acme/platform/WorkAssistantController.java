@@ -87,7 +87,7 @@ public class WorkAssistantController {
                 .map(com.acme.platform.platform.RequestContext::subjectId)
                 .orElse(null);
         if (operator == null) {
-            throw ApiException.badRequest("SUBJECT_REQUIRED", "撤销设备必须携带 X-Subject-Id");
+            throw ApiException.badRequest("SUBJECT_REQUIRED", "撤销设备必须已认证");
         }
         deviceService.revoke(deviceId, operator);
         return new DeviceService.RevokeResult("revoked");
@@ -140,7 +140,7 @@ public class WorkAssistantController {
                 .map(com.acme.platform.platform.RequestContext::subjectId)
                 .orElse(null);
         if (operator == null) {
-            throw ApiException.badRequest("SUBJECT_REQUIRED", "策略更新必须携带 X-Subject-Id");
+            throw ApiException.badRequest("SUBJECT_REQUIRED", "策略更新必须已认证");
         }
         return policyService.append(values, operator);
     }

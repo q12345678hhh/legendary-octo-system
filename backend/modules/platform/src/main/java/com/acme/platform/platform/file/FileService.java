@@ -153,7 +153,7 @@ public class FileService {
     private static RequestContext requireIdentity() {
         RequestContext context = RequestContextHolder.current();
         if (context == null || context.tenantId() == null || context.subjectId() == null) {
-            throw ApiException.badRequest("IDENTITY_REQUIRED", "请求必须携带 X-Tenant-Id 与 X-Subject-Id");
+            throw ApiException.badRequest("IDENTITY_REQUIRED", "请求必须携带 X-Tenant-Id 且已完成认证");
         }
         return context;
     }

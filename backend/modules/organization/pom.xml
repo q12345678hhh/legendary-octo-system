@@ -11,7 +11,7 @@
 
   <artifactId>organization</artifactId>
   <name>Module: organization</name>
-  <description>组织结构、汇报线与调动</description>
+  <description>自然人、雇佣关系与组织结构</description>
 
   <dependencies>
     <dependency>
@@ -21,6 +21,17 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+    <!-- 自然人与雇佣关系都在租户事务内读写 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>platform</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
