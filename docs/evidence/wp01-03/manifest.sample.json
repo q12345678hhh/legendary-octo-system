@@ -1,0 +1,33 @@
+﻿{
+    "createdAt":  "2026-11-11T04:04:01.8590768Z",
+    "database":  "platform",
+    "sourceContainer":  "platform-pg-dev",
+    "pgServerVersion":  "16.15 (Debian 16.15-1.pgdg13+2)",
+    "flywayVersion":  "3",
+    "backupFile":  "platform-20261111T040359Z.dump.enc",
+    "encryption":  {
+                       "algorithm":  "AES-256-CBC",
+                       "kdf":  "PBKDF2-HMAC-SHA256",
+                       "iterations":  200000,
+                       "salt":  "openssl 随机盐，随密文头部保存"
+                   },
+    "files":  [
+                  {
+                      "path":  "platform-20261111T040359Z.dump.enc",
+                      "objectKey":  "s3://platform-backups/platform-20261111T040359Z.dump.enc",
+                      "sizeBytes":  12864,
+                      "cipherSha256":  "4ded3818a4ce03015ef74ff16932b9ed2f4940eb6079af3fb98b9f7dc768ee91",
+                      "plainSha256":  "bf00eabc62659a00232c7e129de14455f5e337a0f25dea5e3d71e54d15603e4d"
+                  }
+              ],
+    "restoreBaseline":  {
+                            "tenancy_tenant.count":  2,
+                            "platform_outbox.count":  4,
+                            "tenancy_tenant.md5_ordered":  "30ee01d6b0e248eb57147bc18edc1e8b"
+                        },
+    "objectStorage":  {
+                          "bucket":  "platform-backups",
+                          "objectKey":  "platform-20261111T040359Z.dump.enc",
+                          "verifiedBy":  "{\"status\":\"success\",\"name\":\"platform-20261111T040359Z.dump.enc\",\"lastModified\":\"2026-11-11T04:04:02Z\",\"size\":12864,\"etag\":\"72bb3eb1af408aa43c2e438b259cd79e\",\"type\":\"file\",\"metadata\":{\"Content-Type\":\"application/octet-stream\"}}"
+                      }
+}

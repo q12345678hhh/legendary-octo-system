@@ -18,6 +18,10 @@ spring:
     user: ${PLATFORM_DB_MIGRATION_USER:platform_owner}
     password: ${PLATFORM_DB_MIGRATION_PASSWORD:dev_only_change_me}
     locations: classpath:db/migration
+    postgresql:
+      # V3 的 CREATE INDEX CONCURRENTLY 必须在事务外执行。Flyway 默认把咨询锁放在一个
+      # 未提交事务里，并发建索引会一直等这个事务（本地实测永久挂起），故关闭事务级锁。
+      transactional-lock: false
 
   data:
     redis:

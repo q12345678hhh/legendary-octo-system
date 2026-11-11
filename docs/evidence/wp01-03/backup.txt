@@ -1,0 +1,9 @@
+﻿备份 platform → platform-20261111T040359Z.dump.enc
+  密文 SHA-256：4ded3818a4ce03015ef74ff16932b9ed2f4940eb6079af3fb98b9f7dc768ee91（12864 字节）
+  明文 SHA-256：bf00eabc62659a00232c7e129de14455f5e337a0f25dea5e3d71e54d15603e4d
+上传到对象存储桶 platform-backups
+  {"status":"success","name":"platform-20261111T040359Z.dump.enc","lastModified":"2026-11-11T04:04:02Z","size":12864,"etag":"72bb3eb1af408aa43c2e438b259cd79e","type":"file","metadata":{"Content-Type":"application/octet-stream"}}
+
+备份完成：C:\新建文件夹\temp_20261109_01\var\backups\platform-20261111T040359Z.dump.enc
+清单：C:\新建文件夹\temp_20261109_01\var\backups\platform-20261111T040359Z.manifest.json
+恢复基准：tenants=2 outbox=4 md5=30ee01d6b0e248eb57147bc18edc1e8b flyway=3

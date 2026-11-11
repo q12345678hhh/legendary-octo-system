@@ -1,0 +1,21 @@
+﻿清单：C:\新建文件夹\temp_20261109_01\var\backups\platform-20261111T040359Z.manifest.json
+备份：platform-20261111T040359Z.dump.enc（12864 字节，2026-11-11T04:04:01.8590768Z）
+
+== 1 失败样本：损坏密文必须被拒绝
+  解密按预期失败（exit=1）
+  bad decrypt 40775DEB0E7C0000:error:1C80006B:Provider routines:ossl_cipher_generic_block_final:wrong final block length:../providers/implementations/ciphers/ciphercommon.c:465:
+
+== 2 修复核对：正式备份的密文哈希必须与清单一致
+  [通过] cipherSha256 = 4ded3818a4ce03015ef74ff16932b9ed2f4940eb6079af3fb98b9f7dc768ee91
+
+== 3 隔离恢复：不接网络的独立实例
+  pg_restore 完成，耗时 0.3 s
+
+== 4 一致性校验
+  [通过] flyway 最大版本 = 3
+  [通过] tenancy_tenant 行数 = 2
+  [通过] platform_outbox 行数 = 4
+  [通过] tenancy_tenant 聚合摘要 = 30ee01d6b0e248eb57147bc18edc1e8b
+
+恢复演练通过：从损坏样本被拒到完整校验通过共 4 s（隔离实例，不含生产网络与附件恢复）
+已删除隔离实例 platform-restore-drill

@@ -12,6 +12,28 @@
   <artifactId>db</artifactId>
   <name>Database migrations</name>
 
+  <dependencies>
+    <!--
+      连接池用例只在提供 -Dplatform.db.url 时执行（见 ConnectionPoolTenantContextTest）。
+      依赖刻意留成 test 作用域：迁移模块本身不参与运行期，不把驱动和连接池带进制品。
+    -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
   <!-- 迁移脚本单一线性历史：src/main/resources/db/migration，见 WP01-03 -->
   <build>
     <resources>
@@ -19,5 +41,42 @@
         <directory>src/main/resources</directory>
       </resource>
     </resources>
+    <plugins>
+      <!--
+        迁移由命令行驱动而不是应用启动时自动执行，理由：
+        - 生产发布是独立步骤，失败要能单独重跑和审计，不能藏在应用启动日志里；
+        - 升级演练需要指定 target、compare 校验和，这些能力只有 CLI 暴露；
+        - 应用内的 Flyway 保留给本地开发，两者读同一份 filesystem 目录，不会跑偏。
+        连接参数一律由命令行传入（-Dflyway.url/user/password），避免口令写进 pom。
+      -->
+      <plugin>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-maven-plugin</artifactId>
+        <version>${flyway.version}</version>
+        <dependencies>
+          <!-- Flyway 10 起数据库支持拆成独立模块，缺它会在连接 PostgreSQL 时直接报错 -->
+          <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
+          </dependency>
+          <!-- 插件运行在 Maven 自己的类路径里，拿不到应用的 runtime 依赖，JDBC 驱动必须显式声明 -->
+          <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgresql.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <locations>
+            <location>filesystem:${project.basedir}/src/main/resources/db/migration</location>
+          </locations>
+          <!-- clean 会清空整个 schema，禁止通过命令行或配置误触 -->
+          <cleanDisabled>true</cleanDisabled>
+          <validateOnMigrate>true</validateOnMigrate>
+          <outOfOrder>false</outOfOrder>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 </project>

@@ -91,6 +91,46 @@ jobs:
             backend/*/target/site/jacoco/jacoco.xml
           if-no-files-found: warn
 
+  # 数据库门禁：迁移只能前向、校验和必须一致、RLS 与并发语义必须在真实 PostgreSQL 上成立。
+  # 本地用 scripts\dev-up.ps1 的同一套脚本，这里换成一个干净的服务容器重跑，避免只在开发机通过。
+  db:
+    name: db
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: platform_owner
+          POSTGRES_PASSWORD: ci_owner_password
+          POSTGRES_DB: platform
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U platform_owner"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+      - name: 创建运行期角色（NOBYPASSRLS，与生产初始化一致）
+        env:
+          PGPASSWORD: ci_owner_password
+        run: |
+          psql -h localhost -U platform_owner -d postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE platform_app LOGIN PASSWORD 'ci_app_password' NOBYPASSRLS NOINHERIT" \
+            -c "GRANT CONNECT ON DATABASE platform TO platform_app"
+      - name: 迁移、校验和门禁、RLS、并发、索引与锁等待
+        env:
+          PLATFORM_OWNER_PASSWORD: ci_owner_password
+          PLATFORM_APP_PASSWORD: ci_app_password
+        run: pwsh -NoProfile -File scripts/db-verify.ps1
+
   frontend:
     name: frontend
     runs-on: ubuntu-latest

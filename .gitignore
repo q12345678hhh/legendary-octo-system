@@ -45,3 +45,6 @@ docs/evidence/tmp/
 .cache/
 tmp/
 .tools/
+
+# 本地备份与演练密钥（绝不入库）
+var/

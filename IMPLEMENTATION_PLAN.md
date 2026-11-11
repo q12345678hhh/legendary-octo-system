@@ -299,14 +299,32 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP01-03 数据库迁移和恢复基线
 
-- [ ] 建立 Flyway 版本规则、校验和门禁、回滚决策和生产锁评估；迁移集中在 `backend/db/` 单一线性历史，模块不得自建迁移目录，版本号全局唯一并按全序编排。
-- [ ] 从上一个受支持版本升级到候选版成功且校验和一致，并在生产级数据量下给出锁等待评估结论。
-- [ ] 使用真实 PostgreSQL 运行迁移、RLS、并发、索引和连接池测试。
-- [ ] 建立加密备份、对象存储清单、恢复到隔离环境和一致性校验。
-- [ ] 记录 RPO/RTO 计算方法；本阶段完成最小恢复演练，不冒充 GA 恢复结果。
+- [x] 建立 Flyway 版本规则、校验和门禁、回滚决策和生产锁评估；迁移集中在 `backend/db/` 单一线性历史，模块不得自建迁移目录，版本号全局唯一并按全序编排。
+- [x] 从上一个受支持版本升级到候选版成功且校验和一致，并在生产级数据量下给出锁等待评估结论。
+- [x] 使用真实 PostgreSQL 运行迁移、RLS、并发、索引和连接池测试。
+- [x] 建立加密备份、对象存储清单、恢复到隔离环境和一致性校验。
+- [x] 记录 RPO/RTO 计算方法；本阶段完成最小恢复演练，不冒充 GA 恢复结果。
 
 **交付物：** 迁移规范、备份脚本规范、恢复运行手册草案。  
 **验收证据：** 从空库与上一版本均可升级；一次失败恢复演练有修复和复测证据。
+
+**进展记录（2026-11-11）：**
+
+| 项 | 落点 | 证据 |
+|---|---|---|
+| 单一线性历史与版本规则 | `backend/db/src/main/resources/db/migration`（V1 基线、V2 租户 RLS、V3 outbox 重试追踪）、`flyway-maven-plugin`（`outOfOrder=false`、`validateOnMigrate=true`、`cleanDisabled=true`） | `docs/runbooks/db-migration.md` 第 1 节 |
+| 校验和门禁 | `scripts/db-verify.ps1` 第 6 步：篡改 `flyway_schema_history.checksum` 后 `validate` 必须失败，还原后必须通过 | `db-verify.txt`（`flyway:validate 按预期失败（exit=1）`） |
+| 上一版本升级 | 先 `-Dflyway.target=2` 迁移，再升到最新；断言 V1/V2 校验和与空库逐条一致 | `db-verify.txt`（三次运行 checksum 均为 `1|-421171951`、`2|-1218073849`、`3|-1157903501`） |
+| 锁等待评估 | `transactional-lock=false` 解掉 `CREATE INDEX CONCURRENTLY` 的永久挂起；V3 执行期间 `50-lock-probe-writer.sql` 持续短事务写入 | 50 万行 outbox：迁移 3.5s、探针 1501 条语句最慢 16.7ms、超 1s 的 0 条（见 `db-verify.txt`） |
+| RLS 与并发 | `tests/db/10-rls-cases.sql` 9 条正负例（无上下文、伪造租户、跨租户读写、空串上下文、提交后不残留、`SET ROLE` 被拒）；两个独立会话 `FOR UPDATE SKIP LOCKED` 必须拿到不同行 | `db-verify.txt`（`RLS 用例全部通过（9/9）`；会话 1/2 取得不同事件 ID） |
+| 索引 | `V3__outbox_retry_tracking.sql` 的 `platform_outbox_tenant_status_idx`；`30-index-plan.sql` 断言投递扫描不得退化为全表扫描 | `db-verify.txt`（`Index Scan using platform_outbox_dispatch_idx`） |
+| 连接池 | `backend/db/src/test/java/.../ConnectionPoolTenantContextTest.java`：单连接池证明 `SET LOCAL` 提交后不残留、会话级 `SET` 会泄漏、两条连接并发各看各租户 | `db-verify.txt` 第 7 步（`Tests run: 3, Failures: 0, Errors: 0, Skipped: 0`） |
+| 加密备份与对象存储清单 | `scripts/db-backup.ps1`：容器内 `pg_dump -Fc` → AES-256-CBC（PBKDF2 20 万次）→ 删除明文 → 上传 MinIO → `mc stat` 核对 → 写 manifest | `docs/evidence/wp01-03/backup.txt`、`manifest.sample.json`（密文 12,864 字节，两个 SHA-256，恢复基准 tenants=2 outbox=4） |
+| 隔离恢复与一致性 | `scripts/db-restore-drill.ps1`：损坏密文必须解密失败 → 校验正式备份哈希 → `--network none` 独立实例 `pg_restore` → 比对版本/行数/聚合摘要 | `docs/evidence/wp01-03/restore-drill.txt`（`wrong final block length`、四项校验全通过、全流程 4s） |
+| 规范与手册 | `docs/runbooks/db-migration.md`（版本规则、门禁、回滚决策、锁评估、RLS 模板）、`docs/runbooks/backup-restore.md`（备份规范、清单字段、恢复步骤、RPO/RTO 计算） | 两份手册 + `docs/evidence/wp01-03/README.md` 的失败与修复记录 |
+| CI 门禁 | `.github/workflows/ci.yml` 新增 `db` 作业：`postgres:16` 服务容器 + 创建 `platform_app`（NOBYPASSRLS）+ 重跑同一脚本 | 与本地同一套断言，不依赖开发机状态 |
+
+**遗留与说明：** ①锁等待结论只基于 50 万行样本，GA 前按 NFR-23 在生产同构容量重跑；②备份为定时逻辑备份，没有 WAL 归档，RPO 达不到 15 分钟，PITR 与密钥轮换属 WP11-05；③恢复演练不含对象存储附件与审计链；④`platform_outbox` 暂未启用 RLS，跨租户投递需要受治理的 dispatcher 角色，随 WP01-04 落地。
 
 ### WP01-04 通用平台技术骨架
 
