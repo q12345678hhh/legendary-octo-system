@@ -1,0 +1,16 @@
+﻿  正在确定要还原的项目…
+  所有项目均是最新的，无法还原。
+  WorkAssistant.PrivacyEngine -> C:\新建文件夹\temp_20261109_01\desktop-agent\privacy-engine\WorkAssistant.PrivacyEngine\bin\Release\net8.0\WorkAssistant.PrivacyEngine.dll
+  WorkAssistant.Core -> C:\新建文件夹\temp_20261109_01\desktop-agent\core\WorkAssistant.Core\bin\Release\net8.0\WorkAssistant.Core.dll
+  WorkAssistant.Storage -> C:\新建文件夹\temp_20261109_01\desktop-agent\storage\WorkAssistant.Storage\bin\Release\net8.0-windows\WorkAssistant.Storage.dll
+  WorkAssistant.Device -> C:\新建文件夹\temp_20261109_01\desktop-agent\device\WorkAssistant.Device\bin\Release\net8.0-windows\WorkAssistant.Device.dll
+  WorkAssistant.Adapters -> C:\新建文件夹\temp_20261109_01\desktop-agent\adapters\WorkAssistant.Adapters\bin\Release\net8.0-windows\WorkAssistant.Adapters.dll
+  WorkAssistant.Device.Checks -> C:\新建文件夹\temp_20261109_01\desktop-agent\device\WorkAssistant.Device.Checks\bin\Release\net8.0-windows\WorkAssistant.Device.Checks.dll
+  WorkAssistant.WindowsApp -> C:\新建文件夹\temp_20261109_01\desktop-agent\windows-app\WorkAssistant.WindowsApp\bin\Release\net8.0-windows\WorkAssistant.WindowsApp.dll
+  WorkAssistant.PrivacyEngine.Checks -> C:\新建文件夹\temp_20261109_01\desktop-agent\privacy-engine\WorkAssistant.PrivacyEngine.Checks\bin\Release\net8.0-windows\WorkAssistant.PrivacyEngine.Checks.dll
+
+已成功生成。
+    0 个警告
+    0 个错误
+
+已用时间 00:00:04.16

@@ -27,6 +27,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "windows-app", "windows-app"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkAssistant.WindowsApp", "windows-app\WorkAssistant.WindowsApp\WorkAssistant.WindowsApp.csproj", "{A46E38FE-3BB5-4FCA-9ACB-84C74F4215A9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "adapters", "adapters", "{93F5C9EF-D32D-47B7-94E8-20168262270F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkAssistant.Adapters", "adapters\WorkAssistant.Adapters\WorkAssistant.Adapters.csproj", "{EBB0AEA6-0CE7-4B80-ADE6-76368F3BEA5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +68,10 @@ Global
 		{A46E38FE-3BB5-4FCA-9ACB-84C74F4215A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A46E38FE-3BB5-4FCA-9ACB-84C74F4215A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A46E38FE-3BB5-4FCA-9ACB-84C74F4215A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBB0AEA6-0CE7-4B80-ADE6-76368F3BEA5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBB0AEA6-0CE7-4B80-ADE6-76368F3BEA5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBB0AEA6-0CE7-4B80-ADE6-76368F3BEA5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBB0AEA6-0CE7-4B80-ADE6-76368F3BEA5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{79C51386-91C1-494E-9CE2-56E9AC46FD46} = {EA77FEE8-2959-49C0-8A7D-153DE424F028}
@@ -73,5 +81,6 @@ Global
 		{76B95D9C-B75C-42F5-92E5-315432EA66CE} = {23277A29-B15D-4BC3-A4FE-9F0D9A232B4E}
 		{328944FE-529B-4F9A-9DDE-ADFBBA3C74BB} = {23277A29-B15D-4BC3-A4FE-9F0D9A232B4E}
 		{A46E38FE-3BB5-4FCA-9ACB-84C74F4215A9} = {11DDE3AB-9A7B-4A20-97CF-ED7270958D7A}
+		{EBB0AEA6-0CE7-4B80-ADE6-76368F3BEA5D} = {93F5C9EF-D32D-47B7-94E8-20168262270F}
 	EndGlobalSection
 EndGlobal

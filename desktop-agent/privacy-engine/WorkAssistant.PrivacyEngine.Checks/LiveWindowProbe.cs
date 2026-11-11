@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
+using WorkAssistant.Adapters;
 using WorkAssistant.PrivacyEngine;
 
 namespace WorkAssistant.PrivacyEngine.Checks;
@@ -103,71 +103,41 @@ internal static class LiveWindowProbe
         var unknown = 0;
         var allowed = 0;
 
-        EnumWindows((hwnd, _) =>
+        // 与运行时采集共用同一个探针实现，验收覆盖的正是线上读取路径。
+        var probe = new WindowsWindowProbe();
+        foreach (var snapshot in probe.ReadVisibleWindows())
         {
-            if (!IsWindowVisible(hwnd))
-            {
-                return true;
-            }
-
-            var length = GetWindowTextLength(hwnd);
-            if (length <= 0)
-            {
-                return true;
-            }
-
-            var buffer = new StringBuilder(length + 1);
-            if (GetWindowText(hwnd, buffer, buffer.Capacity) <= 0)
-            {
-                return true;
-            }
-
-            var title = buffer.ToString();
-            GetWindowThreadProcessId(hwnd, out var processId);
-
-            string? processName = null;
-            try
-            {
-                using var owner = Process.GetProcessById((int)processId);
-                processName = owner.ProcessName;
-            }
-            catch (ArgumentException)
-            {
-                // 进程已退出，按未知进程处理
-            }
-
             sampled++;
-            var decision = session.EvaluateCapture(new WindowSnapshot(processName, title, null));
-            if (processName is null)
+            var decision = session.EvaluateCapture(snapshot);
+            if (snapshot.ProcessName is null)
             {
                 unknown++;
                 if (!decision.Excluded)
                 {
-                    failures.Add($"未知进程窗口未被排除: {title}");
+                    failures.Add($"未知进程窗口未被排除: {snapshot.WindowTitle}");
                 }
 
-                return true;
+                continue;
             }
 
-            if (ForbiddenApplicationPolicy.DefaultForbiddenProcesses.Contains(processName))
+            if (ForbiddenApplicationPolicy.DefaultForbiddenProcesses.Contains(snapshot.ProcessName))
             {
                 if (!decision.Excluded)
                 {
-                    failures.Add($"强制排除应用的窗口未被排除: {processName}");
+                    failures.Add($"强制排除应用的窗口未被排除: {snapshot.ProcessName}");
                 }
 
-                return true;
+                continue;
             }
 
             if (decision.Excluded)
             {
                 titleHits++;
-                return true;
+                continue;
             }
 
             allowed++;
-            return true;
-        }, IntPtr.Zero);
+        }
 
         Console.WriteLine($"采样可见窗口 {sampled} 个：标题关键字命中 {titleHits} 个，未知进程 {unknown} 个，允许采集 {allowed} 个");
         Console.WriteLine($"进程级排除 {forbiddenExcluded} 个（判定在读取窗口内容之前完成）");
@@ -207,23 +177,4 @@ internal static class LiveWindowProbe
 
         return 0;
     }
-
-    private delegate bool EnumWindowsProc(IntPtr hwnd, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool EnumWindows(EnumWindowsProc callback, IntPtr lParam);
-
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool IsWindowVisible(IntPtr hwnd);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern int GetWindowTextLength(IntPtr hwnd);
-
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern int GetWindowText(IntPtr hwnd, StringBuilder text, int maxCount);
-
-    [DllImport("user32.dll")]
-    private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
 }

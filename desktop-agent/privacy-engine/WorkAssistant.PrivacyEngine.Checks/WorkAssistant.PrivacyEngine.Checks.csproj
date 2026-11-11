@@ -2,12 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <RootNamespace>WorkAssistant.PrivacyEngine.Checks</RootNamespace>
     <AssemblyName>WorkAssistant.PrivacyEngine.Checks</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WorkAssistant.PrivacyEngine\WorkAssistant.PrivacyEngine.csproj" />
+    <ProjectReference Include="..\..\adapters\WorkAssistant.Adapters\WorkAssistant.Adapters.csproj" />
   </ItemGroup>
 
 </Project>

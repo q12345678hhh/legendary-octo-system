@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using WorkAssistant.Core;
+using WorkAssistant.PrivacyEngine;
 
 namespace WorkAssistant.WindowsApp;
 
@@ -33,18 +34,21 @@ internal static class SelfCheck
         {
             Expect("未记录状态只提供开始与退出",
                 context.MenuTexts.SequenceEqual(new[] { "开始记录", "退出" }) && !context.IndicatorVisible);
+            Expect("未记录状态图标为灰色", IconMatches(context, CaptureState.Stopped));
 
             context.Session.Start();
             context.Refresh();
             Expect("记录中提示可见且不提供退出",
                 context.IndicatorVisible
                 && context.MenuTexts.SequenceEqual(new[] { "暂停", "结束", "进入私人模式" }));
+            Expect("记录中状态图标为绿色", IconMatches(context, CaptureState.Capturing));
 
             context.Session.Pause();
             context.Refresh();
             Expect("暂停后提示仍可见且文案声明不采集",
                 context.IndicatorVisible
                 && context.Presentation.IndicatorText.Contains("不采集", StringComparison.Ordinal));
+            Expect("暂停状态图标为琥珀色", IconMatches(context, CaptureState.Paused));
 
             context.Session.Resume();
             context.Session.EnterPrivateMode();
@@ -52,11 +56,13 @@ internal static class SelfCheck
             Expect("私人模式提示可见且只能退出私人模式或结束",
                 context.IndicatorVisible
                 && context.MenuTexts.SequenceEqual(new[] { "退出私人模式", "结束" }));
+            Expect("私人模式图标为紫色", IconMatches(context, CaptureState.PrivateMode));
 
             context.Session.Stop();
             context.Refresh();
             Expect("结束后提示隐藏并重新提供退出",
                 !context.IndicatorVisible && context.MenuTexts.SequenceEqual(new[] { "开始记录", "退出" }));
+            Expect("结束后图标回到灰色", IconMatches(context, CaptureState.Stopped));
             Expect("托盘菜单不含隐藏或静默入口",
                 context.MenuTexts.All(text => !text.Contains("隐藏", StringComparison.Ordinal)
                                               && !text.Contains("静默", StringComparison.Ordinal)));
@@ -88,4 +94,19 @@ internal static class SelfCheck
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern bool AttachConsole(int processId);
+
+    /// <summary>核对托盘图标中心像素与状态颜色一致；图标由缓存持有，不能在这里释放。</summary>
+    private static bool IconMatches(TrayApplicationContext context, CaptureState state)
+    {
+        var icon = context.TrayIcon;
+        if (icon is null)
+        {
+            return false;
+        }
+
+        using var bitmap = icon.ToBitmap();
+        return bitmap.Width == 16
+               && bitmap.Height == 16
+               && bitmap.GetPixel(8, 8).ToArgb() == TrayIconFactory.ColorOf(state).ToArgb();
+    }
 }
