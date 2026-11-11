@@ -349,7 +349,7 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 | 可观测性 | `logging.structured.format.console=ecs`、`PlatformMetrics`、MDC 贯穿 API 与 Worker；API 走 `/actuator/prometheus`，Worker 走周期汇总日志 | `metrics.txt`、`trace.txt`、`log-hygiene.txt`；手册 `docs/runbooks/observability.md`、仪表板 `deploy/observability/grafana-dashboard.json` |
 | 前端骨架 | hash 路由 + 会话、登录壳、`AsyncState`（loading/ready/empty/error/partial）、设计 token 递归导出 CSS 变量、跳转链接与路由焦点管理 | `frontend-verify.txt`（typecheck/test/build 全绿，`apps/web` 15 个用例） |
 | 运行手册 | `docs/runbooks/platform-skeleton.md`（幂等冲突、死信回放审批、扫描卡住、Worker 停机、下载拒绝）、`docs/runbooks/observability.md`（字段/指标/告警/trace 检索） | 两份手册 + `docs/evidence/wp01-04/README.md` 的失败修复记录 |
-| CI | 沿用现有 `mvn -B verify` 与前端作业，新增 V4 迁移与前端用例后仍全绿 | `docs/evidence/wp01-04/ci-run.txt` |
+| CI | `mvn -B install` + 覆盖率门禁 + 依赖漏洞、前端 typecheck/test/build/audit、db 作业跑 `db-verify.ps1`、密钥扫描 | `ci-run.txt`：Run 42973191622（`a309190`）`completed successfully`，10 个作业成功、`commit-lint` 在 push 上跳过；前两次失败运行（`9edafe5`、`fb37305`）一并留档 |
 
 **遗留与说明：** ①占位认证（请求头直信）仅用于骨架，WP02-02 必须替换，当前禁止在共享环境启用；②预签名 URL 是 bearer 凭证、无法单次使用，GA 前评估代理下载或一次性令牌；③Worker 指标当前只进汇总日志，接入 OTLP 采集器后改为抓取；④`platform_outbox` 仍不开 RLS（跨租户投递需要），API 侧死信查询强制租户过滤，独立 dispatcher 角色留待后续 WP。
 

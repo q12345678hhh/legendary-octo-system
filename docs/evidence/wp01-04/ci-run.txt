@@ -1,0 +1,37 @@
+GitHub Actions Run 42973191622 —— 代码提交 a309190
+（fix(wp01-04): 抑制 Prometheus 服务端 CPE 对 Java 指标库的误报）
+结论：completed successfully
+
+抓取时间：2026-11-11 15:09 +08:00
+抓取方式：GitHub REST API
+  https://api.github.com/repos/q12345678hhh/legendary-octo-system/actions/runs?branch=main
+  https://api.github.com/repos/q12345678hhh/legendary-octo-system/actions/runs/42973191622/jobs
+（匿名调用；本机未安装 gh，远端是 SSH，拿不到凭据，因此只能读元数据，读不到作业日志与产物）
+
+作业结论（11 条）：
+  artifacts     => success
+  backend       => success
+  commit-lint   => skipped   （工作流里仅在 pull_request 上运行，本次是 push）
+  contracts     => success
+  db            => success
+  desktop-agent => success
+  frontend      => success
+  plugin-runner => success
+  secret-scan   => success
+  supply-chain  => success
+  tests         => success
+
+相邻两次运行作为对照，说明本工作包把失败修到全绿的过程：
+  42967127376  sha=9edafe5  failure   （secret-scan 误报 + backend 依赖漏洞）
+  42968143649  sha=fb37305  failure   （仅 backend 依赖漏洞：CVE-2026-42154 误报）
+  42973191622  sha=a309190  success   （本次）
+
+本次通过的三处关键点：
+1. backend 的「依赖漏洞（OWASP dependency-check）」不再失败：抑制只作用于
+   micrometer-registry-prometheus / io.prometheus:prometheus-metrics-* 与
+   cpe:/a:prometheus:prometheus 的组合，failBuildOnCVSS=7 未放宽。复现与判定见
+   docs/evidence/wp01-04/dependency-check.txt。
+2. db 作业在干净的 postgres:16 服务容器里重跑 scripts/db-verify.ps1，4 个 Flyway 版本、
+   RLS 9/9、并发认领、索引命中与校验和门禁全部成立，不依赖开发机的 WSL 状态。
+3. frontend 作业的 typecheck / test / build / pnpm audit / SBOM 全通过，与
+   frontend-verify.txt 的本地结果一致。
