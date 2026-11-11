@@ -1,3 +1,4 @@
+using WorkAssistant.Adapters;
 using WorkAssistant.Core;
 using WorkAssistant.Device;
 using WorkAssistant.PrivacyEngine;
@@ -22,6 +23,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
     private DeviceIdentity? identity;
     private AgentRuntime? runtime;
+    private ForegroundActivityCapture? capture;
     private DeviceApiClient? api;
     private HttpClient? http;
     private int policyVersion;
@@ -30,7 +32,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     public TrayApplicationContext(AgentSettings settings, bool showTray = true)
     {
         this.settings = settings;
-        tray.Icon = SystemIcons.Information;
+        tray.Icon = TrayIconFactory.Create(CaptureState.Stopped);
         tray.Text = "工作助手";
         tray.ContextMenuStrip = menu;
         tray.Visible = showTray;
@@ -56,13 +58,17 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
     public bool IndicatorVisible => Presentation.IndicatorVisible;
 
+    /// <summary>当前托盘图标；自检用它核对图标与状态一致。</summary>
+    public Icon? TrayIcon => tray.Icon;
+
     public IReadOnlyList<string> MenuTexts =>
         menu.Items.OfType<ToolStripMenuItem>().Select(item => item.Text ?? string.Empty).ToList();
 
-    /// <summary>依据当前状态重建托盘菜单与提示窗。所有可见性都来自同一个 presenter。</summary>
+    /// <summary>依据当前状态重建托盘图标、菜单与提示窗。所有可见性都来自同一个 presenter。</summary>
     public void Refresh()
     {
         var presentation = Presentation;
+        tray.Icon = TrayIconFactory.Create(session.State);
         if (presentation.Tooltip.Length > 0)
         {
             tray.Text = presentation.Tooltip.Length <= 63 ? presentation.Tooltip : presentation.Tooltip[..63];
@@ -141,6 +147,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         api = new DeviceApiClient(http, settings.Tenant!, identity, settings.Subject);
         runtime = new AgentRuntime(session, api, queue, store, identity);
         runtime.Recover();
+        capture = new ForegroundActivityCapture(runtime, new WindowsWindowProbe());
         _ = EnrollAsync();
     }
 
@@ -168,6 +175,9 @@ internal sealed class TrayApplicationContext : ApplicationContext
             return;
         }
 
+        // 先采集：网络不可用时队列仍然积累，由后续周期补传。
+        TryCapture();
+
         try
         {
             var heartbeat = await runtime.HeartbeatAsync(AppVersion);
@@ -193,6 +203,23 @@ internal sealed class TrayApplicationContext : ApplicationContext
         catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
         {
             // 网络暂时不可用：保留队列，下个周期重试
+        }
+    }
+
+    private void TryCapture()
+    {
+        if (capture is null)
+        {
+            return;
+        }
+
+        try
+        {
+            capture.CaptureOnce();
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            // 单个周期采集失败不影响心跳与下一次补传；门禁状态不变。
         }
     }
 

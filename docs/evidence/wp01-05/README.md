@@ -45,10 +45,10 @@ powershell -ExecutionPolicy Bypass -File scripts\work-assistant-verify.ps1
 
 ## 边界与遗留
 
-- 真实的窗口与进程采集器未在本工作包接入：`CaptureGate`、排除策略与状态机已可独立验证，
-  采集源接入时会复用同一门禁。
-- 更新安装器以 `IUpdateInstaller` 接口表示，仓库内只有安装/回滚编排与验签，
-  不包含真实安装包解压与 MSI 执行。
+- 真实窗口/进程采集器已接入运行时，见 `docs/evidence/wp01-05-followup/`：
+  `adapters/WindowsWindowProbe` + `ForegroundActivityCapture`，与验收工具共用同一探针。
+- 更新安装器已有生产实现 `adapters/ZipPackageInstaller`（ZIP 覆盖、整目录备份、回滚、拒绝目录穿越），
+  更新包的下载与员工确认入口仍随发布流水线接入。
+- 托盘图标按采集状态生成（灰/绿/琥珀/紫），不再使用系统默认图标。
 - 服务端策略固定 `uploadEnabled=true`；关闭上传属于客户端本地能力，
   用于企业侧临时止损，不依赖服务端下发。
-- 托盘壳的图标使用系统默认信息图标，正式发布前需要替换为产品图标。

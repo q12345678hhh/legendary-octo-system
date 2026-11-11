@@ -1,0 +1,64 @@
+﻿PASS offline/策略进程为服务端追加项与本地硬编码下限的并集
+PASS offline/策略关键字包含本地硬编码下限
+PASS offline/未开始时采集量为 0
+PASS offline/采集中允许产生片段
+PASS offline/暂停时采集量为 0
+PASS offline/私人模式下采集量为 0
+PASS offline/停止后采集量为 0
+PASS offline/策略关闭上传时采集量为 0
+PASS offline/采集中仍对聊天应用强制排除
+PASS offline/状态 Stopped 的提示可见性
+PASS offline/状态 Stopped 的提示文案
+PASS offline/状态 Stopped 的退出可用性
+PASS offline/状态 Capturing 的提示可见性
+PASS offline/状态 Capturing 的提示文案
+PASS offline/状态 Capturing 的退出可用性
+PASS offline/状态 Paused 的提示可见性
+PASS offline/状态 Paused 的提示文案
+PASS offline/状态 Paused 的退出可用性
+PASS offline/状态 PrivateMode 的提示可见性
+PASS offline/状态 PrivateMode 的提示文案
+PASS offline/状态 PrivateMode 的退出可用性
+PASS offline/托盘动作不含隐藏或静默入口
+PASS offline/采集中必须提供私人模式
+PASS offline/暂停时提示文案声明不采集
+PASS offline/DPAPI 加密后文件不含明文
+PASS offline/DPAPI 可解密回原文
+PASS offline/原子写不留下临时文件
+PASS offline/换设备熵无法解密
+PASS offline/相对路径越界被拒绝
+PASS offline/未注册时状态为未注册且策略版本为 0
+PASS offline/本机状态可持久化
+PASS offline/离线条目可写入并读回
+PASS offline/离线条目超过 72 小时后删除
+PASS offline/崩溃恢复删除未完成写入的临时文件
+PASS offline/崩溃恢复隔离损坏条目并保留有效条目
+PASS offline/隔离区保留损坏条目供排查
+PASS offline/合法策略验签通过
+PASS offline/策略版本不前进时拒绝回滚
+PASS offline/策略 key id 不匹配时拒绝
+PASS offline/策略签名被篡改时拒绝
+PASS offline/策略含未知字段时拒收
+PASS offline/同机同租户设备身份稳定
+PASS offline/不同租户设备身份隔离
+PASS offline/设备签名可被自身公钥验证
+PASS offline/篡改后的规范串签名验证失败
+PASS offline/更新清单验签并暂存成功
+PASS offline/健康检查失败时回滚到上一版本
+PASS offline/健康检查失败时清理暂存目录
+PASS offline/健康检查通过时安装生效
+PASS offline/拒绝降级或重复安装
+PASS offline/更新包哈希不符时拒绝
+PASS offline/更新清单签名无效时拒绝
+PASS offline/更新清单 key id 不匹配时拒绝
+PASS offline/运行时采集：未开始时采集量为 0
+PASS offline/运行时采集：允许的窗口进入离线队列
+PASS offline/运行时采集：摘要只写进程名，不含窗口标题
+PASS offline/运行时采集：聊天应用在入队前被排除
+PASS offline/运行时采集：暂停时采集量为 0
+PASS offline/ZIP 安装器覆盖旧文件并落地新增文件
+PASS offline/回滚恢复旧文件
+PASS offline/回滚删除本次新增文件
+PASS offline/更新包目录穿越条目被拒绝
+PASS offline/目录穿越被拒绝后安装目录不变
+offline: 全部通过（63 项）

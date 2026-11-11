@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\device\WorkAssistant.Device\WorkAssistant.Device.csproj" />
+    <ProjectReference Include="..\..\adapters\WorkAssistant.Adapters\WorkAssistant.Adapters.csproj" />
   </ItemGroup>
 
 </Project>

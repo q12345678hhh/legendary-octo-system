@@ -1,6 +1,8 @@
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using WorkAssistant.Adapters;
 using WorkAssistant.Core;
 using WorkAssistant.PrivacyEngine;
 using WorkAssistant.Storage;
@@ -27,6 +29,8 @@ internal static class OfflineChecks
             PolicyChecks(checks);
             IdentityChecks(checks, root);
             UpdateChecks(checks, root);
+            CaptureAdapterChecks(checks, root);
+            InstallerChecks(checks, root);
         }
         finally
         {
@@ -221,6 +225,96 @@ internal static class OfflineChecks
             () => service.Stage(manifest, package, "0.1.0", spki, "another-key"));
     }
 
+    private static void CaptureAdapterChecks(Checks checks, string root)
+    {
+        using var signer = new TestPolicySigner();
+        using var identity = DeviceIdentity.LoadOrCreate(Path.Combine(root, "capture-identity"), "tenant-capture");
+        using var http = new HttpClient { BaseAddress = new Uri("https://capture.invalid") };
+        var api = new DeviceApiClient(http, Guid.NewGuid().ToString(), identity);
+        var session = new CaptureSession();
+        var queue = new OfflineQueue(new DpapiVault(Path.Combine(root, "capture-queue"), "device-a"),
+            TimeSpan.FromHours(72));
+        var store = new LocalStateStore(new DpapiVault(Path.Combine(root, "capture-state"), "device-a"));
+        var runtime = new AgentRuntime(session, api, queue, store, identity);
+        runtime.ApplyRegistration(new RegistrationInfo("device-capture", "active",
+            signer.Json(9, Array.Empty<string>(), Array.Empty<string>(), true),
+            signer.PublicKeySpki, TestPolicySigner.KeyId, null, null));
+
+        var probe = new FakeProbe(new WindowSnapshot("Code", "季度方案.docx - Word", null));
+        var capture = new ForegroundActivityCapture(runtime, probe, TimeSpan.FromMinutes(1));
+        var now = DateTimeOffset.UtcNow;
+
+        checks.Check("运行时采集：未开始时采集量为 0",
+            () => !capture.CaptureOnce(now).Recorded && queue.Count == 0);
+
+        session.Start();
+        checks.Check("运行时采集：允许的窗口进入离线队列",
+            () => capture.CaptureOnce(now).Recorded && queue.Count == 1);
+        checks.Check("运行时采集：摘要只写进程名，不含窗口标题",
+            () => queue.ReadAll()[0].Draft.Summary == "Code");
+
+        probe.Snapshot = new WindowSnapshot("WeChat", "微信", null);
+        var excluded = capture.CaptureOnce(now);
+        checks.Check("运行时采集：聊天应用在入队前被排除",
+            () => !excluded.Recorded
+                  && excluded.Reason.Contains("强制排除", StringComparison.Ordinal)
+                  && queue.Count == 1);
+
+        probe.Snapshot = new WindowSnapshot("Code", "Program.cs", null);
+        session.Pause();
+        checks.Check("运行时采集：暂停时采集量为 0",
+            () => !capture.CaptureOnce(now).Recorded && queue.Count == 1);
+        session.Stop();
+    }
+
+    private static void InstallerChecks(Checks checks, string root)
+    {
+        var install = Path.Combine(root, "install");
+        var backups = Path.Combine(root, "install-backups");
+        Directory.CreateDirectory(install);
+        File.WriteAllText(Path.Combine(install, "WorkAssistant.exe"), "old");
+        File.WriteAllText(Path.Combine(install, "keep.dll"), "keep");
+
+        var package = Path.Combine(root, "package.zip");
+        using (var archive = ZipFile.Open(package, ZipArchiveMode.Create))
+        {
+            WriteEntry(archive, "WorkAssistant.exe", "new");
+            WriteEntry(archive, "plugins/plugin.dll", "plugin");
+        }
+
+        var installer = new ZipPackageInstaller(install, backups);
+        installer.Install(package);
+        checks.Check("ZIP 安装器覆盖旧文件并落地新增文件",
+            () => File.ReadAllText(Path.Combine(install, "WorkAssistant.exe")) == "new"
+                  && File.Exists(Path.Combine(install, "plugins", "plugin.dll")));
+
+        installer.RestorePrevious();
+        checks.Check("回滚恢复旧文件",
+            () => File.ReadAllText(Path.Combine(install, "WorkAssistant.exe")) == "old"
+                  && File.ReadAllText(Path.Combine(install, "keep.dll")) == "keep");
+        checks.Check("回滚删除本次新增文件",
+            () => !File.Exists(Path.Combine(install, "plugins", "plugin.dll")));
+
+        var slip = Path.Combine(root, "slip.zip");
+        using (var archive = ZipFile.Open(slip, ZipArchiveMode.Create))
+        {
+            WriteEntry(archive, "../escape.txt", "escape");
+        }
+
+        var guarded = new ZipPackageInstaller(install, backups);
+        checks.Throws<InvalidDataException>("更新包目录穿越条目被拒绝", () => guarded.Install(slip));
+        checks.Check("目录穿越被拒绝后安装目录不变",
+            () => File.ReadAllText(Path.Combine(install, "WorkAssistant.exe")) == "old"
+                  && !File.Exists(Path.Combine(root, "escape.txt")));
+    }
+
+    private static void WriteEntry(ZipArchive archive, string name, string content)
+    {
+        var entry = archive.CreateEntry(name);
+        using var writer = new StreamWriter(entry.Open());
+        writer.Write(content);
+    }
+
     private static bool Draft(CaptureSession session, PolicySnapshot policy, DateTimeOffset now)
     {
         return Draft(session, policy, now, out _);
@@ -256,5 +350,19 @@ internal static class OfflineChecks
         public void Install(string packagePath) => Installed = true;
 
         public void RestorePrevious() => Restored = true;
+    }
+
+    private sealed class FakeProbe : IWindowProbe
+    {
+        public FakeProbe(WindowSnapshot snapshot)
+        {
+            Snapshot = snapshot;
+        }
+
+        public WindowSnapshot Snapshot { get; set; }
+
+        public WindowSnapshot ReadForegroundWindow() => Snapshot;
+
+        public IReadOnlyList<WindowSnapshot> ReadVisibleWindows() => new[] { Snapshot };
     }
 }

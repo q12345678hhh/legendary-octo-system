@@ -46,6 +46,11 @@
 - 安装后执行健康检查（进程存活 + 心跳成功）；失败时自动 `RestorePrevious`，
   结果返回 `RolledBack`，用户仍停留在旧版本。
 
+安装器为 `adapters/ZipPackageInstaller`：安装包是 ZIP 载荷，按相对路径覆盖安装目录；
+安装前把当前目录整目录备份到独立备份目录，回滚时先删除本次新增文件再用备份覆盖，
+任一条目越出安装目录（`../` 或绝对路径）都会被拒绝。ZIP 内的文件清单由构建产物决定，
+不要把安装脚本或任意可执行内容放进载荷。
+
 ## 4. 回滚
 
 自动回滚失败或需要人工回退时：
@@ -92,3 +97,11 @@ powershell -ExecutionPolicy Bypass -File scripts\work-assistant-verify.ps1
 
 脚本会生成临时密钥到 `var/wp01-05/`（不进入版本库），跑通注册、补传、暂停零采集、
 崩溃恢复、策略追加与撤销，并把证据写入 `docs/evidence/wp01-05/`。
+
+纯离线的收口取证（采集适配器、ZIP 安装器、状态图标）不需要数据库与后端：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\work-assistant-followup-verify.ps1
+```
+
+产物写入 `docs/evidence/wp01-05-followup/`。

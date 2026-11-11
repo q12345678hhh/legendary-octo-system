@@ -1,0 +1,14 @@
+﻿== 原生 Windows 验收 ==
+OS        Microsoft Windows 10.0.26200
+Runtime   .NET 8.0.33
+Machine   YURI  User Administrator  Session 1
+判定依据   进程名 + 窗口标题；未读取窗口内容
+
+真实运行 Weixin 进程 5 个，全部按排除处理
+真实运行 QQ 进程 12 个，全部按排除处理
+
+采样可见窗口 19 个：标题关键字命中 0 个，未知进程 0 个，允许采集 17 个
+进程级排除 17 个（判定在读取窗口内容之前完成）
+
+检查通过 19 项，失败 0 项，窗口样本 19 个
+真实命中: Weixin x5、QQ x12
