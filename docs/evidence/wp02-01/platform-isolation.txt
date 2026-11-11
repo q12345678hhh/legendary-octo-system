@@ -1,0 +1,19 @@
+﻿平台/租户域隔离与「平台不可读业务正文」证据（WP02-01）
+
+来源：TenantApiBoundaryTest（@WebMvcTest，8 个用例）
+
+  PASS tenantRequestMustNotCarryPlatformOperator
+  PASS tenantViewIsScopedByTenantContext
+  PASS supportAccessIsReadOnlyAndReturnsBannerHeaders
+  PASS platformRequestRequiresOperatorHeader
+  PASS tenantWriteRequiresSubject
+  PASS platformRequestMustNotCarryTenantContext
+  PASS frozenTenantWriteIsBlockedButAppealIsAllowed
+  PASS platformCreatePassesOperatorAsActor
+
+关键断言：
+  - 平台路径缺 X-Platform-Operator-Id -> 401 PLATFORM_OPERATOR_REQUIRED
+  - 平台路径携带 X-Tenant-Id -> 403 PLATFORM_TENANT_CONTEXT_FORBIDDEN
+  - 租户路径携带 X-Platform-Operator-Id -> 403 PLATFORM_OPERATOR_NOT_ALLOWED
+  - 平台接口只暴露 /platform/api/v1/tenants/{id} 的元数据、配额、审计与支持访问，无业务正文端点
+  - 支持访问请求仅允许 GET，非 GET -> 403 SUPPORT_ACCESS_READ_ONLY

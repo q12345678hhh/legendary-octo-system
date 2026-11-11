@@ -388,12 +388,29 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP02-01 租户生命周期
 
-- [ ] 完成租户创建、初始化、启用、冻结、恢复、注销申请、冷静期和最终删除状态机。
-- [ ] 完成域名、品牌、语言、时区、功能开关、套餐、配额和使用量。
-- [ ] 平台运营角色默认不可读租户业务正文；支持访问必须有工单、审批、时限和醒目标识。
-- [ ] 冻结租户后阻止业务写入、插件和 AI 新执行，只保留受控导出与申诉。
+- [x] 完成租户创建、初始化、启用、冻结、恢复、注销申请、冷静期和最终删除状态机。
+- [x] 完成域名、品牌、语言、时区、功能开关、套餐、配额和使用量。
+- [x] 平台运营角色默认不可读租户业务正文；支持访问必须有工单、审批、时限和醒目标识。
+- [x] 冻结租户后阻止业务写入、插件和 AI 新执行，只保留受控导出与申诉。
 
 **验收证据：** 两租户同业务编号无冲突；冻结、恢复和删除流程有审计；平台管理员无法直接读取业务数据。
+
+**完成情况（WP02-01）：**
+
+| 项目 | 落点 | 证据 |
+| --- | --- | --- |
+| 生命周期状态机 | `tenancy/TenantStatus`、`TenantLifecycleService`（create/initialize/freeze/restore/requestClosing/cancelClosing/delete）、`V6__tenant_lifecycle.sql` 状态 CHECK | `docs/evidence/wp02-01/frozen-block.txt`（合法/非法迁移、423/410）、`db-verify.txt`（`TenantLifecycleDbTest` 1/1） |
+| 域名、品牌、语言、时区、功能开关 | `tenancy_profile`、`tenancy_domain`（全局唯一 + 每租户唯一 primary）、`UpdateProfileCommand` | `backend-tests.txt`、`db-verify.txt`（15 张租户表 RLS）、契约 `TenantProfile`/`TenantDomain` |
+| 套餐、配额与使用量 | `tenancy_plan`（trial/standard/enterprise 与默认配额）、`tenancy_quota` 原子扣减、`QuotaExceeded` 429 | `backend-tests.txt`、`tests/db/60-tenant-lifecycle.sql`；契约 `TenantQuota` |
+| 两租户同业务编号 | `tenancy_business_number_sequence` + `tenancy_business_number`（`(tenant_id, scope, business_number)` 唯一） | `two-tenant-numbers.txt`：两租户各自 `WO-000001` 并存，无租户上下文 0 行 |
+| 平台不可读业务正文 | `PlatformDomainIsolationFilter`（平台/租户请求头互斥）、平台接口只暴露元数据/配额/审计/支持访问 | `platform-isolation.txt`（401/403 互斥用例 8/8） |
+| 支持访问工单与醒目提示 | `SupportAccessRules`、`SupportAccessStore`、`SupportAccessBannerFilter`（banner + 三个 ASCII 响应头 + 只读限制） | `support-access.txt`（独立审批、过期、banner、非 GET 403） |
+| 冻结后阻断与保留通道 | `TenantExecutionGate`（业务写/插件/AI 三种 423）、`TenantWriteBlockFilter` 白名单（导出、申诉、撤回注销） | `frozen-block.txt`；运行手册 §3–§5 |
+| 注销冷静期与最终删除 | `closing_requested_at`/`cooling_off_until`、`COOLING_OFF_ACTIVE` 409、删除释放域名与支持访问、`deleted` 410 | `db-verify.txt`、`frozen-block.txt`；审计动作链 `tenancy_lifecycle_audit` |
+| API 与契约 | `/api/v1/tenant/**`、`/platform/api/v1/tenants/**`；OpenAPI 1.2.0 新增 28 条路径、20 个 schema | `contract-check.txt`（7 份契约 PASS，基线已重冻结） |
+| 运行手册与证据 | `docs/runbooks/tenant-lifecycle.md`、`docs/evidence/wp02-01/` | `db-verify.txt`、`backend-tests.txt`、`backend-verify.txt`、`coverage-gate.txt` |
+
+**遗留与说明（WP02-01）：** ①平台运营身份仍是 `X-Platform-Operator-Id` 占位头，真实认证与权限由 WP02-02/02-04 接入，共享环境必须关闭该头信任；②平台跨租户目录与控制台界面属 WP02-07，本包只提供平台域 API；③最终删除仅做状态、审计、域名与支持访问释放，业务数据物理清空属 WP02-08；④冷静期长度只能通过启动配置 `platform.tenancy.cooling-off-days` 调整；⑤补偿：`tenancy_profile` 最初漏写 RLS，由 db-verify 第 5 步拦截并修复，过程见证据 README。
 
 ### WP02-02 身份与会话
 

@@ -1,0 +1,9 @@
+﻿PASS openapi/platform-api.v1.json
+PASS events/employee.hired.v1.json
+PASS events/platform.file.scanned.v1.json
+PASS events/platform.file.uploaded.v1.json
+PASS events/platform.job.requested.v1.json
+PASS plugins/plugin-manifest.v1.json
+PASS events/event-catalog.json
+
+契约门禁通过：7 份契约，3 类覆盖完整

@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-11T08:17:42.546Z",
+  "frozenAt": "2026-11-11T09:01:35.588Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "e8506cac15b27af9dbb92acc9c642e27aad9fe09d25b7400c9b58fda76cc2b69",
+      "sha256": "dc5b038a988df8b139a698f56324cd18737ff785e73c81285a002ebfc75bc9bf",
       "tokens": {
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
@@ -204,6 +204,348 @@
           "defined": true
         },
         "response:PUT /api/v1/work-assistant/policies/current:503": {
+          "defined": true
+        },
+        "operation:GET /api/v1/tenant": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/tenant:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/tenant:400": {
+          "defined": true
+        },
+        "response:GET /api/v1/tenant:404": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/tenant/profile": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/tenant/profile:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/tenant/profile:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/tenant/profile:423": {
+          "defined": true
+        },
+        "operation:POST /api/v1/tenant/closing": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/tenant/closing:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/closing:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/closing:409": {
+          "defined": true
+        },
+        "operation:POST /api/v1/tenant/closing/cancel": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/tenant/closing/cancel:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/closing/cancel:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/closing/cancel:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/tenant/export": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/tenant/export:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/tenant/export:400": {
+          "defined": true
+        },
+        "response:GET /api/v1/tenant/export:410": {
+          "defined": true
+        },
+        "operation:POST /api/v1/tenant/appeals": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/tenant/appeals:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/appeals:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/appeals:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/tenant/audit": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/tenant/audit:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/tenant/audit:400": {
+          "defined": true
+        },
+        "operation:POST /api/v1/tenant/quotas/{quotaKey}/consume": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/tenant/quotas/{quotaKey}/consume:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/quotas/{quotaKey}/consume:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/quotas/{quotaKey}/consume:423": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/quotas/{quotaKey}/consume:429": {
+          "defined": true
+        },
+        "operation:POST /api/v1/tenant/business-numbers/{scope}": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/tenant/business-numbers/{scope}:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/business-numbers/{scope}:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/tenant/business-numbers/{scope}:423": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/tenants:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants:409": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants:422": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/tenants/{tenantId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}:403": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}:404": {
+          "defined": true
+        },
+        "operation:DELETE /platform/api/v1/tenants/{tenantId}": {
+          "requestBodyRequired": true
+        },
+        "response:DELETE /platform/api/v1/tenants/{tenantId}:200": {
+          "defined": true
+        },
+        "response:DELETE /platform/api/v1/tenants/{tenantId}:401": {
+          "defined": true
+        },
+        "response:DELETE /platform/api/v1/tenants/{tenantId}:403": {
+          "defined": true
+        },
+        "response:DELETE /platform/api/v1/tenants/{tenantId}:404": {
+          "defined": true
+        },
+        "response:DELETE /platform/api/v1/tenants/{tenantId}:409": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/initialize": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/initialize:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/initialize:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/initialize:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/initialize:404": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/initialize:409": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/freeze": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/freeze:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/freeze:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/freeze:409": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/restore": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/restore:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/restore:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/restore:409": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/closing": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/closing:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/closing:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/closing:409": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/closing/cancel": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/closing/cancel:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/closing/cancel:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/closing/cancel:409": {
+          "defined": true
+        },
+        "operation:PUT /platform/api/v1/tenants/{tenantId}/profile": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /platform/api/v1/tenants/{tenantId}/profile:200": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/tenants/{tenantId}/profile:400": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/tenants/{tenantId}/profile:404": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/tenants/{tenantId}/profile:423": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/tenants/{tenantId}/quotas": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}/quotas:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}/quotas:404": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/tenants/{tenantId}/audit": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}/audit:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}/audit:404": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/tenants/{tenantId}/support-access": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}/support-access:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/tenants/{tenantId}/support-access:404": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/support-access": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access:404": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access:410": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/approve": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/approve:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/approve:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/approve:404": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/approve:409": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/deny": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/deny:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/deny:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/deny:404": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/deny:409": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/revoke": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/revoke:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/revoke:404": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/revoke:409": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/enter": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/enter:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/enter:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/enter:404": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/enter:410": {
           "defined": true
         },
         "schema:SystemHealth.status": {
@@ -662,6 +1004,510 @@
           "enum": [
             "revoked"
           ]
+        },
+        "schema:Tenant.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Tenant.slug": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Tenant.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Tenant.status": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:Tenant.planCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Tenant.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Tenant.updatedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Tenant.frozenAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Tenant.frozenReason": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Tenant.closingRequestedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Tenant.coolingOffUntil": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Tenant.deletedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantProfile.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantProfile.brandName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantProfile.brandColor": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantProfile.locale": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "en-US",
+            "zh-CN"
+          ]
+        },
+        "schema:TenantProfile.timezone": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantProfile.features": {
+          "type": "object",
+          "required": true
+        },
+        "schema:TenantProfile.updatedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantProfile.updatedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantDomain.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantDomain.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantDomain.domain": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantDomain.kind": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "alias",
+            "primary"
+          ]
+        },
+        "schema:TenantDomain.verified": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:TenantQuota.key": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantQuota.limit": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:TenantQuota.used": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:TenantQuota.unit": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantQuota.period": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "day",
+            "month",
+            "total"
+          ]
+        },
+        "schema:TenantLifecycleAudit.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantLifecycleAudit.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantLifecycleAudit.action": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "appeal_submitted",
+            "closing_cancelled",
+            "closing_requested",
+            "created",
+            "deleted",
+            "exported",
+            "frozen",
+            "initialized",
+            "restored",
+            "support_access_approved",
+            "support_access_denied",
+            "support_access_requested",
+            "support_access_revoked"
+          ]
+        },
+        "schema:TenantLifecycleAudit.fromStatus": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantLifecycleAudit.toStatus": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantLifecycleAudit.actor": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantLifecycleAudit.reason": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantLifecycleAudit.ticketId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantLifecycleAudit.correlationId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantLifecycleAudit.traceId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantLifecycleAudit.occurredAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantAppeal.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantAppeal.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantAppeal.subjectId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantAppeal.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantAppeal.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "accepted",
+            "rejected",
+            "submitted"
+          ]
+        },
+        "schema:TenantAppeal.submittedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantView.tenant": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:TenantView.profile": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantView.domains": {
+          "type": "array",
+          "required": true
+        },
+        "schema:TenantView.quotas": {
+          "type": "array",
+          "required": true
+        },
+        "schema:TenantView.audit": {
+          "type": "array",
+          "required": true
+        },
+        "schema:TenantView.appeals": {
+          "type": "array",
+          "required": true
+        },
+        "schema:TenantExport.generatedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantExport.tenant": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:TenantExport.profile": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantExport.domains": {
+          "type": "array",
+          "required": true
+        },
+        "schema:TenantExport.quotas": {
+          "type": "array",
+          "required": true
+        },
+        "schema:TenantExport.audit": {
+          "type": "array",
+          "required": true
+        },
+        "schema:TenantExport.appeals": {
+          "type": "array",
+          "required": true
+        },
+        "schema:TenantExport.notice": {
+          "type": "string",
+          "required": true
+        },
+        "schema:BusinessNumber.scope": {
+          "type": "string",
+          "required": true
+        },
+        "schema:BusinessNumber.number": {
+          "type": "string",
+          "required": true
+        },
+        "schema:BusinessNumber.sequence": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:CreateTenantRequest.tenantId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateTenantRequest.slug": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateTenantRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateTenantRequest.planCode": {
+          "type": "string",
+          "required": false
+        },
+        "schema:CreateTenantRequest.brandName": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateTenantRequest.brandColor": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateTenantRequest.locale": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "en-US",
+            "null",
+            "zh-CN"
+          ]
+        },
+        "schema:CreateTenantRequest.timezone": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateTenantRequest.primaryDomain": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateTenantRequest.domains": {
+          "type": "array",
+          "required": false
+        },
+        "schema:CreateTenantRequest.features": {
+          "type": "object",
+          "required": false
+        },
+        "schema:TenantProfileRequest.brandName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantProfileRequest.brandColor": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantProfileRequest.locale": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "en-US",
+            "zh-CN"
+          ]
+        },
+        "schema:TenantProfileRequest.timezone": {
+          "type": "string",
+          "required": true
+        },
+        "schema:TenantProfileRequest.features": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ReasonRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ConsumeQuotaRequest.amount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:AppealRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccessRequest.ticketId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccessRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccessRequest.minutes": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:SupportAccess.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccess.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccess.ticketId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccess.operatorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccess.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccess.requestedMinutes": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:SupportAccess.scope": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "tenant_admin_read"
+          ]
+        },
+        "schema:SupportAccess.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "approved",
+            "denied",
+            "expired",
+            "pending",
+            "revoked"
+          ]
+        },
+        "schema:SupportAccess.requestedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccess.approvedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:SupportAccess.approvedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:SupportAccess.expiresAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:SupportAccess.revokedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:SupportAccess.lastUsedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:SupportAccessBanner.ticketId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccessBanner.operatorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportAccessBanner.expiresAt": {
+          "type": "object",
+          "required": true
+        },
+        "schema:SupportAccessBanner.remainingSeconds": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:SupportAccessBanner.readOnly": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:SupportAccessBanner.message": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportGrant.accessId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportGrant.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportGrant.ticketId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportGrant.operatorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SupportGrant.readOnly": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:SupportGrant.expiresAt": {
+          "type": "object",
+          "required": true
+        },
+        "schema:SupportGrant.banner": {
+          "type": "$ref",
+          "required": true
         }
       }
     },

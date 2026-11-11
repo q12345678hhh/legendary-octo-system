@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.1.0",
-    "description": "平台骨架契约：存活检查、统一错误、异步作业、文件、死信回放。业务契约随工作包冻结后追加。"
+    "version": "1.2.0",
+    "description": "平台骨架契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期与支持访问。业务契约随工作包冻结后追加。"
   },
   "servers": [
     {
@@ -499,6 +499,732 @@
           "503": { "$ref": "#/components/responses/Problem" }
         }
       }
+    },
+    "/api/v1/tenant": {
+      "get": {
+        "operationId": "getCurrentTenant",
+        "summary": "查看当前租户的生命周期、配置、配额与最近审计",
+        "description": "必须携带 X-Tenant-Id；响应只包含该租户自身数据，跨租户不可见。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SupportAccessHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "租户视图",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TenantView" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/tenant/profile": {
+      "put": {
+        "operationId": "updateCurrentTenantProfile",
+        "summary": "更新品牌、语言、时区与功能开关",
+        "description": "注销冷静期与已删除状态下配置锁定，返回 423 TENANT_CONFIG_LOCKED。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TenantProfileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的配置",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TenantProfile" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "423": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/tenant/closing": {
+      "post": {
+        "operationId": "requestTenantClosing",
+        "summary": "申请注销并进入冷静期",
+        "description": "写入 closing_requested_at 与 cooling_off_until；冷静期内仍可撤回、导出与申诉。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReasonRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已进入注销冷静期",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/tenant/closing/cancel": {
+      "post": {
+        "operationId": "cancelTenantClosing",
+        "summary": "冷静期内撤回注销",
+        "description": "该路径在冻结/注销写阻断中放行，保证用户始终能撤回。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReasonRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已恢复到 active",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/tenant/export": {
+      "get": {
+        "operationId": "exportCurrentTenant",
+        "summary": "受控导出租户配置与生命周期数据",
+        "description": "冻结与注销冷静期仍可用；导出只含配置、配额、审计与申诉，不含业务正文，并写入 exported 审计。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "导出内容，响应头 X-Controlled-Export 标记导出通道",
+            "headers": {
+              "X-Controlled-Export": {
+                "description": "固定为 tenant-lifecycle",
+                "schema": { "type": "string" }
+              },
+              "Cache-Control": {
+                "description": "no-store",
+                "schema": { "type": "string" }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TenantExport" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "410": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/tenant/appeals": {
+      "post": {
+        "operationId": "submitTenantAppeal",
+        "summary": "冻结或注销冷静期内提交申诉",
+        "description": "只有 frozen 与 closing 可申诉；该路径在写阻断中放行。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AppealRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "申诉已受理",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TenantAppeal" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/tenant/audit": {
+      "get": {
+        "operationId": "listCurrentTenantAudit",
+        "summary": "查看当前租户最近的生命周期审计",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SupportAccessHeader" }
+        ],
+        "responses": {
+          "200": {
+            "description": "审计条目，按发生时间倒序",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TenantLifecycleAudit" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/tenant/quotas/{quotaKey}/consume": {
+      "post": {
+        "operationId": "consumeTenantQuota",
+        "summary": "原子扣减配额",
+        "description": "条件更新保证 used + amount 不超过 limit；冻结状态返回 423，超限返回 429。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/QuotaKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ConsumeQuotaRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "扣减后的配额列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TenantQuota" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "423": { "$ref": "#/components/responses/Problem" },
+          "429": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/tenant/business-numbers/{scope}": {
+      "post": {
+        "operationId": "issueBusinessNumber",
+        "summary": "在指定业务域取号",
+        "description": "编号按租户独立递增，不同租户可以出现相同编号；冻结状态返回 423。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/BusinessScope" }
+        ],
+        "responses": {
+          "200": {
+            "description": "新编号",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BusinessNumber" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "423": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants": {
+      "post": {
+        "operationId": "createTenant",
+        "summary": "创建租户（provisioning）",
+        "description": "平台请求必须带 X-Platform-Operator-Id 且严禁携带 X-Tenant-Id；创建与初始化分两步，便于校验域名与品牌配置。",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateTenantRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已创建，状态为 provisioning",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}": {
+      "get": {
+        "operationId": "getTenantForPlatform",
+        "summary": "平台查看租户元数据与生命周期",
+        "description": "只返回租户元数据、配置、配额与审计，不提供业务正文读取端点。",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "租户视图",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TenantView" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTenant",
+        "summary": "冷静期结束后最终删除租户",
+        "description": "只更新状态、释放域名、撤销支持访问并写审计；业务数据物理清理由 WP02-08 负责。",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReasonRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已标记 deleted",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/initialize": {
+      "post": {
+        "operationId": "initializeTenant",
+        "summary": "provisioning → active",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "已启用",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/freeze": {
+      "post": {
+        "operationId": "freezeTenant",
+        "summary": "冻结租户（active → frozen）",
+        "description": "冻结后阻断业务写入、插件与 AI 新执行，仅保留受控导出与申诉。",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReasonRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已冻结",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/restore": {
+      "post": {
+        "operationId": "restoreTenant",
+        "summary": "解冻租户（frozen → active）",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReasonRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已恢复",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/closing": {
+      "post": {
+        "operationId": "requestTenantClosingByPlatform",
+        "summary": "平台代租户发起注销（进入冷静期）",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReasonRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已进入冷静期",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/closing/cancel": {
+      "post": {
+        "operationId": "cancelTenantClosingByPlatform",
+        "summary": "平台撤回注销（closing → active）",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReasonRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已恢复",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Tenant" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/profile": {
+      "put": {
+        "operationId": "updateTenantProfileByPlatform",
+        "summary": "平台更新租户品牌与区域配置",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TenantProfileRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的配置",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TenantProfile" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "423": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/quotas": {
+      "get": {
+        "operationId": "listTenantQuotas",
+        "summary": "平台查看租户配额与使用量",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "配额列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TenantQuota" }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/audit": {
+      "get": {
+        "operationId": "listTenantAuditForPlatform",
+        "summary": "平台查看租户生命周期审计",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "审计条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TenantLifecycleAudit" }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/support-access": {
+      "get": {
+        "operationId": "listTenantSupportAccess",
+        "summary": "列出支持访问申请与授权",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "支持访问列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SupportAccess" }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "requestTenantSupportAccess",
+        "summary": "申请支持访问（工单 + 理由 + 时限）",
+        "description": "工单格式 ^[A-Z][A-Z0-9-]{3,31}$，理由 10–500 字，时限 1–60 分钟；审批人必须与申请人不同。",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SupportAccessRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "申请已创建，状态 pending",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SupportAccess" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "410": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/support-access/{accessId}/approve": {
+      "post": {
+        "operationId": "approveTenantSupportAccess",
+        "summary": "独立审批支持访问",
+        "description": "审批人不得与申请人相同，否则返回 403 SUPPORT_SEPARATION_REQUIRED。",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" },
+          { "$ref": "#/components/parameters/SupportAccessIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "已批准，带到期时间",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SupportAccess" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/support-access/{accessId}/deny": {
+      "post": {
+        "operationId": "denyTenantSupportAccess",
+        "summary": "拒绝支持访问申请",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" },
+          { "$ref": "#/components/parameters/SupportAccessIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "已拒绝",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SupportAccess" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/support-access/{accessId}/revoke": {
+      "post": {
+        "operationId": "revokeTenantSupportAccess",
+        "summary": "撤销已生效的支持访问",
+        "parameters": [
+          { "$ref": "#/components/parameters/PlatformOperatorHeader" },
+          { "$ref": "#/components/parameters/TenantIdPath" },
+          { "$ref": "#/components/parameters/SupportAccessIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "已撤销",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SupportAccess" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/platform/api/v1/tenants/{tenantId}/support-access/{accessId}/enter": {
+      "post": {
+        "operationId": "enterTenantSupportAccess",
+        "summary": "进入支持访问并取得只读标识",
+        "description": "仅 approved 且未撤销、未过期可用；过期返回 403 SUPPORT_ACCESS_EXPIRED，非 approved 返回 403 SUPPORT_ACCESS_INACTIVE。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantIdPath" },
+          { "$ref": "#/components/parameters/SupportAccessIdPath" }
+        ],
+        "responses": {
+          "200": {
+            "description": "只读会话与必须常驻展示的 banner",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SupportGrant" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "410": { "$ref": "#/components/responses/Problem" }
+        }
+      }
     }
   },
   "components": {
@@ -574,6 +1300,46 @@
         "required": true,
         "description": "ECDSA P-256 签名（IEEE P1363，base64），规范串为方法、路径、时间戳与请求体 SHA-256",
         "schema": { "type": "string" }
+      },
+      "PlatformOperatorHeader": {
+        "name": "X-Platform-Operator-Id",
+        "in": "header",
+        "required": true,
+        "description": "平台运营主体；出现该头的请求不得再携带 X-Tenant-Id，否则 403 PLATFORM_TENANT_CONTEXT_FORBIDDEN",
+        "schema": { "type": "string" }
+      },
+      "SupportAccessHeader": {
+        "name": "X-Support-Access-Id",
+        "in": "header",
+        "required": false,
+        "description": "已批准的支持访问 ID；仅用于 GET，服务端回写 X-Support-Access-Notice/Expires-At/Ticket 三个响应头",
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "TenantIdPath": {
+        "name": "tenantId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "SupportAccessIdPath": {
+        "name": "accessId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "QuotaKey": {
+        "name": "quotaKey",
+        "in": "path",
+        "required": true,
+        "description": "配额键，例如 users、storage_mb、ai_tokens",
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,63}$" }
+      },
+      "BusinessScope": {
+        "name": "scope",
+        "in": "path",
+        "required": true,
+        "description": "业务域，例如 WO、INV",
+        "schema": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,31}$" }
       }
     },
     "responses": {
@@ -897,6 +1663,308 @@
         "required": ["status"],
         "properties": {
           "status": { "type": "string", "enum": ["revoked"] }
+        }
+      },
+      "TenantStatus": {
+        "type": "string",
+        "description": "租户生命周期状态；只有 active 可写、可执行插件与 AI",
+        "enum": ["provisioning", "active", "frozen", "closing", "deleted"]
+      },
+      "Tenant": {
+        "type": "object",
+        "required": ["id", "slug", "name", "status", "planCode", "createdAt", "updatedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "slug": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,31}$" },
+          "name": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/TenantStatus" },
+          "planCode": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "frozenAt": { "type": ["string", "null"], "format": "date-time" },
+          "frozenReason": { "type": ["string", "null"] },
+          "closingRequestedAt": { "type": ["string", "null"], "format": "date-time" },
+          "coolingOffUntil": { "type": ["string", "null"], "format": "date-time" },
+          "deletedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "TenantProfile": {
+        "type": "object",
+        "required": ["tenantId", "brandName", "brandColor", "locale", "timezone", "features", "updatedAt"],
+        "properties": {
+          "tenantId": { "type": "string", "format": "uuid" },
+          "brandName": { "type": "string", "maxLength": 100 },
+          "brandColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+          "locale": { "type": "string", "enum": ["zh-CN", "en-US"] },
+          "timezone": { "type": "string", "maxLength": 64 },
+          "features": {
+            "type": "object",
+            "description": "功能开关，只能是布尔值；键不超过 100 项",
+            "additionalProperties": { "type": "boolean" }
+          },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "updatedBy": { "type": ["string", "null"] }
+        }
+      },
+      "TenantDomain": {
+        "type": "object",
+        "required": ["id", "tenantId", "domain", "kind", "verified"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "domain": { "type": "string" },
+          "kind": { "type": "string", "enum": ["primary", "alias"] },
+          "verified": { "type": "boolean" }
+        }
+      },
+      "TenantQuota": {
+        "type": "object",
+        "required": ["key", "limit", "used", "unit", "period"],
+        "properties": {
+          "key": { "type": "string" },
+          "limit": { "type": "integer", "minimum": 0 },
+          "used": { "type": "integer", "minimum": 0 },
+          "unit": { "type": "string" },
+          "period": { "type": "string", "enum": ["day", "month", "total"] }
+        }
+      },
+      "TenantLifecycleAudit": {
+        "type": "object",
+        "required": ["id", "tenantId", "action", "actor", "occurredAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "action": {
+            "type": "string",
+            "enum": [
+              "created",
+              "initialized",
+              "frozen",
+              "restored",
+              "closing_requested",
+              "closing_cancelled",
+              "deleted",
+              "exported",
+              "appeal_submitted",
+              "support_access_requested",
+              "support_access_approved",
+              "support_access_denied",
+              "support_access_revoked"
+            ]
+          },
+          "fromStatus": { "type": ["string", "null"] },
+          "toStatus": { "type": ["string", "null"] },
+          "actor": { "type": "string" },
+          "reason": { "type": ["string", "null"] },
+          "ticketId": { "type": ["string", "null"] },
+          "correlationId": { "type": ["string", "null"] },
+          "traceId": { "type": ["string", "null"] },
+          "occurredAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TenantAppeal": {
+        "type": "object",
+        "required": ["id", "tenantId", "subjectId", "reason", "status", "submittedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "subjectId": { "type": "string" },
+          "reason": { "type": "string", "minLength": 5, "maxLength": 2000 },
+          "status": { "type": "string", "enum": ["submitted", "accepted", "rejected"] },
+          "submittedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TenantView": {
+        "type": "object",
+        "required": ["tenant", "domains", "quotas", "audit", "appeals"],
+        "properties": {
+          "tenant": { "$ref": "#/components/schemas/Tenant" },
+          "profile": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/TenantProfile" },
+              { "type": "null" }
+            ]
+          },
+          "domains": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenantDomain" }
+          },
+          "quotas": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenantQuota" }
+          },
+          "audit": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenantLifecycleAudit" }
+          },
+          "appeals": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenantAppeal" }
+          }
+        }
+      },
+      "TenantExport": {
+        "type": "object",
+        "description": "受控导出：只含配置、配额、审计与申诉，不含任何业务正文",
+        "required": ["generatedAt", "tenant", "domains", "quotas", "audit", "appeals", "notice"],
+        "properties": {
+          "generatedAt": { "type": "string", "format": "date-time" },
+          "tenant": { "$ref": "#/components/schemas/Tenant" },
+          "profile": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/TenantProfile" },
+              { "type": "null" }
+            ]
+          },
+          "domains": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenantDomain" }
+          },
+          "quotas": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenantQuota" }
+          },
+          "audit": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenantLifecycleAudit" }
+          },
+          "appeals": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TenantAppeal" }
+          },
+          "notice": { "type": "string" }
+        }
+      },
+      "BusinessNumber": {
+        "type": "object",
+        "required": ["scope", "number", "sequence"],
+        "properties": {
+          "scope": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,31}$" },
+          "number": { "type": "string" },
+          "sequence": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "CreateTenantRequest": {
+        "type": "object",
+        "required": ["slug", "name", "primaryDomain"],
+        "properties": {
+          "tenantId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "仅测试使用；生产留空由服务端生成"
+          },
+          "slug": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,31}$" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "planCode": { "type": "string", "description": "套餐编码，默认 trial" },
+          "brandName": { "type": ["string", "null"], "maxLength": 100 },
+          "brandColor": { "type": ["string", "null"], "pattern": "^#[0-9a-fA-F]{6}$" },
+          "locale": { "type": ["string", "null"], "enum": ["zh-CN", "en-US", null] },
+          "timezone": { "type": ["string", "null"], "maxLength": 64 },
+          "primaryDomain": { "type": "string" },
+          "domains": {
+            "type": "array",
+            "description": "别名域名；不能与主域名重复",
+            "items": { "type": "string" }
+          },
+          "features": {
+            "type": "object",
+            "description": "缺省时继承套餐默认开关",
+            "additionalProperties": { "type": "boolean" }
+          }
+        }
+      },
+      "TenantProfileRequest": {
+        "type": "object",
+        "required": ["brandName", "brandColor", "locale", "timezone"],
+        "properties": {
+          "brandName": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "brandColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+          "locale": { "type": "string", "enum": ["zh-CN", "en-US"] },
+          "timezone": { "type": "string", "maxLength": 64 },
+          "features": {
+            "type": "object",
+            "additionalProperties": { "type": "boolean" }
+          }
+        }
+      },
+      "ReasonRequest": {
+        "type": "object",
+        "required": ["reason"],
+        "properties": {
+          "reason": { "type": "string", "minLength": 5, "maxLength": 500 }
+        }
+      },
+      "ConsumeQuotaRequest": {
+        "type": "object",
+        "required": ["amount"],
+        "properties": {
+          "amount": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "AppealRequest": {
+        "type": "object",
+        "required": ["reason"],
+        "properties": {
+          "reason": { "type": "string", "minLength": 5, "maxLength": 2000 }
+        }
+      },
+      "SupportAccessRequest": {
+        "type": "object",
+        "required": ["ticketId", "reason", "minutes"],
+        "properties": {
+          "ticketId": { "type": "string", "pattern": "^[A-Z][A-Z0-9-]{3,31}$" },
+          "reason": { "type": "string", "minLength": 10, "maxLength": 500 },
+          "minutes": { "type": "integer", "minimum": 1, "maximum": 60 }
+        }
+      },
+      "SupportAccess": {
+        "type": "object",
+        "required": ["id", "tenantId", "ticketId", "operatorId", "reason", "requestedMinutes",
+                     "scope", "status", "requestedAt"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "ticketId": { "type": "string" },
+          "operatorId": { "type": "string" },
+          "reason": { "type": "string" },
+          "requestedMinutes": { "type": "integer", "minimum": 1, "maximum": 60 },
+          "scope": { "type": "string", "enum": ["tenant_admin_read"] },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "approved", "denied", "expired", "revoked"]
+          },
+          "requestedAt": { "type": "string", "format": "date-time" },
+          "approvedBy": { "type": ["string", "null"] },
+          "approvedAt": { "type": ["string", "null"], "format": "date-time" },
+          "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+          "revokedAt": { "type": ["string", "null"], "format": "date-time" },
+          "lastUsedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "SupportAccessBanner": {
+        "type": "object",
+        "description": "支持访问醒目标识，前端必须常驻展示，不能折叠或仅放入通知中心",
+        "required": ["ticketId", "operatorId", "expiresAt", "remainingSeconds", "readOnly", "message"],
+        "properties": {
+          "ticketId": { "type": "string" },
+          "operatorId": { "type": "string" },
+          "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+          "remainingSeconds": { "type": "integer", "minimum": 0 },
+          "readOnly": { "type": "boolean" },
+          "message": { "type": "string" }
+        }
+      },
+      "SupportGrant": {
+        "type": "object",
+        "required": ["accessId", "tenantId", "ticketId", "operatorId", "readOnly", "expiresAt", "banner"],
+        "properties": {
+          "accessId": { "type": "string", "format": "uuid" },
+          "tenantId": { "type": "string", "format": "uuid" },
+          "ticketId": { "type": "string" },
+          "operatorId": { "type": "string" },
+          "readOnly": { "type": "boolean" },
+          "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+          "banner": { "$ref": "#/components/schemas/SupportAccessBanner" }
         }
       }
     }
