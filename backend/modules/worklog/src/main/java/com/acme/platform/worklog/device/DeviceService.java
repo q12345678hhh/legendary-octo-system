@@ -119,7 +119,7 @@ public class DeviceService {
 
     private static String requireSubject(RequestContext context) {
         if (context.subjectId() == null) {
-            throw ApiException.badRequest("SUBJECT_REQUIRED", "设备注册必须携带 X-Subject-Id");
+            throw ApiException.badRequest("SUBJECT_REQUIRED", "设备注册必须已认证");
         }
         return context.subjectId();
     }

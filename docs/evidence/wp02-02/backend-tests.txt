@@ -1,0 +1,40 @@
+﻿$env:JAVA_HOME='C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
+mvn -B -ntp -f backend/pom.xml clean install '-Djacoco.destFile=D:/DevCache/jacoco-${project.artifactId}.exec' '-Djacoco.dataFile=D:/DevCache/jacoco-${project.artifactId}.exec'
+
+== 身份与会话相关用例 ==
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.024 s -- in com.acme.platform.identity.IdentityDbTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.796 s -- in com.acme.platform.identity.IdentityProviderServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.528 s -- in com.acme.platform.identity.PasswordPolicyTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.490 s -- in com.acme.platform.identity.SessionServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.024 s -- in com.acme.platform.identity.TokenHasherTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.145 s -- in com.acme.platform.identity.TotpTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.02 s -- in com.acme.platform.AuthApiTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.767 s -- in com.acme.platform.ModuleStructureTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in com.acme.platform.RequestContextBindingFilterTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.149 s -- in com.acme.platform.SystemHealthControllerTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.410 s -- in com.acme.platform.TenantApiBoundaryTest
+
+== Reactor Summary ==
+[INFO] Enterprise Application Platform .................... SUCCESS [  8.226 s]
+[INFO] Database migrations ................................ SUCCESS [  4.627 s]
+[INFO] Module: platform ................................... SUCCESS [  6.431 s]
+[INFO] Module: tenancy .................................... SUCCESS [  6.952 s]
+[INFO] Module: organization ............................... SUCCESS [  1.464 s]
+[INFO] Module: identity ................................... SUCCESS [  8.961 s]
+[INFO] Module: authorization .............................. SUCCESS [  0.807 s]
+[INFO] Module: department ................................. SUCCESS [  0.682 s]
+[INFO] Module: appcatalog ................................. SUCCESS [  0.694 s]
+[INFO] Module: lowcode .................................... SUCCESS [  0.636 s]
+[INFO] Module: workflow ................................... SUCCESS [  0.631 s]
+[INFO] Module: hr ......................................... SUCCESS [  0.580 s]
+[INFO] Module: worklog .................................... SUCCESS [  4.020 s]
+[INFO] Module: collaboration .............................. SUCCESS [  0.651 s]
+[INFO] Module: integration ................................ SUCCESS [  0.599 s]
+[INFO] Module: plugin ..................................... SUCCESS [  0.627 s]
+[INFO] Module: ai ......................................... SUCCESS [  0.621 s]
+[INFO] Bootstrap: API ..................................... SUCCESS [ 26.894 s]
+[INFO] Bootstrap: Worker .................................. SUCCESS [  5.115 s]
+[INFO] Test support ....................................... SUCCESS [  3.202 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  01:22 min
+[INFO] Finished at: 2026-11-11T18:06:14+08:00

@@ -1,6 +1,7 @@
 package com.acme.platform;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,6 +10,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.acme.platform.identity.IdentityProperties;
+import com.acme.platform.identity.SessionPrincipal;
+import com.acme.platform.identity.SessionService;
 import com.acme.platform.platform.ApiException;
 import com.acme.platform.platform.PlatformMetrics;
 import com.acme.platform.platform.idempotency.IdempotencyService;
@@ -22,6 +26,7 @@ import com.acme.platform.tenancy.TenantSupportAccessService;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -52,10 +57,27 @@ class TenantApiBoundaryTest {
     @MockitoBean
     private IdempotencyService idempotencyService;
 
+    @MockitoBean
+    private SessionService sessionService;
+
+    @MockitoBean
+    private IdentityProperties identityProperties;
+
     @Autowired
     private MockMvc mockMvc;
 
     private final UUID tenantId = UUID.randomUUID();
+    private static final String BEARER = "Bearer test-session-token";
+
+    @BeforeEach
+    void authenticateRequests() {
+        when(identityProperties.getCookieName()).thenReturn("plt_session");
+        when(identityProperties.getCsrfCookieName()).thenReturn("plt_csrf");
+        when(sessionService.authenticateToken(any(), anyString())).thenReturn(
+                new SessionPrincipal(tenantId, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                        UUID.randomUUID(), "user", "admin@example.test", "管理员",
+                        true, true, true, true));
+    }
 
     @Test
     void platformRequestRequiresOperatorHeader() throws Exception {
@@ -76,6 +98,7 @@ class TenantApiBoundaryTest {
     @Test
     void tenantRequestMustNotCarryPlatformOperator() throws Exception {
         mockMvc.perform(get("/api/v1/tenant")
+                        .header("Authorization", BEARER)
                         .header("X-Platform-Operator-Id", "ops-a")
                         .header("X-Tenant-Id", tenantId.toString()))
                 .andExpect(status().isForbidden())
@@ -88,7 +111,9 @@ class TenantApiBoundaryTest {
         when(lifecycleService.view(tenantId)).thenReturn(new TenantLifecycleService.TenantView(
                 tenant, null, List.of(), List.of(), List.of(), List.of()));
 
-        mockMvc.perform(get("/api/v1/tenant").header("X-Tenant-Id", tenantId.toString()))
+        mockMvc.perform(get("/api/v1/tenant")
+                        .header("Authorization", BEARER)
+                        .header("X-Tenant-Id", tenantId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tenant.id").value(tenantId.toString()))
                 .andExpect(jsonPath("$.tenant.status").value("active"));
@@ -100,8 +125,8 @@ class TenantApiBoundaryTest {
                 .thenThrow(new ApiException(423, "TENANT_FROZEN", "租户已冻结"));
 
         mockMvc.perform(post("/api/v1/tenant/profile")
+                        .header("Authorization", BEARER)
                         .header("X-Tenant-Id", tenantId.toString())
-                        .header("X-Subject-Id", "employee-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"brandName":"演示","brandColor":"#1f6feb","locale":"zh-CN",
@@ -111,21 +136,22 @@ class TenantApiBoundaryTest {
                 .andExpect(jsonPath("$.code").value("TENANT_FROZEN"));
 
         mockMvc.perform(post("/api/v1/tenant/appeals")
+                        .header("Authorization", BEARER)
                         .header("X-Tenant-Id", tenantId.toString())
-                        .header("X-Subject-Id", "employee-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"冻结期间需要导出个人工时记录\"}"))
                 .andExpect(status().isOk());
     }
 
     @Test
-    void tenantWriteRequiresSubject() throws Exception {
+    void subjectHeaderIsIgnoredAndSessionIsRequired() throws Exception {
         mockMvc.perform(post("/api/v1/tenant/closing")
                         .header("X-Tenant-Id", tenantId.toString())
+                        .header("X-Subject-Id", "employee-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reason\":\"业务调整，申请注销\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("ACTOR_REQUIRED"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("SESSION_REQUIRED"));
     }
 
     @Test
@@ -140,6 +166,7 @@ class TenantApiBoundaryTest {
                         true, expiresAt, access.banner(OffsetDateTime.now())));
 
         mockMvc.perform(get("/api/v1/tenant")
+                        .header("Authorization", BEARER)
                         .header("X-Tenant-Id", tenantId.toString())
                         .header(SupportAccessBannerFilter.ACCESS_HEADER, accessId.toString()))
                 .andExpect(status().isOk())
@@ -148,6 +175,7 @@ class TenantApiBoundaryTest {
                         org.hamcrest.Matchers.containsString("read-only")));
 
         mockMvc.perform(post("/api/v1/tenant/appeals")
+                        .header("Authorization", BEARER)
                         .header("X-Tenant-Id", tenantId.toString())
                         .header(SupportAccessBannerFilter.ACCESS_HEADER, accessId.toString())
                         .contentType(MediaType.APPLICATION_JSON)

@@ -1,0 +1,36 @@
+WP02-02 认证与边界负例（boot-api 切片测试）
+
+命令：
+  $env:JAVA_HOME='C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
+  mvn -B -ntp -f backend/pom.xml -pl boot-api -am test
+
+结果：
+  Tests run: 7, Failures: 0, Errors: 0, Skipped: 0 -- in com.acme.platform.AuthApiTest
+  Tests run: 8, Failures: 0, Errors: 0, Skipped: 0 -- in com.acme.platform.TenantApiBoundaryTest
+  Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- in com.acme.platform.RequestContextBindingFilterTest
+
+AuthApiTest 用例与断言：
+  1. loginIssuesHttpOnlySessionAndCsrfCookies
+     POST /api/v1/auth/login -> 200，status=session；
+     Set-Cookie 同时含 plt_session（HttpOnly、Secure、SameSite=Lax）与 plt_csrf。
+  2. mfaChallengeDoesNotIssueSessionCookie
+     POST /api/v1/auth/login（已启用 MFA）-> 202，status=mfa_required，返回 mfaToken；
+     Set-Cookie 为空，不提前下发会话。
+  3. protectedEndpointRequiresSession
+     GET /api/v1/auth/me 无 Cookie/令牌 -> 401 SESSION_REQUIRED。
+  4. subjectHeaderCannotAuthenticate
+     仅带 X-Subject-Id: forged-actor -> 401 SESSION_REQUIRED（占位头不再被采信）。
+  5. cookieWriteRequiresMatchingCsrfToken
+     POST /api/v1/auth/logout 带会话与 plt_csrf，但缺 X-CSRF-Token -> 403 CSRF_REQUIRED。
+  6. cookieWriteWithMatchingCsrfSucceeds
+     补齐一致的 X-CSRF-Token -> 204，并下发 plt_session=; 清除 Cookie。
+  7. meReturnsAuthenticatedPrincipal
+     带有效会话 Cookie -> 200，返回 email 与 mfaSatisfied。
+
+TenantApiBoundaryTest 变更：
+  原 tenantWriteRequiresSubject（依赖 X-Subject-Id，400 ACTOR_REQUIRED）
+  改为 subjectHeaderIsIgnoredAndSessionIsRequired：无会话时 401 SESSION_REQUIRED；
+  其余租户边界用例改为 Bearer 认证，8/8 通过。
+
+RequestContextBindingFilterTest：
+  新增 ignoresClientSuppliedSubjectHeader：客户端伪造的 X-Subject-Id 不会进入请求上下文。

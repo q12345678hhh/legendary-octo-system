@@ -1,0 +1,47 @@
+WP02-02 身份与会话场景（真实 PostgreSQL）
+
+入口：com.acme.platform.identity.IdentityDbTest#identityLifecycleAcrossScenarios
+运行：scripts/db-verify.ps1 第 5c 步（-Dplatform.db.url 指向 WSL pglab 内的 platform-pg-dev）
+结果：Tests run: 1, Failures: 0, Errors: 0, Skipped: 0（2.271s）
+断言脚本：tests/db/70-identity.sql -> "WP02-02 身份与会话数据库断言通过"
+
+15 个场景（同一用例内顺序执行，租户 C/D 双租户对照）：
+
+ 1. 无账号员工
+    Person + Employment 落库成功；按邮箱查不到 identity_user_account（findByEmailOnly 为空）。
+ 2. 邀请首个成员
+    自动 owner=true、admin=true、mfaRequired=true；activationToken 以 plt_inv_ 开头。
+ 3. 令牌只存哈希
+    库中 token_hash != 明文；仅 SHA-256 可查。
+ 4. 激活
+    accept 后 principal.owner=true、mfaRequired=true、mfaSatisfied=false；会话可认证。
+ 5. 邀请一次性
+    二次 accept -> 409 INVITATION_ALREADY_ACCEPTED。
+ 6. 密码登录
+    status=session；强制 MFA 成员 mfaSatisfied=false（需二次因子）。
+ 7. 撤销即时生效
+    revoke 后 authenticate -> 401 SESSION_REVOKED。
+ 8. 过期拒绝
+    同时调整 created_at / idle_expires_at / expires_at 到过去 -> 401 SESSION_EXPIRED。
+ 9. auth_version 代际失效
+    递增 auth_version 后旧会话 -> 401 SESSION_INVALID。
+10. 跨租户会话
+    用租户 C 的会话在租户 D 认证 -> 401 SESSION_INVALID（RLS 无行）。
+11. 一人多雇佣 / 再雇佣
+    同一 personId 追加两段 Employment，历史 3 条；ACTIVE 2 条；再雇佣 effectiveFrom 晚于首段。
+12. 账号更换
+    成员 userId 改为新账号；旧账号 DISABLED；member_account_history 1 条；
+    旧会话 -> 401 SESSION_REVOKED。
+13. 服务账号令牌
+    令牌以 plt_api_ 开头；租户 C 可用且 actorType=service；
+    租户 D -> 401 TOKEN_INVALID；撤销后 -> 401 TOKEN_REVOKED。
+14. MFA 全流程
+    注册后 10 个恢复码；登录返回 mfa_required；verify 后 mfaSatisfied=true；
+    高权限成员 disable -> 409 MFA_REQUIRED_FOR_PRIVILEGED。
+15. 身份提供商与无上下文
+    draft 可建；update 到 active -> 409 CONNECTOR_NOT_AVAILABLE；
+    无租户上下文时 16 张身份表 count 全部为 0。
+
+对应验收：
+  无账号员工、再雇佣、一人多雇佣、账号更换通过；
+  过期、撤销、auth_version 变化与跨租户令牌全部拒绝。

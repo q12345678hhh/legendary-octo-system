@@ -91,7 +91,7 @@ public class IdempotencyFilter extends OncePerRequestFilter {
         if (context == null || context.tenantId() == null || context.subjectId() == null) {
             metrics.idempotency("missing_identity");
             problems.write(response, 400, "IDENTITY_REQUIRED",
-                    "使用 Idempotency-Key 时必须携带 X-Tenant-Id 与 X-Subject-Id");
+                    "使用 Idempotency-Key 时请求必须携带 X-Tenant-Id 且已完成认证");
             return;
         }
 

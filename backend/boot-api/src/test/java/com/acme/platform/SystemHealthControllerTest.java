@@ -4,6 +4,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.acme.platform.identity.IdentityProperties;
+import com.acme.platform.identity.SessionService;
 import com.acme.platform.platform.PlatformMetrics;
 import com.acme.platform.platform.idempotency.IdempotencyService;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,12 @@ class SystemHealthControllerTest {
 
     @MockitoBean
     private ProblemDetailsSupport problemDetailsSupport;
+
+    @MockitoBean
+    private SessionService sessionService;
+
+    @MockitoBean
+    private IdentityProperties identityProperties;
 
     @Autowired
     private MockMvc mockMvc;

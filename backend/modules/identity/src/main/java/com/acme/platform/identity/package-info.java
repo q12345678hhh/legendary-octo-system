@@ -5,5 +5,5 @@
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "identity",
-        allowedDependencies = { "tenancy" })
+        allowedDependencies = { "tenancy", "organization", "platform" })
 package com.acme.platform.identity;

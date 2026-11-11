@@ -37,7 +37,7 @@ BEGIN
         RAISE EXCEPTION 'V3 未生效：platform_outbox.last_attempt_at 不存在';
     END IF;
 
-    -- V4/V5/V6：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
+    -- V4/V5/V6/V7：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
     FOR rls IN
         SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity
           FROM pg_class c
@@ -48,7 +48,15 @@ BEGIN
                              'tenancy_domain', 'tenancy_quota',
                              'tenancy_business_number_sequence', 'tenancy_business_number',
                              'tenancy_lifecycle_audit', 'tenancy_support_access',
-                             'tenancy_profile', 'tenancy_appeal')
+                             'tenancy_profile', 'tenancy_appeal',
+                             'organization_person', 'organization_employment',
+                             'identity_user_account', 'identity_actor',
+                             'identity_service_account', 'identity_tenant_member',
+                             'identity_member_account_history', 'identity_password_history',
+                             'identity_invitation', 'identity_mfa_method',
+                             'identity_recovery_code', 'identity_mfa_challenge',
+                             'identity_session', 'identity_api_token',
+                             'identity_identity_provider', 'identity_auth_event')
     LOOP
         IF NOT (rls.relrowsecurity AND rls.relforcerowsecurity) THEN
             RAISE EXCEPTION '% 必须同时 ENABLE 与 FORCE RLS，实际 enable=%, force=%',
@@ -70,9 +78,17 @@ BEGIN
                          'tenancy_domain', 'tenancy_quota',
                          'tenancy_business_number_sequence', 'tenancy_business_number',
                          'tenancy_lifecycle_audit', 'tenancy_support_access',
-                         'tenancy_profile', 'tenancy_appeal');
-    IF policy_count <> 15 THEN
-        RAISE EXCEPTION 'V4/V5/V6 未完整生效：应有 15 张租户表，实际 %', policy_count;
+                         'tenancy_profile', 'tenancy_appeal',
+                         'organization_person', 'organization_employment',
+                         'identity_user_account', 'identity_actor',
+                         'identity_service_account', 'identity_tenant_member',
+                         'identity_member_account_history', 'identity_password_history',
+                         'identity_invitation', 'identity_mfa_method',
+                         'identity_recovery_code', 'identity_mfa_challenge',
+                         'identity_session', 'identity_api_token',
+                         'identity_identity_provider', 'identity_auth_event');
+    IF policy_count <> 31 THEN
+        RAISE EXCEPTION 'V4/V5/V6/V7 未完整生效：应有 31 张租户表，实际 %', policy_count;
     END IF;
 END
 $$;

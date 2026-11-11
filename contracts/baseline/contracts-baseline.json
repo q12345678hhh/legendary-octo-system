@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-11T09:01:35.588Z",
+  "frozenAt": "2026-11-11T10:03:04.359Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "dc5b038a988df8b139a698f56324cd18737ff785e73c81285a002ebfc75bc9bf",
+      "sha256": "2e3896ea9e773dc849bcbd84c25d8db0d6b9117f9c0add36aeb89ae13334ab45",
       "tokens": {
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
@@ -547,6 +547,950 @@
         },
         "response:POST /platform/api/v1/tenants/{tenantId}/support-access/{accessId}/enter:410": {
           "defined": true
+        },
+        "operation:POST /api/v1/auth/login": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/auth/login:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/login:202": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/login:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/login:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/login:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/login:423": {
+          "defined": true
+        },
+        "operation:POST /api/v1/auth/mfa/verify": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/auth/mfa/verify:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/verify:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/verify:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/verify:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/verify:429": {
+          "defined": true
+        },
+        "operation:POST /api/v1/auth/invitations/accept": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/auth/invitations/accept:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/invitations/accept:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/invitations/accept:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/invitations/accept:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/invitations/accept:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/invitations/accept:422": {
+          "defined": true
+        },
+        "operation:POST /api/v1/auth/logout": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/auth/logout:204": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/logout:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/logout:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/auth/me": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/auth/me:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/auth/me:401": {
+          "defined": true
+        },
+        "operation:POST /api/v1/auth/password/change": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/auth/password/change:204": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/password/change:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/password/change:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/password/change:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/auth/sessions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/auth/sessions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/auth/sessions:401": {
+          "defined": true
+        },
+        "operation:DELETE /api/v1/auth/sessions/{sessionId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/auth/sessions/{sessionId}:204": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/auth/sessions/{sessionId}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/auth/sessions/{sessionId}:403": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/auth/sessions/{sessionId}:404": {
+          "defined": true
+        },
+        "operation:POST /api/v1/auth/sessions/revoke-all": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/auth/sessions/revoke-all:204": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/sessions/revoke-all:401": {
+          "defined": true
+        },
+        "operation:GET /api/v1/auth/mfa": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/auth/mfa:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/auth/mfa:401": {
+          "defined": true
+        },
+        "operation:POST /api/v1/auth/mfa/totp/start": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/auth/mfa/totp/start:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/totp/start:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/totp/start:503": {
+          "defined": true
+        },
+        "operation:POST /api/v1/auth/mfa/totp/confirm": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/auth/mfa/totp/confirm:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/totp/confirm:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/totp/confirm:401": {
+          "defined": true
+        },
+        "operation:POST /api/v1/auth/mfa/disable": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/auth/mfa/disable:204": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/disable:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/disable:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/auth/mfa/disable:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/members": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/members:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/members:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/members:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/members/invitations": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/members/invitations:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/invitations:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/invitations:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/invitations:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/invitations:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/invitations:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/invitations:422": {
+          "defined": true
+        },
+        "operation:PATCH /api/v1/members/{memberId}": {
+          "requestBodyRequired": true
+        },
+        "response:PATCH /api/v1/members/{memberId}:200": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}:401": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}:403": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}:404": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}:409": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}:422": {
+          "defined": true
+        },
+        "operation:PATCH /api/v1/members/{memberId}/account": {
+          "requestBodyRequired": true
+        },
+        "response:PATCH /api/v1/members/{memberId}/account:200": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}/account:401": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}/account:403": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}/account:404": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}/account:409": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/members/{memberId}/account:422": {
+          "defined": true
+        },
+        "operation:POST /api/v1/members/{memberId}/reset-password": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/members/{memberId}/reset-password:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/{memberId}/reset-password:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/{memberId}/reset-password:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/{memberId}/reset-password:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/members/{memberId}/reset-password:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/service-accounts": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/service-accounts:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/service-accounts:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/service-accounts:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/service-accounts": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/service-accounts:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts:422": {
+          "defined": true
+        },
+        "operation:DELETE /api/v1/service-accounts/{serviceAccountId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/service-accounts/{serviceAccountId}:204": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/service-accounts/{serviceAccountId}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/service-accounts/{serviceAccountId}:403": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/service-accounts/{serviceAccountId}:404": {
+          "defined": true
+        },
+        "operation:GET /api/v1/service-accounts/{serviceAccountId}/tokens": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/service-accounts/{serviceAccountId}/tokens:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/service-accounts/{serviceAccountId}/tokens:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/service-accounts/{serviceAccountId}/tokens:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/service-accounts/{serviceAccountId}/tokens": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/service-accounts/{serviceAccountId}/tokens:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts/{serviceAccountId}/tokens:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts/{serviceAccountId}/tokens:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts/{serviceAccountId}/tokens:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts/{serviceAccountId}/tokens:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/service-accounts/{serviceAccountId}/tokens:422": {
+          "defined": true
+        },
+        "operation:DELETE /api/v1/service-accounts/{serviceAccountId}/tokens/{tokenId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/service-accounts/{serviceAccountId}/tokens/{tokenId}:204": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/service-accounts/{serviceAccountId}/tokens/{tokenId}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/service-accounts/{serviceAccountId}/tokens/{tokenId}:403": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/service-accounts/{serviceAccountId}/tokens/{tokenId}:404": {
+          "defined": true
+        },
+        "operation:GET /api/v1/identity-providers": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/identity-providers:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/identity-providers:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/identity-providers:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/identity-providers": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/identity-providers:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/identity-providers:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/identity-providers:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/identity-providers:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/identity-providers:422": {
+          "defined": true
+        },
+        "operation:PATCH /api/v1/identity-providers/{providerId}": {
+          "requestBodyRequired": true
+        },
+        "response:PATCH /api/v1/identity-providers/{providerId}:200": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/identity-providers/{providerId}:401": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/identity-providers/{providerId}:403": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/identity-providers/{providerId}:404": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/identity-providers/{providerId}:409": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/identity-providers/{providerId}:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/people": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/people:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/people:401": {
+          "defined": true
+        },
+        "operation:POST /api/v1/people": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/people:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/people:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/people:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/people:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/people:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/people/{personId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/people/{personId}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/people/{personId}:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/people/{personId}:404": {
+          "defined": true
+        },
+        "operation:GET /api/v1/people/{personId}/employments": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/people/{personId}/employments:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/people/{personId}/employments:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/people/{personId}/employments:404": {
+          "defined": true
+        },
+        "operation:POST /api/v1/people/{personId}/employments": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/people/{personId}/employments:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/people/{personId}/employments:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/people/{personId}/employments:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/people/{personId}/employments:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/people/{personId}/employments:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/people/{personId}/employments:422": {
+          "defined": true
+        },
+        "operation:PATCH /api/v1/employments/{employmentId}/end": {
+          "requestBodyRequired": true
+        },
+        "response:PATCH /api/v1/employments/{employmentId}/end:200": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/employments/{employmentId}/end:401": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/employments/{employmentId}/end:403": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/employments/{employmentId}/end:404": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/employments/{employmentId}/end:409": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/employments/{employmentId}/end:422": {
+          "defined": true
+        },
+        "schema:SessionPrincipal.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SessionPrincipal.actorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SessionPrincipal.userId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionPrincipal.memberId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionPrincipal.sessionId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionPrincipal.actorType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "ai",
+            "external",
+            "service",
+            "user"
+          ]
+        },
+        "schema:SessionPrincipal.email": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionPrincipal.displayName": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionPrincipal.mfaSatisfied": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:SessionPrincipal.owner": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:SessionPrincipal.admin": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:SessionPrincipal.mfaRequired": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:LoginResponse.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "mfa_required",
+            "session"
+          ]
+        },
+        "schema:LoginResponse.principal": {
+          "type": "$ref",
+          "required": false
+        },
+        "schema:LoginResponse.mfaToken": {
+          "type": "string",
+          "required": false
+        },
+        "schema:LoginResponse.mfaExpiresAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:LoginResponse.sessionExpiresAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MeView.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:MeView.actorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:MeView.userId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MeView.memberId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MeView.actorType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:MeView.email": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MeView.displayName": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MeView.owner": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:MeView.admin": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:MeView.mfaRequired": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:MeView.mfaSatisfied": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:MeView.mfaEnabled": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:SessionView.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SessionView.deviceId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionView.deviceLabel": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionView.ip": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionView.userAgent": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionView.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionView.lastSeenAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionView.expiresAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:SessionView.current": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:MfaStatusView.enabled": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:MfaStatusView.remainingRecoveryCodes": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:MfaEnrollment.secret": {
+          "type": "string",
+          "required": true
+        },
+        "schema:MfaEnrollment.otpauthUri": {
+          "type": "string",
+          "required": true
+        },
+        "schema:MemberView.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:MemberView.userId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MemberView.personId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MemberView.email": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MemberView.displayName": {
+          "type": "string",
+          "required": false
+        },
+        "schema:MemberView.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "disabled",
+            "invited",
+            "suspended"
+          ]
+        },
+        "schema:MemberView.owner": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:MemberView.admin": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:MemberView.mfaRequired": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:InvitationIssued.memberId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:InvitationIssued.userId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:InvitationIssued.email": {
+          "type": "string",
+          "required": true
+        },
+        "schema:InvitationIssued.activationToken": {
+          "type": "string",
+          "required": true
+        },
+        "schema:InvitationIssued.expiresAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:InvitationIssued.owner": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:InvitationIssued.admin": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:InvitationIssued.mfaRequired": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:ServiceAccount.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ServiceAccount.actorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ServiceAccount.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ServiceAccount.description": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ServiceAccount.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ServiceAccount.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ApiTokenIssued.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ApiTokenIssued.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ApiTokenIssued.scopes": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ApiTokenIssued.expiresAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ApiTokenIssued.token": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ApiTokenView.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ApiTokenView.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ApiTokenView.prefix": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ApiTokenView.scopes": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ApiTokenView.expiresAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ApiTokenView.revokedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ApiTokenView.lastUsedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ApiTokenView.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:IdentityProvider.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:IdentityProvider.providerType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "oidc",
+            "saml",
+            "scim"
+          ]
+        },
+        "schema:IdentityProvider.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:IdentityProvider.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "disabled",
+            "draft"
+          ]
+        },
+        "schema:IdentityProvider.config": {
+          "type": "object",
+          "required": false
+        },
+        "schema:IdentityProvider.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:IdentityProvider.updatedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Person.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Person.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Person.displayName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Person.primaryEmail": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Person.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "schema:Person.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Employment.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Employment.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Employment.personId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Employment.employmentNo": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Employment.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "ended"
+          ]
+        },
+        "schema:Employment.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Employment.effectiveTo": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Employment.jobTitle": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Employment.createdAt": {
+          "type": "string",
+          "required": false
         },
         "schema:SystemHealth.status": {
           "type": "string",

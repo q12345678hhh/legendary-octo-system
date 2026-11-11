@@ -52,6 +52,18 @@ class RequestContextBindingFilterTest {
     }
 
     @Test
+    void ignoresClientSuppliedSubjectHeader() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Subject-Id", "forged-operator");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicReference<RequestContext> seen = new AtomicReference<>();
+
+        filter.doFilter(request, response, (req, res) -> seen.set(RequestContextHolder.find().orElseThrow()));
+
+        assertThat(seen.get().subjectId()).isNull();
+    }
+
+    @Test
     void ignoresInvalidTenantAndTraceHeaders() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(RequestContextBindingFilter.TENANT_HEADER, "not-a-uuid");

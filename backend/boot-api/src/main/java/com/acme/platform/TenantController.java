@@ -100,7 +100,7 @@ public class TenantController {
         return RequestContextHolder.find().map(RequestContext::subjectId)
                 .filter(value -> !value.isBlank())
                 .orElseThrow(() -> ApiException.badRequest(
-                        "ACTOR_REQUIRED", "写操作必须携带 X-Subject-Id，便于审计追溯"));
+                        "ACTOR_REQUIRED", "写操作必须已认证，便于审计追溯"));
     }
 
     public record ProfileRequest(String brandName, String brandColor, String locale,
