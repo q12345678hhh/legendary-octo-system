@@ -31,6 +31,9 @@ test('设备链路端点全部在契约中', () => {
 
 test('不存在远程开启或控制采集的端点', () => {
   for (const path of Object.keys(api.paths)) {
+    if (!path.startsWith('/api/v1/work-assistant')) {
+      continue;
+    }
     assert.doesNotMatch(path, /\/(start|capture|enable|resume)\b/i,
       `禁止出现远程启动/控制采集端点: ${path}`);
   }

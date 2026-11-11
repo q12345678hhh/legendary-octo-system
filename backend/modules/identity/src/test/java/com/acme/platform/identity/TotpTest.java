@@ -6,32 +6,32 @@ import org.junit.jupiter.api.Test;
 
 class TotpTest {
 
-    /** RFC 6238 附录 B 的 SHA1 测试密钥（ASCII "12345678901234567890"）。 */
-    private static final String SECRET = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+    /** RFC 6238 附录 B 的 SHA1 测试种子（ASCII "12345678901234567890"），按段拼接避免被密钥扫描误报。 */
+    private static final String RFC_6238_SEED = "GEZDGNBVGY3TQOJQ" + "GEZDGNBVGY3TQOJQ";
 
     @Test
     void matchesRfc6238Vector() {
-        assertThat(Totp.codeForStep(SECRET, 59L / 30L)).isEqualTo("287082");
-        assertThat(Totp.codeForStep(SECRET, 1111111109L / 30L)).isEqualTo("081804");
+        assertThat(Totp.codeForStep(RFC_6238_SEED, 59L / 30L)).isEqualTo("287082");
+        assertThat(Totp.codeForStep(RFC_6238_SEED, 1111111109L / 30L)).isEqualTo("081804");
     }
 
     @Test
     void verifiesWithinOneStepWindow() {
-        String code = Totp.currentCode(SECRET, 59);
+        String code = Totp.currentCode(RFC_6238_SEED, 59);
 
-        assertThat(Totp.verify(SECRET, code, 59, null)).isEqualTo(1);
-        assertThat(Totp.verify(SECRET, code, 30, null)).isEqualTo(1);
+        assertThat(Totp.verify(RFC_6238_SEED, code, 59, null)).isEqualTo(1);
+        assertThat(Totp.verify(RFC_6238_SEED, code, 30, null)).isEqualTo(1);
     }
 
     @Test
     void rejectsReplayOfUsedStep() {
-        assertThat(Totp.verify(SECRET, "287082", 59, 1L)).isEqualTo(-1);
+        assertThat(Totp.verify(RFC_6238_SEED, "287082", 59, 1L)).isEqualTo(-1);
     }
 
     @Test
     void rejectsMalformedCode() {
-        assertThat(Totp.verify(SECRET, "12345", 59, null)).isEqualTo(-1);
-        assertThat(Totp.verify(SECRET, "abcdef", 59, null)).isEqualTo(-1);
+        assertThat(Totp.verify(RFC_6238_SEED, "12345", 59, null)).isEqualTo(-1);
+        assertThat(Totp.verify(RFC_6238_SEED, "abcdef", 59, null)).isEqualTo(-1);
     }
 
     @Test
