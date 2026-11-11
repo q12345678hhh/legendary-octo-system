@@ -257,7 +257,7 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 | 项 | 落点 | 证据 |
 |---|---|---|
 | 仓库结构与概念 | `backend/`（20 个 reactor 模块）、`frontend/`、`desktop-agent/`、`plugin-runner/`、`contracts/`、`tests/` | `docs/evidence/wp01-01/backend-build-1.txt`、`frontend-verify.txt`、`desktop-agent-verify.txt`、`plugin-runner-smoke.txt` |
-| 分支保护与评审 | `docs/runbooks/ci-pipeline.md` §1、`.github/CODEOWNERS` | 同上手册；CI 断言见 `tests/ci/workflow-gates.test.mjs` |
+| 分支保护与评审 | `docs/runbooks/ci-pipeline.md` §1、`.github/CODEOWNERS` | 已启用并回读验证：`docs/evidence/wp01-01/branch-protection.txt`（10 项必需检查、`enforce_admins=true`、禁强推/禁删除、直推 main 被 `GH006` 拒绝、PR #1 全绿后 squash 合并）；CI 断言见 `tests/ci/workflow-gates.test.mjs` |
 | 格式化与提交规范 | `.editorconfig`、`.gitattributes`、`commitlint.config.mjs` | `commit-lint` 任务 |
 | 六任务流水线 | `.github/workflows/ci.yml` | `tests/ci/workflow-gates.test.mjs` 断言六任务齐备且门禁不得降级；GitHub Actions 实跑记录见 `ci-runs-first-green.txt`（运行 #7 全绿） |
 | 模块边界 | `@ApplicationModule` 声明 + `ApplicationModules.verify()` | `backend/boot-api/src/test/.../ModuleStructureTest.java`（15 个模块） |
@@ -271,7 +271,7 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 | 缓存无关一致性 | `project.build.outputTimestamp` 固定 | `reproducible-build.txt`（两次 clean verify 的 jar 与 SBOM 哈希一致） |
 | 不可变版本与制品哈希 | `tools/artifact-manifest.mjs` | `release-manifest.json`（7 个制品 + 2 份依赖清单） |
 
-**遗留与说明：** ①容器扫描当前仅覆盖 `plugin-runner`，`boot-api` 镜像随 WP01-02 接入；②本机工作区路径含中文，JaCoCo agent 无法落盘，覆盖率证据取自 ASCII 路径干净副本（CI 无此问题）；③分支保护规则需在仓库设置中开启，代码内只提供清单与断言。
+**遗留与说明：** ①容器扫描当前仅覆盖 `plugin-runner`，`boot-api` 镜像随 WP01-02 接入；②本机工作区路径含中文，JaCoCo agent 无法落盘，覆盖率证据取自 ASCII 路径干净副本（CI 无此问题）；③分支保护已于 2026-11-11 在仓库设置中启用（`docs/evidence/wp01-01/branch-protection.txt`），当前批准数为 0，加入第二位协作者后必须改为 1 并开启 code owner 审核。
 
 ### WP01-02 本地和测试拓扑
 

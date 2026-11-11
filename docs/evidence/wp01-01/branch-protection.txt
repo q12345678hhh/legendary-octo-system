@@ -1,0 +1,76 @@
+main 分支保护启用记录（WP01-01）
+仓库：q12345678hhh/legendary-octo-system
+时间：2026-11-11 15:2x +08:00
+方式：GitHub REST API（PUT /repos/{owner}/{repo}/branches/main/protection），使用本机凭据管理器中的账号凭据
+
+一、启用前的状态
+----------------
+GET /repos/q12345678hhh/legendary-octo-system/branches/main/protection
+  -> 404 Not Found
+即 main 无任何保护，任何人都可直接推送、强推和删除。
+
+二、下发配置（与服务端回读一致）
+------------------------------
+strict                                  = true
+contexts                                = secret-scan, commit-lint, backend, db, frontend,
+                                          desktop-agent, plugin-runner, contracts, tests, supply-chain
+enforce_admins                          = true
+required_approving_review_count         = 0
+dismiss_stale_reviews                   = true
+allow_force_pushes                      = false
+allow_deletions                         = false
+required_conversation_resolution        = true
+block_creations                         = false
+lock_branch                             = false
+
+说明：
+1. 必需检查比 docs/runbooks/ci-pipeline.md 原表多一项 db。db 作业在干净的 postgres:16
+   服务容器里跑迁移、RLS、并发与校验和门禁，是硬门禁，原表漏列，已同步更新手册。
+2. 批准数取 0 是单人阶段的事实约束：GitHub 不允许作者批准自己的 PR，设成 1 会让唯一
+   协作者无法合并任何改动。评审要求仍写在手册里，加第二位协作者后必须改为 1 并开启
+   code owner 审核——这条不随「当前能合并」而放宽。
+3. enforce_admins=true 意味着管理员也不能强推、不能绕过检查，牺牲的是应急直推通道，
+   换来的是「门禁对所有人一致」。应急走前向修复，不走强推。
+
+三、负例：直接推送 main 必须被拒绝（实测）
+------------------------------------------
+本地在 main 上提交后执行 git push origin main：
+
+  remote: error: GH006: Protected branch update failed for refs/heads/main.
+  remote:
+  remote: - Changes must be made through a pull request.
+  remote:
+  remote: - 10 of 10 required status checks are expected.
+  To github.com:q12345678hhh/legendary-octo-system.git
+   ! [remote rejected] main -> main (protected branch hook declined)
+  error: failed to push some refs to 'github.com:q12345678hhh/legendary-octo-system.git'
+
+服务端同时给出了两个原因：必须走 PR，且 10 项必需检查尚未在该提交上出现过。
+
+四、正例：走 PR 后由门禁放行
+----------------------------
+同一提交改推到 wp01-01-branch-protection，开 PR #1（base=main）：
+
+  PR https://github.com/q12345678hhh/legendary-octo-system/pull/1
+  Run 42979351755（event=pull_request, head=4615fa3）conclusion=success
+
+  artifacts      => success
+  backend        => success
+  commit-lint    => success      （PR 事件下才会运行）
+  contracts      => success
+  db             => success
+  desktop-agent  => success
+  frontend       => success
+  plugin-runner  => success
+  secret-scan    => success
+  supply-chain   => success
+  tests          => success
+
+mergeable_state=clean 后按 squash 合并，主干新增 c93f402：
+  docs(ci): 记录 main 分支保护的实际配置与单人评审取舍 (#1)
+
+五、复查方法
+------------
+  GET /repos/q12345678hhh/legendary-octo-system/branches/main/protection
+或网页 Settings -> Rules / Branches -> main。
+变更保护规则必须走变更请求（docs/change-request-template.md），不得直接在设置页静默修改。
