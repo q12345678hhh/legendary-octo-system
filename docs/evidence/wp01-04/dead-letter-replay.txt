@@ -1,0 +1,4 @@
+﻿dead letter: {"eventId":"932bbdc5-0a81-45c8-8c6c-f6098869fb11","eventName":"platform.job.requested.v1","attempts":2,"lastError":"IllegalStateException: 演示失败：作业类型 fail-demo","occurredAt":"2026-11-11T05:34:15.774594Z","lastAttemptAt":null,"correlationId":"cor-ec8ce63e420a4f5e8c33448032068e0f","traceId":"51d48379f9e44f2fbdae07e7d7ad5f70"}
+short reason: status=422 body={"detail":"回放原因必填，长度 8-500 字符，用于审计与事故复盘","instance":"/api/v1/system/outbox/dead-letters/932bbdc5-0a81-45c8-8c6c-f6098869fb11/replay","status":422,"title":"语义校验失败","code":"REPLAY_REASON_REQUIRED","timestamp":"2026-11-11T13:35:20.863296+08:00","correlationId":"cor-ebbcc8db482944898d76fdb3f09cc619","traceId":"abf878c1eb434436b618ff8e808e0367"}
+valid reason: status=202 body={"eventId":"932bbdc5-0a81-45c8-8c6c-f6098869fb11","status":"pending"}
+audit rows=1

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.platform.local/events/platform.file.scanned.v1.json",
+  "title": "文件扫描完成事件 v1",
+  "x-event-name": "platform.file.scanned.v1",
+  "x-event-version": 1,
+  "allOf": [
+    {
+      "$ref": "./envelope.v1.json"
+    },
+    {
+      "type": "object",
+      "required": ["data"],
+      "properties": {
+        "data": {
+          "type": "object",
+          "required": ["file_id", "scan_status", "status"],
+          "properties": {
+            "file_id": { "type": "string", "format": "uuid" },
+            "scan_status": {
+              "type": "string",
+              "enum": ["clean", "infected", "failed"]
+            },
+            "status": { "type": "string" },
+            "detail": { "type": "string" }
+          }
+        }
+      }
+    }
+  ]
+}

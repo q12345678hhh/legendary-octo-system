@@ -1,0 +1,144 @@
+{
+  "uid": "platform-skeleton",
+  "title": "平台骨架（WP01-04）",
+  "tags": ["platform", "wp01-04"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "label": "Prometheus（API /actuator/prometheus）",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {}
+      },
+      {
+        "name": "DS_POSTGRES",
+        "label": "PostgreSQL（异步域状态）",
+        "type": "datasource",
+        "query": "postgres",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "请求速率（按状态码）",
+      "description": "platform_http_requests_total，API 侧计数器。",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (status) (rate(platform_http_requests_total[$__rate_interval]))",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "5xx 比例",
+      "description": "与告警同表达式：5xx / 全部请求。",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum(rate(platform_http_requests_total{status=~\"5..\"}[$__rate_interval])) / clamp_min(sum(rate(platform_http_requests_total[$__rate_interval])), 0.001)",
+          "legendFormat": "5xx%"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "幂等结果分布",
+      "description": "stored=首次落库，replayed=命中缓存，key_reused=同键换载荷（客户端问题）。",
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 10 } }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (result) (rate(platform_idempotency_total[$__rate_interval]))",
+          "legendFormat": "{{result}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "作业状态分布",
+      "description": "platform_job 按状态分桶；queued 长期不降说明 Worker 没在消费。",
+      "datasource": { "type": "postgres", "uid": "${DS_POSTGRES}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT date_trunc('minute', requested_at) AS \"time\", status AS metric, count(*)::int AS value FROM platform_job WHERE $__timeFilter(requested_at) GROUP BY 1, 2 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "outbox 积压与死信",
+      "description": "platform_outbox 按 status 分桶；dead 不为 0 时按运行手册第 2 节处理。",
+      "datasource": { "type": "postgres", "uid": "${DS_POSTGRES}" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT date_trunc('minute', occurred_at) AS \"time\", status AS metric, count(*)::int AS value FROM platform_outbox WHERE $__timeFilter(occurred_at) GROUP BY 1, 2 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "文件扫描状态",
+      "description": "platform_file 按 scan_status 分桶；infected 需要隔离并通知上传者。",
+      "datasource": { "type": "postgres", "uid": "${DS_POSTGRES}" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT date_trunc('minute', created_at) AS \"time\", scan_status AS metric, count(*)::int AS value FROM platform_file WHERE $__timeFilter(created_at) GROUP BY 1, 2 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "text",
+      "title": "trace 检索",
+      "description": "从页面报障的 correlation_id 或日志里的 trace_id 还原整条链路。",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 24 },
+      "options": {
+        "mode": "markdown",
+        "content": "```sql\n-- 作业与它的事件\nselect j.id, j.status, j.progress, o.event_id, o.status, o.attempts, o.last_error\nfrom platform_job j\nleft join platform_outbox o on o.payload->>'job_id' = j.id::text\nwhere j.trace_id = '<traceId>';\n```\n\n日志侧按 `trace_id` 过滤 API 与 Worker 两个进程的输出；两份日志都是 ECS JSON。\n\n详细字段与告警处置见 `docs/runbooks/observability.md`。"
+      }
+    }
+  ]
+}

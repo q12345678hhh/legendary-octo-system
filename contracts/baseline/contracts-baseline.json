@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-09T09:06:02.700Z",
+  "frozenAt": "2026-11-11T05:06:08.434Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "e687a9a0848f3967156b21e804a1bd76b009230aaee10d4eb6d69732affb9c35",
+      "sha256": "4d875fb76b4c5a2cd0cedd1e319dec2328bd9e306b5d6e8fae87b4fabcd300af",
       "tokens": {
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
@@ -12,6 +12,117 @@
           "defined": true
         },
         "response:GET /api/v1/system/health:503": {
+          "defined": true
+        },
+        "operation:GET /api/v1/system/jobs": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/system/jobs:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/system/jobs:400": {
+          "defined": true
+        },
+        "operation:POST /api/v1/system/jobs": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/system/jobs:201": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/jobs:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/jobs:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/jobs:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/system/jobs/{jobId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/system/jobs/{jobId}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/system/jobs/{jobId}:404": {
+          "defined": true
+        },
+        "operation:POST /api/v1/system/jobs/{jobId}/cancel": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/system/jobs/{jobId}/cancel:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/jobs/{jobId}/cancel:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/jobs/{jobId}/cancel:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/system/files": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/system/files:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/system/files:400": {
+          "defined": true
+        },
+        "operation:POST /api/v1/system/files/uploads": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/system/files/uploads:201": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/files/uploads:400": {
+          "defined": true
+        },
+        "operation:POST /api/v1/system/files/{fileId}/complete": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/system/files/{fileId}/complete:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/files/{fileId}/complete:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/files/{fileId}/complete:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/system/files/{fileId}/download": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/system/files/{fileId}/download:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/system/files/{fileId}/download:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/system/files/{fileId}/download:404": {
+          "defined": true
+        },
+        "response:GET /api/v1/system/files/{fileId}/download:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/system/outbox/dead-letters": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/system/outbox/dead-letters:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/system/outbox/dead-letters:400": {
+          "defined": true
+        },
+        "operation:POST /api/v1/system/outbox/dead-letters/{eventId}/replay": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/system/outbox/dead-letters/{eventId}/replay:202": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/outbox/dead-letters/{eventId}/replay:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/system/outbox/dead-letters/{eventId}/replay:422": {
           "defined": true
         },
         "schema:SystemHealth.status": {
@@ -55,6 +166,233 @@
         "schema:Problem.correlationId": {
           "type": "string",
           "required": false
+        },
+        "schema:Problem.traceId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Problem.timestamp": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Problem.errors": {
+          "type": "array",
+          "required": false
+        },
+        "schema:CreateJobRequest.jobType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateJobRequest.payload": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Job.jobId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Job.jobType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Job.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "cancelled",
+            "failed",
+            "queued",
+            "running",
+            "succeeded"
+          ]
+        },
+        "schema:Job.progress": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:Job.cancelRequested": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:Job.payload": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Job.result": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Job.lastError": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Job.traceId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Job.correlationId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Job.requestedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Job.startedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Job.finishedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateUploadRequest.fileName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateUploadRequest.contentType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateUploadRequest.sizeBytes": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:CreateUploadRequest.sha256": {
+          "type": "string",
+          "required": false
+        },
+        "schema:UploadSession.fileId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UploadSession.objectKey": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UploadSession.uploadUrl": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UploadSession.expiresAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FileMetadata.fileId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FileMetadata.fileName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FileMetadata.contentType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FileMetadata.sizeBytes": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:FileMetadata.sha256": {
+          "type": "object",
+          "required": false
+        },
+        "schema:FileMetadata.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "available",
+            "pending_upload",
+            "rejected",
+            "uploaded"
+          ]
+        },
+        "schema:FileMetadata.scanStatus": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "clean",
+            "failed",
+            "infected",
+            "pending",
+            "scanning"
+          ]
+        },
+        "schema:FileMetadata.scanDetail": {
+          "type": "object",
+          "required": false
+        },
+        "schema:FileMetadata.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FileMetadata.uploadedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:FileMetadata.scannedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:DownloadGrant.fileId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DownloadGrant.url": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DownloadGrant.expiresAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DeadLetter.eventId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DeadLetter.eventName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DeadLetter.attempts": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:DeadLetter.lastError": {
+          "type": "object",
+          "required": false
+        },
+        "schema:DeadLetter.occurredAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DeadLetter.lastAttemptAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:DeadLetter.correlationId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:DeadLetter.traceId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ReplayRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReplayAccepted.eventId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReplayAccepted.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "pending"
+          ]
         }
       }
     },
@@ -79,6 +417,97 @@
           "required": true
         },
         "event.data.position_title": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "events/platform.file.scanned.v1.json": {
+      "kind": "events",
+      "sha256": "8eceb2be3acf558a1dcdc8630edfa3cbb88f578b9de27824e0b6204162e64b0f",
+      "tokens": {
+        "event.data": {
+          "type": "object",
+          "required": true
+        },
+        "event.data.file_id": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.scan_status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "clean",
+            "failed",
+            "infected"
+          ]
+        },
+        "event.data.status": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.detail": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
+    "events/platform.file.uploaded.v1.json": {
+      "kind": "events",
+      "sha256": "b8ed1aa09883f1e7a5333610e507e039081842994b0d122664b9aaf4ad8f53a1",
+      "tokens": {
+        "event.data": {
+          "type": "object",
+          "required": true
+        },
+        "event.data.file_id": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.object_key": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.content_type": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.size_bytes": {
+          "type": "integer",
+          "required": true
+        },
+        "event.data.subject_id": {
+          "type": "string",
+          "required": true
+        }
+      }
+    },
+    "events/platform.job.requested.v1.json": {
+      "kind": "events",
+      "sha256": "eb67be0a6d9bafefd7110bd7a1d3d7003849717aeaafd4455732d996c57ca4e9",
+      "tokens": {
+        "event.data": {
+          "type": "object",
+          "required": true
+        },
+        "event.data.job_id": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.job_type": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.requested_by": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.trace_id": {
+          "type": "string",
+          "required": false
+        },
+        "event.data.correlation_id": {
           "type": "string",
           "required": false
         }
@@ -131,11 +560,23 @@
     },
     "events/event-catalog.json": {
       "kind": "events-catalog",
-      "sha256": "d7c8840afa8ea747a167025158408c090d4793f44262b9d5b134b844ccd7e6fd",
+      "sha256": "ae5b50417d319f5ef6e94b8c99dd3197f87bbf24d997b407ef270504661155fb",
       "tokens": {
         "catalog:employee.hired.v1": {
           "version": 1,
           "schema": "employee.hired.v1.json"
+        },
+        "catalog:platform.job.requested.v1": {
+          "version": 1,
+          "schema": "platform.job.requested.v1.json"
+        },
+        "catalog:platform.file.uploaded.v1": {
+          "version": 1,
+          "schema": "platform.file.uploaded.v1.json"
+        },
+        "catalog:platform.file.scanned.v1": {
+          "version": 1,
+          "schema": "platform.file.scanned.v1.json"
         }
       }
     }

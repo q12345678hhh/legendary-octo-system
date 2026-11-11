@@ -11,8 +11,12 @@ export const tokens = {
     textPrimary: '#1f2933',
     textSecondary: '#52606d',
     danger: '#b42318',
+    warning: '#b25e09',
+    info: '#0b6bcb',
     success: '#1f7a44',
   },
+  /** 键盘焦点环，仅用于 :focus-visible 样式。 */
+  focusRing: '0 0 0 3px rgba(27, 92, 255, 0.45)',
   spacing: {
     xs: 4,
     sm: 8,
@@ -24,6 +28,11 @@ export const tokens = {
     sm: 4,
     md: 8,
     lg: 12,
+  },
+  control: {
+    heightSm: 32,
+    height: 40,
+    heightLg: 48,
   },
   font: {
     family: "'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif",

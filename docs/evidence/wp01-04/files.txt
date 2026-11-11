@@ -1,0 +1,11 @@
+﻿fileId=2633a845-7833-43e4-8a7f-6f05ac314c6f size=46
+upload session: status=201 objectKey=aaaaaaaa-0000-0000-0000-000000000001/2633a845-7833-43e4-8a7f-6f05ac314c6f/wp01-04-evidence.txt
+presigned PUT status=200
+complete: status=200 status=uploaded
+scan: scanStatus=clean status=available
+download url: status=200 expiresAt=2026-11-11T13:35:32.7029146+08:00
+download bytes match=True http=200
+cross subject: status=403 body={"detail":"文件不属于当前主体，不能复用他人下载链接","instance":"/api/v1/system/files/2633a845-7833-43e4-8a7f-6f05ac314c6f/download","status":403,"title":"无权限","code":"FILE_NOT_OWNED","timestamp":"2026-11-11T13:35:22.793972200+08:00","correlationId":"cor-8166c4e75328408b85edcfb594429e4d","traceId":"ee87299f3d9541fc84913eb9d8c52dd5"}
+cross tenant: status=404 body={"detail":"文件不存在或不属于当前租户","instance":"/api/v1/system/files/2633a845-7833-43e4-8a7f-6f05ac314c6f/download","status":404,"title":"资源不存在","code":"FILE_NOT_FOUND","timestamp":"2026-11-11T13:35:22.852739300+08:00","correlationId":"cor-6f0bd4385bb8458ab0fad181421ff48d","traceId":"d55118ebf28c419cbb646aec7493e1ea"}
+expired url: status=403 body=<?xml version="1.0" encoding="UTF-8"?>
+<Error><Code>AccessDenied</Code><Message>Request has expired</Message><Key>aaaaaaaa-0000-0000-0000-000000000001/2633a845-7833-43e4-8a7f-6f05ac314c6f/wp01-04-evidence.txt</Key><BucketName>platform-dev</BucketName><Resource>/platform-dev/aaaaaaaa-0000-0000-0000-000000000001/2633a845-7833-43e4-8a7f-6f05ac314c6f/wp01-04-evidence.txt</Resource><RequestId>18E6E6DC2F4A62B2</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>

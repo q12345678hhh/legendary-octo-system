@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * <p>调度器负责轮询 outbox，因此需要 {@code @EnableScheduling}；
  * {@code @ConfigurationPropertiesScan} 用来绑定 {@code platform.outbox.*}。
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.acme.platform")
 @EnableScheduling
 @ConfigurationPropertiesScan
 public class PlatformWorkerApplication {

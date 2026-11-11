@@ -1,0 +1,6 @@
+﻿platform_jobs_submitted_total lines=1 sample=platform_jobs_submitted_total 3.0
+platform_jobs_state_total lines=1 sample=platform_jobs_state_total{state="queued"} 3.0
+platform_http_requests_total lines=6 sample=platform_http_requests_total{status="200"} 16.0
+platform_idempotency_total lines=3 sample=platform_idempotency_total{result="key_reused"} 1.0
+worker 汇总日志：{"@timestamp":"2026-11-11T05:35:33.892222400Z","log":{"level":"INFO","logger":"com.acme.platform.worker.WorkerMetricsSummary"},"process":{"pid":15880,"thread":{"name":"scheduling-1"}},"service":{"name":"platform-worker","version":"0.1.0-SNAPSHOT","node":{}},"message":"平台指标汇总 platform.http.requests=0 platform.idempotency=0 platform.jobs.submitted=0 platform.jobs.state=2 platform.files.scanned=1 platform.outbox.dispatched=3 platform.outbox.failed=6 platform.outbox.replayed=0","ecs":{"version":"8.11"}}
+API 走 /actuator/prometheus；Worker 无 Web 端口，指标写入周期汇总日志（接入 OTLP 后改为抓取）。

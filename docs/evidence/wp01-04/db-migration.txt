@@ -1,0 +1,15 @@
+﻿启动前迁移版本：
+1
+2
+3
+4
+启动后迁移版本：
+1
+2
+3
+4
+新表 RLS 状态：
+platform_file rows=1 rls=true force=true
+platform_idempotency rows=1 rls=true force=true
+platform_job rows=1 rls=true force=true
+platform_outbox_replay rows=1 rls=true force=true

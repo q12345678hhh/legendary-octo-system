@@ -5,6 +5,8 @@ import 'antd/dist/reset.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { readSession } from './session';
+import './styles.css';
 import { platformTheme } from './theme';
 
 const rootElement = document.getElementById('root');
@@ -16,7 +18,7 @@ for (const [name, value] of Object.entries(toCssVariables())) {
   document.documentElement.style.setProperty(name, value);
 }
 
-const apiClient = createApiClient({ baseUrl: '' });
+const apiClient = createApiClient({ baseUrl: '', identityProvider: readSession });
 
 createRoot(rootElement).render(
   <StrictMode>

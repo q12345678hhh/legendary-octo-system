@@ -21,6 +21,11 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- Worker 非 Web 应用，需显式引入 Jackson 自动配置以发布/消费事件载荷 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jackson</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.modulith</groupId>
       <artifactId>spring-modulith-starter-core</artifactId>
@@ -37,6 +42,10 @@
       <scope>runtime</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>platform</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.acme.platform</groupId>
       <artifactId>tenancy</artifactId>

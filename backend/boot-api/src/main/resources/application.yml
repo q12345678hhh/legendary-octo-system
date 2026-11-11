@@ -40,20 +40,38 @@ server:
 platform:
   storage:
     health-url: ${PLATFORM_STORAGE_HEALTH_URL:http://localhost:9000/minio/health/live}
+    # 文件字节只走对象存储：API 只签发短 TTL 的预签名 URL，不转发内容
+    endpoint: ${PLATFORM_STORAGE_ENDPOINT:http://localhost:9000}
+    bucket: ${PLATFORM_STORAGE_BUCKET:platform-dev}
+    region: ${PLATFORM_STORAGE_REGION:us-east-1}
+    # 不在源码里给默认密钥；缺失时预签名会明确报错，而不是悄悄用弱凭据
+    access-key: ${PLATFORM_STORAGE_ACCESS_KEY:}
+    secret-key: ${PLATFORM_STORAGE_SECRET_KEY:}
+    upload-ttl: ${PLATFORM_STORAGE_UPLOAD_TTL:15m}
+    download-ttl: ${PLATFORM_STORAGE_DOWNLOAD_TTL:5m}
+  idempotency:
+    # 幂等记录保留一天：足够覆盖客户端重试窗口，又不会长期占表
+    ttl: ${PLATFORM_IDEMPOTENCY_TTL:24h}
   smoke:
     # 冒烟端点只在本地验证「请求 → outbox → Worker」链路时打开
     enabled: ${PLATFORM_SMOKE_ENABLED:false}
 
 logging:
+  # 结构化日志：每行 JSON，MDC 里的 trace/correlation/tenant/subject 可直接被日志平台检索。
+  # 业务正文（请求体、文件内容、工时原始记录）默认不进日志，只记录 ID 与状态。
+  structured:
+    format:
+      console: ecs
   pattern:
-    # 把关联 ID 与 trace ID 打进每一行日志：页面请求、写库、outbox 与 Worker 靠它对齐
-    level: "%5p [trace=%X{trace_id:-} corr=%X{correlation_id:-} tenant=%X{tenant_id:-}]"
+    # 非结构化输出（例如本地临时切回 pattern）时仍带上关联 ID
+    level: "%5p [trace=%X{trace_id:-} corr=%X{correlation_id:-} tenant=%X{tenant_id:-} subject=%X{subject_id:-}]"
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        # metrics/prometheus 给仪表板与告警取数；不暴露 env、beans 等敏感端点
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       probes:

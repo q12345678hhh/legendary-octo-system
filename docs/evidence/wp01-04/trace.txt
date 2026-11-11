@@ -1,0 +1,6 @@
+﻿jobId=f54c201c-c330-462d-bacb-38ab804dbcda
+traceId=8659e990505b44629895f9b0a3119d28
+db trace_id=8659e990505b44629895f9b0a3119d28
+worker log matches=3
+api log matches=4
+API/Worker 均使用 ECS 结构化日志；页面请求头 X-Correlation-Id 与 trace 一起写入 outbox 与作业行。

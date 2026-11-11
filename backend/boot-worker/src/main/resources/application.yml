@@ -23,3 +23,12 @@ platform:
     poll-interval: ${PLATFORM_OUTBOX_POLL_INTERVAL:2s}
     max-attempts: ${PLATFORM_OUTBOX_MAX_ATTEMPTS:5}
     retry-delay: ${PLATFORM_OUTBOX_RETRY_DELAY:10s}
+
+logging:
+  # 与 API 同一套结构化格式：Worker 的每行日志都带事件里的 trace/correlation/tenant，
+  # 页面发起的一次请求可以一直追到异步消费。
+  structured:
+    format:
+      console: ecs
+  pattern:
+    level: "%5p [trace=%X{trace_id:-} corr=%X{correlation_id:-} tenant=%X{tenant_id:-}]"

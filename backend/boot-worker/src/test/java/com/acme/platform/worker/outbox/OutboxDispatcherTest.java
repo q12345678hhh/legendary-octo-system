@@ -9,16 +9,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.acme.platform.platform.PlatformMetrics;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 
 class OutboxDispatcherTest {
 
     private final OutboxProperties properties = new OutboxProperties(10, 3, Duration.ofSeconds(5));
+    private final PlatformMetrics metrics = new PlatformMetrics(new SimpleMeterRegistry());
 
     @Test
     void marksPublishedWhenHandlerSucceeds() {
         FakeStore store = new FakeStore(List.of(event(SmokePingEventHandler.EVENT_NAME)));
-        OutboxDispatcher dispatcher = new OutboxDispatcher(store, properties, List.of(new SmokePingEventHandler()));
+        OutboxDispatcher dispatcher = new OutboxDispatcher(store, properties, metrics,
+                List.of(new SmokePingEventHandler()));
 
         assertThat(dispatcher.dispatchOnce()).isEqualTo(1);
         assertThat(store.published).containsExactly(store.claimed.get(0).eventId());
@@ -31,7 +35,7 @@ class OutboxDispatcherTest {
         OutboxEventHandler broken = handler(SmokePingEventHandler.EVENT_NAME, () -> {
             throw new IllegalStateException("下游不可用");
         });
-        OutboxDispatcher dispatcher = new OutboxDispatcher(store, properties, List.of(broken));
+        OutboxDispatcher dispatcher = new OutboxDispatcher(store, properties, metrics, List.of(broken));
 
         dispatcher.dispatchOnce();
 
@@ -43,7 +47,7 @@ class OutboxDispatcherTest {
     @Test
     void retriesWhenNoHandlerIsRegistered() {
         FakeStore store = new FakeStore(List.of(event("platform.unknown.v1")));
-        OutboxDispatcher dispatcher = new OutboxDispatcher(store, properties, List.of());
+        OutboxDispatcher dispatcher = new OutboxDispatcher(store, properties, metrics, List.of());
 
         dispatcher.dispatchOnce();
 
@@ -57,7 +61,8 @@ class OutboxDispatcherTest {
         OutboxEventHandler first = handler(SmokePingEventHandler.EVENT_NAME, () -> { });
         OutboxEventHandler second = handler(SmokePingEventHandler.EVENT_NAME, () -> { });
 
-        assertThatThrownBy(() -> new OutboxDispatcher(new FakeStore(List.of()), properties, List.of(first, second)))
+        assertThatThrownBy(() -> new OutboxDispatcher(new FakeStore(List.of()), properties, metrics,
+                List.of(first, second)))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining(SmokePingEventHandler.EVENT_NAME);
     }

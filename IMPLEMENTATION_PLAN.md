@@ -328,14 +328,30 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP01-04 通用平台技术骨架
 
-- [ ] 实现统一请求上下文、认证主体占位、租户上下文、Problem Details 和关联 ID。
-- [ ] 实现事务 outbox、幂等 inbox、异步作业、死信、进度、取消和安全回放骨架。
-- [ ] 建立文件预签名上传、病毒扫描状态、下载再授权和对象存储隔离骨架。
-- [ ] 接入结构化日志、指标、追踪和告警；日志默认不记录业务正文。
-- [ ] 建立前端登录壳、路由、设计 token、无障碍、错误、空和加载状态。
+- [x] 实现统一请求上下文、认证主体占位、租户上下文、Problem Details 和关联 ID。
+- [x] 实现事务 outbox、幂等 inbox、异步作业、死信、进度、取消和安全回放骨架。
+- [x] 建立文件预签名上传、病毒扫描状态、下载再授权和对象存储隔离骨架。
+- [x] 接入结构化日志、指标、追踪和告警；日志默认不记录业务正文。
+- [x] 建立前端登录壳、路由、设计 token、无障碍、错误、空和加载状态。
 
 **交付物：** 最小产品壳、公开契约、观测仪表板和故障运行手册。  
 **验收证据：** 重复请求不产生重复副作用；文件 URL 不能跨主体复用；trace 可关联页面、API、数据库和 Worker。
+
+**进展记录（2026-11-11）：**
+
+| 项 | 落点 | 证据 |
+|---|---|---|
+| 请求上下文与 Problem Details | `platform` 模块的 `RequestContext`/`RequestContextHolder`/`TenantTransactions`（事务内 `set_config('app.tenant_id', …, true)`）、`ApiException` + `ProblemDetailsSupport`、boot-api 的 `HttpContextFilter`；错误响应统一含 `code/detail/instance/correlationId/traceId` | `docs/evidence/wp01-04/files.txt` 的 422/403/404 响应体与 `X-Correlation-Id`/`X-Trace-Id` 响应头 |
+| 幂等 inbox | `IdempotencyService`：键 + 请求体 SHA-256 指纹；命中回放原响应并带 `Idempotent-Replayed: true`，键 24 小时过期，同键换载荷 422 | `idempotency.txt`（两次 201 同一 jobId、`platform_job` 仅 1 行、换载荷 `IDEMPOTENCY_KEY_REUSED`） |
+| 事务 outbox 与死信回放 | `platform_outbox`（V1/V3）+ `JdbcOutboxStore`（`FOR UPDATE SKIP LOCKED`）+ `DeadLetterService`（原因 8–500 字、同租户、写 `platform_outbox_replay` 审计） | `dead-letter-replay.txt`（attempts=2 → 422 → 202 pending → 审计 1 行） |
+| 异步作业、进度与取消 | `JobService` + `JobRequestedEventHandler`：分步写进度、每步查 `cancel_requested`、非 `queued` 直接跳过（幂等） | `jobs.txt`（`succeeded`/100%、`cancelled`/`cancelRequested=true`） |
+| 文件链路 | 自写 SigV4 预签名（不引 SDK）、`complete` 后扫描（`clean`/`infected`）、下载前再授权、对象键 `<tenant>/<fileId>/<name>` | `files.txt`（PUT 200、跨主体 403 `FILE_NOT_OWNED`、跨租户 404、10s 后 403 `Request has expired`） |
+| 可观测性 | `logging.structured.format.console=ecs`、`PlatformMetrics`、MDC 贯穿 API 与 Worker；API 走 `/actuator/prometheus`，Worker 走周期汇总日志 | `metrics.txt`、`trace.txt`、`log-hygiene.txt`；手册 `docs/runbooks/observability.md`、仪表板 `deploy/observability/grafana-dashboard.json` |
+| 前端骨架 | hash 路由 + 会话、登录壳、`AsyncState`（loading/ready/empty/error/partial）、设计 token 递归导出 CSS 变量、跳转链接与路由焦点管理 | `frontend-verify.txt`（typecheck/test/build 全绿，`apps/web` 15 个用例） |
+| 运行手册 | `docs/runbooks/platform-skeleton.md`（幂等冲突、死信回放审批、扫描卡住、Worker 停机、下载拒绝）、`docs/runbooks/observability.md`（字段/指标/告警/trace 检索） | 两份手册 + `docs/evidence/wp01-04/README.md` 的失败修复记录 |
+| CI | 沿用现有 `mvn -B verify` 与前端作业，新增 V4 迁移与前端用例后仍全绿 | `docs/evidence/wp01-04/ci-run.txt` |
+
+**遗留与说明：** ①占位认证（请求头直信）仅用于骨架，WP02-02 必须替换，当前禁止在共享环境启用；②预签名 URL 是 bearer 凭证、无法单次使用，GA 前评估代理下载或一次性令牌；③Worker 指标当前只进汇总日志，接入 OTLP 采集器后改为抓取；④`platform_outbox` 仍不开 RLS（跨租户投递需要），API 侧死信查询强制租户过滤，独立 dispatcher 角色留待后续 WP。
 
 ### WP01-05 Windows 工作助手技术骨架
 

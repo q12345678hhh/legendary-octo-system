@@ -1,5 +1,11 @@
 package com.acme.platform.worker.outbox;
 
+import com.acme.platform.platform.PlatformMetrics;
+import com.acme.platform.platform.RequestContext;
+import com.acme.platform.platform.RequestContextHolder;
+import java.util.UUID;
+import org.slf4j.MDC;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +20,9 @@ import org.springframework.stereotype.Component;
  *
  * <p>投递语义是「至少一次」：处理器成功返回才置为 published，抛异常则按退避重试，
  * 因此处理器必须自己保证幂等。
+ *
+ * <p>投递时把事件里的租户与 trace 绑进 {@link RequestContextHolder} 与 MDC：
+ * 这样 Worker 里的租户表读写有 RLS 上下文，日志也能与页面、API 对齐到同一条 trace。
  */
 @Component
 public class OutboxDispatcher {
@@ -22,11 +31,14 @@ public class OutboxDispatcher {
 
     private final OutboxStore store;
     private final OutboxProperties properties;
+    private final PlatformMetrics metrics;
     private final Map<String, OutboxEventHandler> handlers;
 
-    OutboxDispatcher(OutboxStore store, OutboxProperties properties, List<OutboxEventHandler> handlers) {
+    OutboxDispatcher(OutboxStore store, OutboxProperties properties, PlatformMetrics metrics,
+                     List<OutboxEventHandler> handlers) {
         this.store = store;
         this.properties = properties;
+        this.metrics = metrics;
         this.handlers = indexByEventName(handlers);
     }
 
@@ -50,6 +62,27 @@ public class OutboxDispatcher {
     }
 
     private void deliver(OutboxEvent event) {
+        String traceId = event.traceId() == null || event.traceId().isBlank()
+                ? UUID.randomUUID().toString().replace("-", "")
+                : event.traceId();
+        RequestContextHolder.set(new RequestContext(event.tenantId(), null,
+                event.correlationId(), traceId));
+        MDC.put("correlation_id", event.correlationId());
+        MDC.put("trace_id", traceId);
+        if (event.tenantId() != null) {
+            MDC.put("tenant_id", event.tenantId().toString());
+        }
+        try {
+            deliverWithContext(event, traceId);
+        } finally {
+            MDC.remove("correlation_id");
+            MDC.remove("trace_id");
+            MDC.remove("tenant_id");
+            RequestContextHolder.clear();
+        }
+    }
+
+    private void deliverWithContext(OutboxEvent event, String traceId) {
         OutboxEventHandler handler = handlers.get(event.eventName());
         if (handler == null) {
             // 没有消费者就先留着重试，等处理器上线后还能补投；重试耗尽才进 dead
@@ -59,9 +92,10 @@ public class OutboxDispatcher {
         try {
             handler.handle(event);
             store.markPublished(event.eventId());
+            metrics.outboxDispatched();
             log.info("事件已消费 event={} eventId={} tenantId={} correlationId={} traceId={}",
                     event.eventName(), event.eventId(), event.tenantId(),
-                    event.correlationId(), event.traceId());
+                    event.correlationId(), traceId);
         } catch (Exception ex) {
             fail(event, ex.getClass().getSimpleName() + ": " + ex.getMessage());
         }
@@ -69,6 +103,7 @@ public class OutboxDispatcher {
 
     private void fail(OutboxEvent event, String error) {
         store.markFailed(event.eventId(), error, properties.maxAttempts(), properties.retryDelay());
+        metrics.outboxFailed();
         log.warn("事件投递失败 event={} eventId={} attempts={} traceId={} error={}",
                 event.eventName(), event.eventId(), event.attempts(), event.traceId(), error);
     }

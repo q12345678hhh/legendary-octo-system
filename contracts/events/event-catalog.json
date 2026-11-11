@@ -10,6 +10,30 @@
       "producer": "hr",
       "consumers": ["organization", "authorization"],
       "introducedIn": "WP01-01"
+    },
+    {
+      "name": "platform.job.requested.v1",
+      "version": 1,
+      "schema": "platform.job.requested.v1.json",
+      "producer": "platform",
+      "consumers": ["boot-worker"],
+      "introducedIn": "WP01-04"
+    },
+    {
+      "name": "platform.file.uploaded.v1",
+      "version": 1,
+      "schema": "platform.file.uploaded.v1.json",
+      "producer": "platform",
+      "consumers": ["boot-worker"],
+      "introducedIn": "WP01-04"
+    },
+    {
+      "name": "platform.file.scanned.v1",
+      "version": 1,
+      "schema": "platform.file.scanned.v1.json",
+      "producer": "boot-worker",
+      "consumers": ["platform"],
+      "introducedIn": "WP01-04"
     }
   ]
 }

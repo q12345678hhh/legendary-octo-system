@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.0.0",
-    "description": "首批契约：进程级存活检查与统一错误结构。业务契约随工作包冻结后追加。"
+    "version": "1.1.0",
+    "description": "平台骨架契约：存活检查、统一错误、异步作业、文件、死信回放。业务契约随工作包冻结后追加。"
   },
   "servers": [
     {
@@ -39,9 +39,331 @@
           }
         }
       }
+    },
+    "/api/v1/system/jobs": {
+      "get": {
+        "operationId": "listJobs",
+        "summary": "列出当前租户的异步作业",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "作业列表，按创建时间倒序",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Job" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "createJob",
+        "summary": "创建异步作业",
+        "description": "作业与 outbox 事件同事务落库；带 Idempotency-Key 时重复提交只建一个作业。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateJobRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "作业已创建",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Job" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/system/jobs/{jobId}": {
+      "get": {
+        "operationId": "getJob",
+        "summary": "查询作业状态与进度",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/JobId" }
+        ],
+        "responses": {
+          "200": {
+            "description": "作业详情",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Job" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/system/jobs/{jobId}/cancel": {
+      "post": {
+        "operationId": "cancelJob",
+        "summary": "请求取消作业",
+        "description": "只置取消标记，由 Worker 在下一个进度点停止并置为 cancelled。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/JobId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "responses": {
+          "200": {
+            "description": "取消请求已记录",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Job" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/system/files": {
+      "get": {
+        "operationId": "listFiles",
+        "summary": "列出当前租户的文件元数据",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "文件列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/FileMetadata" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/system/files/uploads": {
+      "post": {
+        "operationId": "createFileUpload",
+        "summary": "创建上传会话并返回预签名 PUT URL",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateUploadRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "上传会话",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UploadSession" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/system/files/{fileId}/complete": {
+      "post": {
+        "operationId": "completeFileUpload",
+        "summary": "确认对象已上传，触发扫描",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/FileId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "responses": {
+          "200": {
+            "description": "文件元数据（扫描状态此时通常仍为 pending）",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FileMetadata" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/system/files/{fileId}/download": {
+      "get": {
+        "operationId": "authorizeFileDownload",
+        "summary": "重新授权并签发短 TTL 下载 URL",
+        "description": "每次下载都校验当前主体；只有 clean 的文件才会签发，URL 不能跨主体复用。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/FileId" }
+        ],
+        "responses": {
+          "200": {
+            "description": "下载授权",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DownloadGrant" }
+              }
+            }
+          },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/system/outbox/dead-letters": {
+      "get": {
+        "operationId": "listDeadLetters",
+        "summary": "列出当前租户的死信事件",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": {
+            "description": "死信列表，不含事件载荷正文",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DeadLetter" }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/system/outbox/dead-letters/{eventId}/replay": {
+      "post": {
+        "operationId": "replayDeadLetter",
+        "summary": "安全回放一条死信",
+        "description": "必须提供 8-500 字符的原因，写入 platform_outbox_replay 审计表；只把事件重置为 pending。",
+        "parameters": [
+          { "$ref": "#/components/parameters/TenantHeader" },
+          { "$ref": "#/components/parameters/SubjectHeader" },
+          { "$ref": "#/components/parameters/EventId" },
+          { "$ref": "#/components/parameters/IdempotencyKey" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ReplayRequest" }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "已重新入队",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ReplayAccepted" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "422": { "$ref": "#/components/responses/Problem" }
+        }
+      }
     }
   },
   "components": {
+    "parameters": {
+      "TenantHeader": {
+        "name": "X-Tenant-Id",
+        "in": "header",
+        "required": true,
+        "description": "租户 ID（骨架阶段由网关注入，WP02-02 起改为会话解析）",
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "SubjectHeader": {
+        "name": "X-Subject-Id",
+        "in": "header",
+        "required": true,
+        "description": "认证主体占位，仅用于骨架与越权负例，共享环境必须关闭",
+        "schema": { "type": "string" }
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "description": "写请求幂等键，8-128 位字母数字或 . _ : -",
+        "schema": { "type": "string" }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+      },
+      "JobId": {
+        "name": "jobId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "FileId": {
+        "name": "fileId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      },
+      "EventId": {
+        "name": "eventId",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "format": "uuid" }
+      }
+    },
+    "responses": {
+      "Problem": {
+        "description": "RFC 9457 错误",
+        "content": {
+          "application/problem+json": {
+            "schema": { "$ref": "#/components/schemas/Problem" }
+          }
+        }
+      }
+    },
     "schemas": {
       "SystemHealth": {
         "type": "object",
@@ -58,7 +380,7 @@
       },
       "Problem": {
         "type": "object",
-        "description": "RFC 9457 Problem Details",
+        "description": "RFC 9457 Problem Details，额外带稳定 code 与链路标识",
         "required": ["type", "title", "status"],
         "properties": {
           "type": {
@@ -77,11 +399,147 @@
             "type": "string"
           },
           "code": {
-            "type": "string"
+            "type": "string",
+            "description": "稳定机器可读错误码，例如 JOB_NOT_FOUND"
           },
           "correlationId": {
             "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "errors": {
+            "type": "array",
+            "description": "字段级校验错误",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string" },
+                "message": { "type": "string" }
+              }
+            }
           }
+        }
+      },
+      "CreateJobRequest": {
+        "type": "object",
+        "required": ["jobType"],
+        "properties": {
+          "jobType": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{2,63}$"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "Job": {
+        "type": "object",
+        "required": ["jobId", "jobType", "status", "progress", "cancelRequested", "traceId", "correlationId", "requestedAt"],
+        "properties": {
+          "jobId": { "type": "string", "format": "uuid" },
+          "jobType": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["queued", "running", "succeeded", "failed", "cancelled"]
+          },
+          "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "cancelRequested": { "type": "boolean" },
+          "payload": { "type": ["object", "null"], "additionalProperties": true },
+          "result": { "type": ["object", "null"], "additionalProperties": true },
+          "lastError": { "type": ["string", "null"] },
+          "traceId": { "type": "string" },
+          "correlationId": { "type": "string" },
+          "requestedAt": { "type": "string", "format": "date-time" },
+          "startedAt": { "type": ["string", "null"], "format": "date-time" },
+          "finishedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "CreateUploadRequest": {
+        "type": "object",
+        "required": ["fileName", "contentType", "sizeBytes"],
+        "properties": {
+          "fileName": { "type": "string", "maxLength": 200 },
+          "contentType": { "type": "string", "maxLength": 120 },
+          "sizeBytes": { "type": "integer", "minimum": 1, "maximum": 104857600 },
+          "sha256": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" }
+        }
+      },
+      "UploadSession": {
+        "type": "object",
+        "required": ["fileId", "objectKey", "uploadUrl", "expiresAt"],
+        "properties": {
+          "fileId": { "type": "string", "format": "uuid" },
+          "objectKey": { "type": "string" },
+          "uploadUrl": { "type": "string", "format": "uri" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "FileMetadata": {
+        "type": "object",
+        "required": ["fileId", "fileName", "contentType", "sizeBytes", "status", "scanStatus", "createdAt"],
+        "properties": {
+          "fileId": { "type": "string", "format": "uuid" },
+          "fileName": { "type": "string" },
+          "contentType": { "type": "string" },
+          "sizeBytes": { "type": "integer" },
+          "sha256": { "type": ["string", "null"] },
+          "status": {
+            "type": "string",
+            "enum": ["pending_upload", "uploaded", "available", "rejected"]
+          },
+          "scanStatus": {
+            "type": "string",
+            "enum": ["pending", "scanning", "clean", "infected", "failed"]
+          },
+          "scanDetail": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "uploadedAt": { "type": ["string", "null"], "format": "date-time" },
+          "scannedAt": { "type": ["string", "null"], "format": "date-time" }
+        }
+      },
+      "DownloadGrant": {
+        "type": "object",
+        "required": ["fileId", "url", "expiresAt"],
+        "properties": {
+          "fileId": { "type": "string", "format": "uuid" },
+          "url": { "type": "string", "format": "uri" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "DeadLetter": {
+        "type": "object",
+        "required": ["eventId", "eventName", "attempts", "occurredAt"],
+        "properties": {
+          "eventId": { "type": "string", "format": "uuid" },
+          "eventName": { "type": "string" },
+          "attempts": { "type": "integer" },
+          "lastError": { "type": ["string", "null"] },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "lastAttemptAt": { "type": ["string", "null"], "format": "date-time" },
+          "correlationId": { "type": "string" },
+          "traceId": { "type": ["string", "null"] }
+        }
+      },
+      "ReplayRequest": {
+        "type": "object",
+        "required": ["reason"],
+        "properties": {
+          "reason": { "type": "string", "minLength": 8, "maxLength": 500 }
+        }
+      },
+      "ReplayAccepted": {
+        "type": "object",
+        "required": ["eventId", "status"],
+        "properties": {
+          "eventId": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["pending"] }
         }
       }
     }

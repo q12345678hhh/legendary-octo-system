@@ -1,0 +1,35 @@
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1000;
+  padding: var(--platform-spacing-sm) var(--platform-spacing-md);
+  background: var(--platform-color-surface);
+  color: var(--platform-color-text-primary);
+  border-radius: 0 0 var(--platform-radius-md) 0;
+}
+
+.skip-link:focus {
+  left: 0;
+  outline: none;
+  box-shadow: var(--platform-focus-ring);
+}
+
+/* 主区域用 JS 聚焦以通知读屏，不显示可见轮廓。 */
+.skip-target:focus {
+  outline: none;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--platform-color-brand);
+  outline-offset: 2px;
+}

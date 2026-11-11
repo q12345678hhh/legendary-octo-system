@@ -28,6 +28,16 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-jdbc</artifactId>
     </dependency>
+    <!-- TenantTransactions 用 TransactionTemplate 包住 set_config 与业务写库 -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-tx</artifactId>
+    </dependency>
+    <!-- 指标：MeterRegistry 由 actuator 提供，这里只需要编译期 API -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-core</artifactId>
+    </dependency>
     <!-- Boot 4 起 Jackson 主版本是 3（tools.jackson），自动配置的 ObjectMapper 也是这个类型 -->
     <dependency>
       <groupId>tools.jackson.core</groupId>
