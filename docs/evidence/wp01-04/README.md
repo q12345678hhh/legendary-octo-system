@@ -18,7 +18,7 @@
 | `frontend-verify.txt` | 前端 `pnpm -r typecheck / test / build` | 四个包全部通过：`lowcode-runtime` 3、`design-system` 3、`api-client` 6、`apps/web` 15 个用例；`dist/index.html` 存在 |
 | `db-verify.txt` | `scripts/db-verify.ps1` 全量输出（含 V4） | 空库安装 4 个版本（`4|-2118030789`）、RLS 9/9、并发认领不同行、V2→V4 迁移 3.9s、50 万行下探针最慢 33.6ms 且超 1s 的 0 条、索引命中 `platform_outbox_dispatch_idx`、篡改 checksum 后 validate 退出码 1 |
 | `dependency-check.txt` | 依赖漏洞门禁对 Prometheus 服务端 CPE 误报的复现、判定与复测 | 本地复现得到与 CI 一致的 `CVE-2026-42154(7.5)` 行；加抑制后 `BUILD SUCCESS`，报告中该条目转入 `Suppressed Vulnerabilities`，`failBuildOnCVSS=7` 未放宽 |
-| `ci-run.txt` | 该提交在 GitHub Actions 的结果 | Run 42973191622（`a309190`）`completed successfully`：10 个作业成功、`commit-lint` 在 push 上跳过；同时保留前两次失败运行作对照 |
+| `ci-run.txt` | 该提交在 GitHub Actions 的结果 | Run 42973191622（`a309190`）`completed successfully`：10 个作业成功、`commit-lint` 在 push 上跳过；同时保留前两次失败运行作对照。随后归档提交 `f0f5437`（Run 42977429228）同样全绿 |
 
 复现命令（需要 WSL 里的 PostgreSQL 与 MinIO 容器、JDK 21、pnpm）：
 

@@ -35,3 +35,12 @@ GitHub Actions Run 42973191622 —— 代码提交 a309190
    RLS 9/9、并发认领、索引命中与校验和门禁全部成立，不依赖开发机的 WSL 状态。
 3. frontend 作业的 typecheck / test / build / pnpm audit / SBOM 全通过，与
    frontend-verify.txt 的本地结果一致。
+
+---
+
+补充：证据归档提交 f0f5437（docs(wp01-04): 归档 CI 全绿运行并更新计划进展）
+Run 42977429228 —— completed successfully
+  artifacts / backend / contracts / db / desktop-agent / frontend /
+  plugin-runner / secret-scan / supply-chain / tests => success
+  commit-lint => skipped（仅在 pull_request 上运行）
+该次只改文档与计划文件，重跑用于确认归档本身不会破坏门禁。
