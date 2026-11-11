@@ -1,0 +1,74 @@
+WP01-02 本地拓扑 · 容器化验收记录
+=====================================
+
+日期        2026-11-11
+环境        Windows 11 + WSL2 发行版 pglab 内的 Docker Engine（Docker Desktop 未启动，脚本自动回退）
+版本        分支 main，dev-up.ps1 含 -App 档的这次提交
+执行人      个人开发者（本机）
+
+一、起栈
+--------
+命令     powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1 -App
+期望     5 个基础设施容器 healthy，3 个应用容器起得来，再从宿主机验就绪
+实际
+```
+Docker Desktop 未运行，回退到 WSL 内的 Docker Engine
+已提交起栈，等待 8 个服务健康（上限 180s）
+  api 就绪：http://localhost:8080/actuator/health
+  web 就绪：http://localhost:3000/
+
+本地开发拓扑已就绪（46s）：
+  PostgreSQL 5432  库 platform  owner=platform_owner  app=platform_app
+  Redis      6379
+  MinIO      9000  Console 9001
+  Mailpit    SMTP 1025  界面 http://localhost:8025
+  OTLP       grpc 4317  http 4318
+```
+结论     通过。8 个服务全部就绪；应用容器为 --profile app，日常模式不受影响。
+
+二、Web 容器与反向代理
+----------------------
+命令     GET http://localhost:3000/
+         GET http://localhost:3000/api/v1/system/health
+实际     web /: 200（dist/index.html 原样返回）
+         web -> api proxy: 200 {"status":"UP","service":"platform-api"}
+结论     通过。nginx 静态托管与 /api 反代可用，SPA 回落生效。
+
+三、端到端：请求 → outbox → Worker（贯穿 trace_id）
+----------------------------------------------------
+命令     POST http://localhost:8080/api/v1/system/smoke/ping-events
+         X-Tenant-Id: 11111111-1111-1111-1111-111111111111
+         X-Correlation-Id: corr-container-1
+         X-Trace-Id: 0123456789abcdef0123456789abcdef
+期望     201，响应回写关联头；outbox 落 pending 后转 published；Worker 日志带着同样的 id
+实际
+```
+HTTP/1.1 201
+X-Correlation-Id: corr-container-1
+X-Trace-Id: 0123456789abcdef0123456789abcdef
+{"traceId":"0123456789abcdef0123456789abcdef","correlationId":"corr-container-1",
+ "tenantId":"11111111-1111-1111-1111-111111111111","eventId":"56e57ea9-7dca-4487-9cb1-8089380b45be"}
+
+outbox: platform.smoke.ping.v1|published|1|platform-api|corr-container-1|0123456789abcdef0123456789abcdef
+
+worker:
+SmokePingEventHandler : 冒烟事件已收到 eventId=56e57ea9-… tenantId=1111… correlationId=corr-container-1
+                        traceId=0123456789abcdef0123456789abcdef
+OutboxDispatcher      : 事件已消费 event=platform.smoke.ping.v1 eventId=56e57ea9-…
+                        correlationId=corr-container-1 traceId=0123456789abcdef0123456789abcdef
+```
+结论     通过。一次请求在 API 写库、同事务写 outbox、Worker 认领并消费，整条链路的
+         correlation_id 与 trace_id 未断。
+
+四、容器化前的准备路径
+----------------------
+- 镜像只搬运构建产物，缺件的判定与补齐在 scripts/dev-up.ps1 的 Ensure-AppArtifacts：
+  缺 boot-api / boot-worker 的 jar 时执行 mvn -pl <模块> -am package -DskipTests；
+  缺 frontend/apps/web/dist 时执行 pnpm --filter @platform/web build。
+- 这样本地、CI 与容器用同一份 jar 与 dist，容器构建不需要再下载一遍依赖。
+
+五、未覆盖与本轮不做
+--------------------
+- 工作助手（desktop-agent）的原生 Windows 验收不在本记录范围，仍按 WP01-02 第 3 条待办，
+  需在真实 Windows 测试机上运行，不能用容器模拟替代。
+- 容器化档只用于本地验收，镜像未做多架构、未接生产基础镜像与签名，这些随发布流水线处理。

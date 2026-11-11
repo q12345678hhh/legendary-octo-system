@@ -275,14 +275,26 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP01-02 本地和测试拓扑
 
-- [ ] 用 Docker Compose 编排 PostgreSQL、Redis、对象存储、邮件捕获、观测组件和应用依赖。
-- [ ] Web、API 和 Worker 支持 VS Code 调试与容器化验收两种运行方式。
+- [x] 用 Docker Compose 编排 PostgreSQL、Redis、对象存储、邮件捕获、观测组件和应用依赖。
+- [x] Web、API 和 Worker 支持 VS Code 调试与容器化验收两种运行方式。
 - [ ] 工作助手在真实 Windows 测试机运行，不能用容器模拟替代原生验收。
-- [ ] 配置开发数据重建、端口检查、健康检查和环境变量模板。
-- [ ] 证明一条受保护请求写库、产生 outbox、被 Worker 消费并贯穿 trace_id。
+- [x] 配置开发数据重建、端口检查、健康检查和环境变量模板。
+- [x] 证明一条受保护请求写库、产生 outbox、被 Worker 消费并贯穿 trace_id。
 
 **交付物：** 本地运行说明、Compose 拓扑、健康检查和端到端冒烟。  
 **验收证据：** 新机器在文档时间内启动；单组件失败可定位；重建不依赖手工改库。
+
+**进展记录（2026-11-11）：**
+
+| 项 | 落点 | 证据 |
+|---|---|---|
+| Compose 拓扑 | `deploy/compose/compose.dev.yaml`（5 个基础设施 + `--profile app` 的 api / worker / web）、`deploy/compose/.env.example` | `docs/evidence/wp01-02/container-acceptance.txt` |
+| 一键起栈与健康等待 | `scripts/dev-up.ps1`（端口检查、Docker 回退 WSL、`-Reset` / `-Down` / `-App`） | 冷启动 7s（仅基础设施）、45–46s（含应用容器） |
+| 两种运行方式 | `.vscode/launch.json`（API / Worker / 组合 / 附加 5005 / Web）、`.vscode/tasks.json`、`backend/boot-api/Dockerfile`、`backend/boot-worker/Dockerfile`、`frontend/apps/web/Dockerfile` + `nginx.conf` | 容器档实测见证据文件；本机进程调试路径沿用 WP01-01 起已通过的 `mvn` 构建 |
+| 本地运行说明 | `docs/runbooks/local-dev.md` | 端口与账号表、单组件定位表、重建与冒烟步骤 |
+| 端到端 trace | `POST /api/v1/system/smoke/ping-events` → `platform_outbox` → Worker | 201 + 响应回写关联头；outbox `published` / `attempts=1`；Worker 日志 `correlationId` / `traceId` 与请求一致 |
+
+**遗留与说明：** ①工作助手原生 Windows 验收未做，需真实测试机运行 `desktop-agent`，不得用容器替代；②`bitnamilegacy` 的 MinIO 归档镜像仅限本地；③容器扫描仍只覆盖 `plugin-runner`，应用镜像的扫描随发布流水线接入。
 
 ### WP01-03 数据库迁移和恢复基线
 
