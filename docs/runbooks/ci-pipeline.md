@@ -13,12 +13,27 @@
 |---|---|
 | 主干 | `main`，禁止直接推送 |
 | 合并方式 | Squash merge，保留单个 Conventional Commits 头 |
-| 必需检查 | `secret-scan`、`commit-lint`、`backend`、`frontend`、`desktop-agent`、`plugin-runner`、`contracts`、`tests`、`supply-chain` |
-| 评审 | `CODEOWNERS` 指定路径必须由对应所有者批准；`/contracts/`、`/.github/`、`coverage-scope.yaml` 与 ADR 同级别 |
+| 必需检查 | `secret-scan`、`commit-lint`、`backend`、`db`、`frontend`、`desktop-agent`、`plugin-runner`、`contracts`、`tests`、`supply-chain`（要求分支基于最新 `main`，即 strict） |
+| 评审 | `CODEOWNERS` 指定路径必须由对应所有者批准；`/contracts/`、`/.github/`、`coverage-scope.yaml` 与 ADR 同级别。**当前单人阶段批准数为 0**（GitHub 不允许自我批准），加第二位协作者后必须改为 1 并开启 code owner 审核 |
 | 强制推送 | 禁止（含管理员） |
+| 分支删除 | 禁止（含管理员） |
+| 会话解决 | 未解决的评审评论必须先解决才能合并 |
 | 分支命名 | `wp<NN>-<NN>-<slug>`，例如 `wp01-01-ci-baseline` |
 
 分支保护在仓库设置中配置，**不在代码里**；变更保护规则需走变更请求并记录在 `docs/change-request-template.md`。
+
+当前已启用（2026-11-11，仓库 `q12345678hhh/legendary-octo-system`，`main`）：
+
+| 项 | 值 |
+|---|---|
+| required_status_checks | strict=true，10 项上下文（上表所列） |
+| enforce_admins | true（管理员同样不能强推、不能跳过检查） |
+| required_approving_review_count | 0（单人阶段） |
+| dismiss_stale_reviews | true |
+| allow_force_pushes / allow_deletions | false / false |
+| required_conversation_resolution | true |
+
+负例已验证：在本地 `main` 上直接 `git push origin main` 被服务端拒绝（`GH006 Protected branch update failed`），改为推送分支 + PR 后由检查门禁放行。
 
 ## 2. 任务与本地等价命令
 
