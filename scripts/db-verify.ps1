@@ -358,9 +358,14 @@ COMMIT;
     Assert-True ($lifecycle.Output -match 'WP02-01 租户生命周期数据库断言通过') '生命周期 SQL 断言未通过'
 
     if (Test-Path $pinnedJavaHome) { $env:JAVA_HOME = $pinnedJavaHome }
+    # 必须从聚合 POM 走 reactor：db 作业没有先执行 backend 的 install，
+    # 单独用模块 POM 会解析不到 com.acme.platform:platform 等同仓依赖。
     $lifecycleArgs = @(
-        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\modules\tenancy\pom.xml'), 'test',
-        '-Dtest=TenantLifecycleDbTest', '-DfailIfNoTests=true',
+        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'),
+        '-pl', 'modules/tenancy', '-am', 'test',
+        '-Dtest=TenantLifecycleDbTest',
+        '-Dsurefire.failIfNoSpecifiedTests=false',
+        '-DfailIfNoTests=false',
         '-Djacoco.skip=true',
         "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
         "-Dplatform.db.user=$AppUser",

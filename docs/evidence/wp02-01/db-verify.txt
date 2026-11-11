@@ -1,6 +1,6 @@
 ﻿powershell : wsl: 检测到 localhost 代理配置，但未镜像到 WSL。NAT 模式下的 WSL 不支持 localhost 代理。
-所在位置 行:15 字符: 1869
-+ ... M = 'dumb'; powershell -ExecutionPolicy Bypass -File scripts\db-verif ...
+所在位置 行:15 字符: 2003
++ ... o\com\acme; powershell -ExecutionPolicy Bypass -File scripts\db-verif ...
 +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (wsl: 检测到 localh...持 localhost 代理。:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
@@ -61,7 +61,7 @@ RLS 用例全部通过（9/9）
     1|-421171951
     2|-1218073849
   已灌入 outbox 行数：500000（4s）
-  迁移耗时 4.3s；探针执行 1501 条语句，最慢 142.1 ms，超过 1s 的语句 0 条
+  迁移耗时 4.2s；探针执行 1501 条语句，最慢 18.4 ms，超过 1s 的语句 0 条
   升级后的校验和：
     1|-421171951
     2|-1218073849
@@ -107,7 +107,7 @@ aaaaaaaa-0000-4000-8000-000000000001
 DO
 COMMIT
 WP02-01 租户生命周期数据库断言通过
-  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.489 s -- in com.acme.platform.tenancy.TenantLifecycleDbTest
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.624 s -- in com.acme.platform.tenancy.TenantLifecycleDbTest
   状态机、冻结门禁、冷静期删除、审计链、同号跨租户与支持访问时限全部通过
 
 == 6 校验和门禁：篡改历史 checksum 后 validate 必须失败
@@ -115,7 +115,7 @@ WP02-01 租户生命周期数据库断言通过
   篡改被拦截，还原后 validate 通过
 
 == 7 连接池：租户上下文随连接复用不得残留
-  Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.562 s -- in com.acme.platform.db.ConnectionPoolTenantContextTest
+  Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.643 s -- in com.acme.platform.db.ConnectionPoolTenantContextTest
   事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户
 
 全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、并发、索引、锁等待评估、连接池隔离。

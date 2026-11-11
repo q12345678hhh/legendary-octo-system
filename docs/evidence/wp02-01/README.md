@@ -66,6 +66,13 @@ ERROR:  tenancy_profile 必须同时 ENABLE 与 FORCE RLS，实际 enable=f, for
 `assertThat(tenantTransactions.inTenant(...))` 在结果类型未显式声明时同时匹配 `assertThat(Predicate)` 与 `assertThat(IntPredicate)`。
 修复：先赋给 `List<TenantQuota>`、`List<String>`、`List<TenantDomain>` 等显式类型局部变量再断言。
 
+**5. CI `db` 作业：模块 POM 解析不到同仓依赖**
+
+首轮 PR CI 中 `db` 失败：`SupportAccessRules.java:[3,34] cannot find symbol ApiException`、`package org.springframework.jdbc.core does not exist`。
+原因：第 5b 步用 `-f backend/modules/tenancy/pom.xml` 单模块运行，而 `db` 作业不会先执行 backend 的 `install`，同仓 `com.acme.platform:platform` 无法解析；本地能过是因为 `.m2` 里有之前 install 的产物。
+修复：改为聚合 POM + reactor（`-f backend/pom.xml -pl modules/tenancy -am test`），并加 `-Dsurefire.failIfNoSpecifiedTests=false`（上游模块没有匹配用例）。
+复测：删除本地 `com/acme` 产物后重跑 `db-verify.ps1`，全部 8 步通过，复现了 CI 的干净环境。
+
 ## 边界
 
 - 平台跨租户目录与平台控制台界面属 WP02-07；本包只提供平台域 API 与租户生命周期。
