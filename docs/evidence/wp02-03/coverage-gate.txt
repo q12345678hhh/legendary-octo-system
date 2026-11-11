@@ -1,0 +1,12 @@
+﻿报告数量: 8
+  backend\boot-api\target\site\jacoco\jacoco.xml  covered=1508 missed=3319
+  backend\boot-worker\target\site\jacoco\jacoco.xml  covered=335 missed=405
+  backend\modules\identity\target\site\jacoco\jacoco.xml  covered=1391 missed=6052
+  backend\modules\organization\target\site\jacoco\jacoco.xml  covered=268 missed=8335
+  backend\modules\platform\target\site\jacoco\jacoco.xml  covered=164 missed=3247
+  backend\modules\tenancy\target\site\jacoco\jacoco.xml  covered=421 missed=3503
+  backend\modules\worklog\target\site\jacoco\jacoco.xml  covered=255 missed=1710
+  backend\test-support\target\site\jacoco\jacoco.xml  covered=34 missed=3
+指令覆盖率: 14.14% (covered=4376, missed=26574)
+基线: 0.00% (tolerance=0.0005)
+PASS: 覆盖率满足非回归门槛

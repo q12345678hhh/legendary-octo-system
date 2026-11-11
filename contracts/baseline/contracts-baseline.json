@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-11T10:03:04.359Z",
+  "frozenAt": "2026-11-11T11:00:47.171Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "2e3896ea9e773dc849bcbd84c25d8db0d6b9117f9c0add36aeb89ae13334ab45",
+      "sha256": "01fcc479ce1a54c17ddbe2698a6dc5a1b351d75e8df3c43c5437f631265a474e",
       "tokens": {
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
@@ -1057,6 +1057,770 @@
         },
         "response:PATCH /api/v1/employments/{employmentId}/end:422": {
           "defined": true
+        },
+        "operation:GET /api/v1/legal-entities": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/legal-entities:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/legal-entities:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/legal-entities": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/legal-entities:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/legal-entities:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/legal-entities:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/legal-entities:422": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/legal-entities/{legalEntityId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/legal-entities/{legalEntityId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/legal-entities/{legalEntityId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/legal-entities/{legalEntityId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/legal-entities/{legalEntityId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/legal-entities/{legalEntityId}:422": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/legal-entities/{legalEntityId}:path:legalEntityId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/org-units": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/org-units:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/org-units:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/org-units": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/org-units:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/org-units/tree": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/org-units/tree:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/org-units/tree:403": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/org-units/{unitId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/org-units/{unitId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/org-units/{unitId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/org-units/{unitId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/org-units/{unitId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/org-units/{unitId}:422": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/org-units/{unitId}:path:unitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/org-units/{unitId}/archive": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/org-units/{unitId}/archive:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/archive:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/archive:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/archive:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/archive:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/archive:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/org-units/{unitId}/archive:path:unitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/org-units/{unitId}/move-previews": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move-previews:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move-previews:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move-previews:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move-previews:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move-previews:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move-previews:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/org-units/{unitId}/move-previews:path:unitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/org-units/{unitId}/move": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/org-units/{unitId}/move:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/org-units/{unitId}/move:path:unitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/job-levels": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/job-levels:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/job-levels:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/job-levels": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/job-levels:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/job-levels:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/job-levels:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/job-levels:422": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/job-levels/{jobLevelId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/job-levels/{jobLevelId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/job-levels/{jobLevelId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/job-levels/{jobLevelId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/job-levels/{jobLevelId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/job-levels/{jobLevelId}:422": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/job-levels/{jobLevelId}:path:jobLevelId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/jobs": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/jobs:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/jobs:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/jobs": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/jobs:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/jobs:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/jobs:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/jobs:422": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/jobs/{jobId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/jobs/{jobId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/jobs/{jobId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/jobs/{jobId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/jobs/{jobId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/jobs/{jobId}:422": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/jobs/{jobId}:path:jobId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/positions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/positions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/positions:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/positions:query:orgUnitId": {
+          "required": false,
+          "type": "string"
+        },
+        "operation:POST /api/v1/positions": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/positions:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/positions:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/positions:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/positions:422": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/positions/{positionId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/positions/{positionId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/positions/{positionId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/positions/{positionId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/positions/{positionId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/positions/{positionId}:422": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/positions/{positionId}:path:positionId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/cost-centers": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/cost-centers:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/cost-centers:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/cost-centers": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/cost-centers:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/cost-centers:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/cost-centers:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/cost-centers:422": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/cost-centers/{costCenterId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/cost-centers/{costCenterId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/cost-centers/{costCenterId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/cost-centers/{costCenterId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/cost-centers/{costCenterId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/cost-centers/{costCenterId}:422": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/cost-centers/{costCenterId}:path:costCenterId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/locations": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/locations:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/locations:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/locations": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/locations:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/locations:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/locations:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/locations:422": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/locations/{locationId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/locations/{locationId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/locations/{locationId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/locations/{locationId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/locations/{locationId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/locations/{locationId}:422": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/locations/{locationId}:path:locationId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/employments/{employmentId}/assignments": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/employments/{employmentId}/assignments:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/employments/{employmentId}/assignments:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/employments/{employmentId}/assignments:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/employments/{employmentId}/assignments:path:employmentId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/employments/{employmentId}/assignments:query:current": {
+          "required": false,
+          "type": "boolean"
+        },
+        "operation:POST /api/v1/employments/{employmentId}/assignments": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/employments/{employmentId}/assignments:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/employments/{employmentId}/assignments:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/employments/{employmentId}/assignments:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/employments/{employmentId}/assignments:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/employments/{employmentId}/assignments:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/employments/{employmentId}/assignments:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/employments/{employmentId}/assignments:path:employmentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/assignments/{assignmentId}/end": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/assignments/{assignmentId}/end:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/assignments/{assignmentId}/end:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/assignments/{assignmentId}/end:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/assignments/{assignmentId}/end:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/assignments/{assignmentId}/end:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/assignments/{assignmentId}/end:path:assignmentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/reporting-lines": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/reporting-lines:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/reporting-lines:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/reporting-lines": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/reporting-lines:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/reporting-lines:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/reporting-lines:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/reporting-lines:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/reporting-lines:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/employments/{employmentId}/reporting-lines": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/employments/{employmentId}/reporting-lines:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/employments/{employmentId}/reporting-lines:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/employments/{employmentId}/reporting-lines:path:employmentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/reporting-lines/{lineId}/end": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/reporting-lines/{lineId}/end:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/reporting-lines/{lineId}/end:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/reporting-lines/{lineId}/end:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/reporting-lines/{lineId}/end:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/reporting-lines/{lineId}/end:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/reporting-lines/{lineId}/end:path:lineId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/delegations": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/delegations:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/delegations:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/delegations:query:current": {
+          "required": false,
+          "type": "boolean"
+        },
+        "operation:POST /api/v1/delegations": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/delegations:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/delegations:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/delegations:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/delegations:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/delegations:422": {
+          "defined": true
+        },
+        "operation:POST /api/v1/delegations/{delegationId}/end": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/delegations/{delegationId}/end:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/delegations/{delegationId}/end:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/delegations/{delegationId}/end:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/delegations/{delegationId}/end:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/delegations/{delegationId}/end:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/delegations/{delegationId}/end:path:delegationId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/owner-roles": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/owner-roles:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/owner-roles:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/owner-roles": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/owner-roles:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles:422": {
+          "defined": true
+        },
+        "operation:POST /api/v1/owner-roles/{roleId}/revoke": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/owner-roles/{roleId}/revoke:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles/{roleId}/revoke:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles/{roleId}/revoke:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles/{roleId}/revoke:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/owner-roles/{roleId}/revoke:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/owner-roles/{roleId}/revoke:path:roleId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/organization/readiness": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/organization/readiness:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/organization/readiness:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/organization/changes": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/organization/changes:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/organization/changes:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/organization/changes:query:status": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/organization/changes:query:targetId": {
+          "required": false,
+          "type": "string"
+        },
+        "operation:POST /api/v1/organization/changes": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/organization/changes:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/organization/changes/{changeId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/organization/changes/{changeId}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/organization/changes/{changeId}:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/organization/changes/{changeId}:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/organization/changes/{changeId}:path:changeId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/organization/changes/{changeId}/cancel": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/organization/changes/{changeId}/cancel:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes/{changeId}/cancel:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes/{changeId}/cancel:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes/{changeId}/cancel:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes/{changeId}/cancel:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes/{changeId}/cancel:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/organization/changes/{changeId}/cancel:path:changeId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/organization/changes/apply-due": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/organization/changes/apply-due:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes/apply-due:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes/apply-due:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/organization/changes/apply-due:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/organization/history": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/organization/history:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/organization/history:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/organization/history:query:entityType": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/organization/history:query:entityId": {
+          "required": false,
+          "type": "string"
         },
         "schema:SessionPrincipal.tenantId": {
           "type": "string",
@@ -2451,6 +3215,938 @@
         },
         "schema:SupportGrant.banner": {
           "type": "$ref",
+          "required": true
+        },
+        "schema:LegalEntity.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:LegalEntity.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:LegalEntity.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:LegalEntity.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:LegalEntity.registrationNo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:LegalEntity.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "schema:LegalEntity.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:OrgUnit.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnit.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnit.parentId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrgUnit.legalEntityId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnit.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnit.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnit.unitType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "company",
+            "department",
+            "division",
+            "team"
+          ]
+        },
+        "schema:OrgUnit.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "archived"
+          ]
+        },
+        "schema:OrgUnit.sortOrder": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:OrgUnit.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:OrgUnitNode.unit": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:OrgUnitNode.children": {
+          "type": "array",
+          "required": true
+        },
+        "schema:JobLevel.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:JobLevel.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:JobLevel.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:JobLevel.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:JobLevel.rank": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:JobLevel.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "schema:JobLevel.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:OrganizationJob.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationJob.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationJob.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationJob.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationJob.jobFamily": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationJob.defaultLevelId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationJob.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "schema:OrganizationJob.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Position.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Position.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Position.orgUnitId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Position.jobId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Position.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Position.name": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Position.headcountLimit": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Position.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "schema:Position.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:CostCenter.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CostCenter.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CostCenter.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CostCenter.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CostCenter.legalEntityId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CostCenter.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "schema:CostCenter.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Location.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Location.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Location.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Location.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Location.address": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Location.timezone": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Location.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "inactive"
+          ]
+        },
+        "schema:Location.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:EmploymentAssignment.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:EmploymentAssignment.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:EmploymentAssignment.employmentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:EmploymentAssignment.positionId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:EmploymentAssignment.assignmentType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "primary",
+            "secondary"
+          ]
+        },
+        "schema:EmploymentAssignment.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:EmploymentAssignment.effectiveTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:EmploymentAssignment.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ReportingLine.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReportingLine.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReportingLine.subordinateEmploymentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReportingLine.managerEmploymentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReportingLine.lineType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "dotted",
+            "solid"
+          ]
+        },
+        "schema:ReportingLine.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReportingLine.effectiveTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ReportingLine.createdBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ReportingLine.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Delegation.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Delegation.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Delegation.delegatorEmploymentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Delegation.delegateEmploymentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Delegation.scopeOrgUnitId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Delegation.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Delegation.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Delegation.effectiveTo": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Delegation.createdBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Delegation.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:OwnerRole.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OwnerRole.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OwnerRole.employmentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OwnerRole.roleType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "owner",
+            "trustee"
+          ]
+        },
+        "schema:OwnerRole.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OwnerRole.effectiveTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OwnerRole.appointedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OwnerRole.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ImpactPreview.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ImpactPreview.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ImpactPreview.unitId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ImpactPreview.targetParentId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ImpactPreview.descendantCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ImpactPreview.employmentCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ImpactPreview.positionCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ImpactPreview.reportingLineCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ImpactPreview.delegationCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ImpactPreview.scheduledChangeCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ImpactPreview.createdBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ImpactPreview.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ImpactPreview.expiresAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationChange.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationChange.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationChange.changeType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "COST_CENTER_UPSERT",
+            "JOB_LEVEL_UPSERT",
+            "JOB_UPSERT",
+            "LEGAL_ENTITY_UPSERT",
+            "LOCATION_UPSERT",
+            "OWNER_ASSIGN",
+            "OWNER_REVOKE",
+            "POSITION_UPSERT",
+            "UNIT_ARCHIVE",
+            "UNIT_CREATE",
+            "UNIT_MOVE",
+            "UNIT_UPDATE"
+          ]
+        },
+        "schema:OrganizationChange.targetId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationChange.effectiveDate": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationChange.payload": {
+          "type": "object",
+          "required": true
+        },
+        "schema:OrganizationChange.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "applied",
+            "cancelled",
+            "failed",
+            "scheduled"
+          ]
+        },
+        "schema:OrganizationChange.requestedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationChange.reason": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationChange.appliedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationChange.failureReason": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationChange.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:OrganizationChangeResult.change": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:OrganizationChangeResult.appliedImmediately": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:OrganizationHistoryEntry.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationHistoryEntry.tenantId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationHistoryEntry.changeId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationHistoryEntry.entityType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationHistoryEntry.entityId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationHistoryEntry.action": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationHistoryEntry.effectiveDate": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationHistoryEntry.beforeState": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationHistoryEntry.afterState": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationHistoryEntry.actor": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationHistoryEntry.occurredAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationReadiness.ready": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:OrganizationReadiness.blockers": {
+          "type": "array",
+          "required": true
+        },
+        "schema:OrganizationReadiness.currentRoles": {
+          "type": "array",
+          "required": true
+        },
+        "schema:OrganizationReadiness.ownerCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:OrganizationReadiness.trusteeCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:LegalEntityRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:LegalEntityRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:LegalEntityRequest.registrationNo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:LegalEntityRequest.status": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "active",
+            "inactive",
+            "null"
+          ]
+        },
+        "schema:OrgUnitRequest.parentId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrgUnitRequest.legalEntityId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnitRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnitRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnitRequest.unitType": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "company",
+            "department",
+            "division",
+            "team"
+          ]
+        },
+        "schema:OrgUnitRequest.sortOrder": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrgUnitMovePreviewRequest.targetParentId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrgUnitMoveRequest.targetParentId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrgUnitMoveRequest.previewId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrgUnitMoveRequest.sortOrder": {
+          "type": "object",
+          "required": false
+        },
+        "schema:JobLevelRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:JobLevelRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:JobLevelRequest.rank": {
+          "type": "object",
+          "required": false
+        },
+        "schema:JobLevelRequest.status": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "active",
+            "inactive",
+            "null"
+          ]
+        },
+        "schema:OrganizationJobRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationJobRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationJobRequest.jobFamily": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationJobRequest.defaultLevelId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationJobRequest.status": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "active",
+            "inactive",
+            "null"
+          ]
+        },
+        "schema:PositionRequest.orgUnitId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PositionRequest.jobId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PositionRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PositionRequest.name": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PositionRequest.headcountLimit": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PositionRequest.status": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "active",
+            "inactive",
+            "null"
+          ]
+        },
+        "schema:CostCenterRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CostCenterRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CostCenterRequest.legalEntityId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CostCenterRequest.status": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "active",
+            "inactive",
+            "null"
+          ]
+        },
+        "schema:LocationRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:LocationRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:LocationRequest.address": {
+          "type": "object",
+          "required": false
+        },
+        "schema:LocationRequest.timezone": {
+          "type": "object",
+          "required": false
+        },
+        "schema:LocationRequest.status": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "active",
+            "inactive",
+            "null"
+          ]
+        },
+        "schema:AssignmentRequest.positionId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AssignmentRequest.assignmentType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "primary",
+            "secondary"
+          ]
+        },
+        "schema:AssignmentRequest.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AssignmentRequest.effectiveTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ReportingLineRequest.subordinateEmploymentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReportingLineRequest.managerEmploymentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReportingLineRequest.lineType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "dotted",
+            "solid"
+          ]
+        },
+        "schema:ReportingLineRequest.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ReportingLineRequest.effectiveTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:DelegationRequest.delegatorEmploymentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DelegationRequest.delegateEmploymentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DelegationRequest.scopeOrgUnitId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DelegationRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DelegationRequest.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DelegationRequest.effectiveTo": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OwnerRoleRequest.employmentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OwnerRoleRequest.roleType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "owner",
+            "trustee"
+          ]
+        },
+        "schema:OwnerRoleRequest.effectiveFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OwnerRoleRequest.effectiveTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:EndRelationRequest.effectiveTo": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationChangeRequest.changeType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "COST_CENTER_UPSERT",
+            "JOB_LEVEL_UPSERT",
+            "JOB_UPSERT",
+            "LEGAL_ENTITY_UPSERT",
+            "LOCATION_UPSERT",
+            "OWNER_ASSIGN",
+            "OWNER_REVOKE",
+            "POSITION_UPSERT",
+            "UNIT_ARCHIVE",
+            "UNIT_CREATE",
+            "UNIT_MOVE",
+            "UNIT_UPDATE"
+          ]
+        },
+        "schema:OrganizationChangeRequest.targetId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationChangeRequest.effectiveDate": {
+          "type": "string",
+          "required": true
+        },
+        "schema:OrganizationChangeRequest.payload": {
+          "type": "object",
+          "required": false
+        },
+        "schema:OrganizationChangeRequest.reason": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ApplyDueRequest.batchSize": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ApplyDueResult.applied": {
+          "type": "integer",
           "required": true
         }
       }

@@ -440,12 +440,30 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP02-03 组织和生效日期
 
-- [ ] 完成法人、部门、岗位、职位、职级、成本中心、地点和主/兼岗。
-- [ ] 完成实线/虚线汇报、管理委派、未来变更、生效/失效和历史快照。
-- [ ] 组织和汇报图禁止环；移动部门前生成权限、审批、编制和报表影响预览。
-- [ ] 老板/最高负责人是独立业务角色，至少一名有效受托人；租户管理员不自动获得正文权限。
+- [x] 完成法人、部门、岗位、职位、职级、成本中心、地点和主/兼岗。
+- [x] 完成实线/虚线汇报、管理委派、未来变更、生效/失效和历史快照。
+- [x] 组织和汇报图禁止环；移动部门前生成权限、审批、编制和报表影响预览。
+- [x] 老板/最高负责人是独立业务角色，至少一名有效受托人；租户管理员不自动获得正文权限。
 
 **验收证据：** 三级汇报链、兼岗、代管、虚线和调动历史正确；空老板角色会阻断正常模块启用。
+
+**完成情况（WP02-03）：**
+
+| 项目 | 落点 | 证据 |
+| --- | --- | --- |
+| 组织结构 | `organization_legal_entity`/`organization_unit`/`organization_job_level`/`organization_job`/`organization_position`/`organization_cost_center`/`organization_location`；`OrganizationStructureService` | `org-scenarios.txt`（法人、三级部门、职级/岗位/职位）；`db-verify.txt`（`80-organization.sql`） |
+| 主/兼岗与调动 | `organization_employment_assignment`；主岗区间唯一、兼岗可与主岗并存；调动自动把前任主岗截止到新主岗生效日前一天 | `org-scenarios.txt`（主岗+兼岗、调动历史） |
+| 汇报线 | `organization_reporting_line`（solid/dotted）；三级实线链、虚线参与判环；自汇报与成环返回 `REPORTING_CYCLE` | `org-scenarios.txt`；`backend-tests.txt`（`ReportingGraphTest`） |
+| 管理委派 | `organization_delegation`，区间必填、默认上限 180 天，写入前拒绝超期与自我委派 | `org-scenarios.txt`（限时代管）；`backend-tests.txt`（`EffectiveDatingTest`） |
+| 生效/失效与未来变更 | `organization_change` + 非 RLS 系统队列 `platform_organization_due`；`OrganizationChangeApplier` 在 boot-worker 轮询应用到期变更 | `org-scenarios.txt`（排期、撤销、apply-due、立即生效） |
+| 历史快照 | `organization_change_history` 只插入，数据库触发器拒绝 UPDATE/DELETE | `org-scenarios.txt`（历史可读、篡改抛 `DataAccessException`） |
+| 移动影响预览票据 | `organization_impact_preview`：10 分钟 TTL、单次消费、服务端复算六项计数；缺票据返回 `ORG_IMPACT_PREVIEW_REQUIRED`，重放返回 `ORG_IMPACT_PREVIEW_CONSUMED` | `org-scenarios.txt`；`OrganizationApiTest`（移动缺票据 409） |
+| 老板与受托人 | `organization_owner_role`（owner/trustee），`readiness` 在 owner 或 trustee 缺失时阻断并要求独立受托人；租户管理员不自动获得正文权限 | `org-scenarios.txt`（空老板 `ORGANIZATION_NOT_READY`）；`backend-tests.txt`（`OwnerReadinessTest`） |
+| 数据库与 RLS | `V8__organization_structure.sql`：14 张租户表全部 ENABLE+FORCE RLS，跨表引用统一 `(tenant_id, id)` | `db-verify.txt`（V8 校验和 `-525129633`、RLS 45/45） |
+| API 与契约 | `/api/v1/legal-entities`、`/org-units`、`/job-levels`、`/jobs`、`/positions`、`/cost-centers`、`/locations`、`/employments/{id}/assignments`、`/reporting-lines`、`/delegations`、`/owner-roles`、`/organization/changes`、`/organization/history`、`/organization/readiness`；OpenAPI 1.4.0 新增 36 条路径、27 个 schema | `contract-check.txt`（7 份契约 PASS，基线已重冻结） |
+| 运行手册与证据 | `docs/runbooks/organization.md`、`docs/evidence/wp02-03/` | `backend-tests.txt`、`db-verify.txt`、`org-scenarios.txt`、`coverage-gate.txt` |
+
+**遗留与说明（WP02-03）：** ①影响预览当前只统计组织侧可确定的六项（子部门、在职人数、职位、汇报线、代管、排期变更）；权限、审批、编制与报表影响需等 WP02-04 与后续模块接入后补齐，不伪造结论。②排期移动在创建变更单时消费预览票据并冻结计数快照，到期应用前重新计算，数据变化即标记失败，不自动重放。③`platform_organization_due` 是非 RLS 系统队列，仅 boot-worker 跨租户扫描；单条失败只标记 `failed`，需人工重新确认。④老板/受托人以雇佣（Employment）为锚点，租户管理员不因管理员身份自动获得组织正文权限，细粒度权限解释由 WP02-04 收口。⑤OIDC 与邮件不在本工作包范围。
 
 ### WP02-04 统一授权决策
 

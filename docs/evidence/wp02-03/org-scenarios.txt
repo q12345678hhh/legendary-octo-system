@@ -1,0 +1,42 @@
+WP02-03 组织结构与生效日期：场景清单
+命令：mvn -B -ntp -f backend/pom.xml -pl modules/organization -Dtest=OrganizationDbTest test
+（需真实 PostgreSQL，db-verify.ps1 第 5d 步自动执行）
+
+OrganizationDbTest.organizationStructureLifecycle（Tests run: 1, Failures: 0, Errors: 0）
+租户：C=eeeeeeee-...0005（完整组织），D=ffffffff-...0006（只有结构，无老板）
+
+ 1. 法人：创建并读取，编码唯一。
+ 2. 部门树：company → division → department 三级，parentId 正确。
+ 3. 主数据：1 个职级、1 个岗位、3 个职位（分属三级部门）。
+ 4. 人员与雇佣：3 名 Person / Employment，主岗落在各自部门。
+ 5. 主/兼岗：成员在 department 有主岗、在 division 有兼岗；currentAssignments 返回 2 条；
+    主岗区间唯一（兼岗不触发 ASSIGNMENT_OVERLAP）。
+ 6. 汇报线：lead→boss 实线、member→lead 实线、member→boss 虚线；
+    让 boss 汇报给 member 触发 REPORTING_CYCLE（虚线也参与判环）。
+ 7. 限时代管：boss 在 today-1 ~ today+30 把 department 交给 member 代管；
+    currentDelegations 返回该条记录。
+ 8. 老板与受托人：boss=owner、member=trustee；readiness ready，ownerCount=1、trusteeCount=1，
+    requireReady 不抛异常。
+ 9. 部门成环：把 company 移到 department 下 → ORG_UNIT_CYCLE。
+10. 移动影响预览：previewMove(department → company) 返回 descendant=0、employment=1、position=1；
+    携带票据移动成功，parentId 变为 company；重放同一票据 → ORG_IMPACT_PREVIEW_CONSUMED。
+11. 未来变更：排期 UNIT_UPDATE（today+3）→ SCHEDULED；另一条排期后 cancel → CANCELLED。
+12. 跨日应用：把 organization_change 与 platform_organization_due 的 effective_date 改为 CURRENT_DATE，
+    applyDue(10) 返回 1；变更状态 APPLIED，部门名称已切换。
+13. 立即生效：effectiveDate=today 的 UNIT_UPDATE 直接 appliedImmediately=true、状态 APPLIED。
+14. 历史快照：history("org_unit", department) 非空；UPDATE organization_change_history 抛 DataAccessException
+    （触发器拒绝篡改）。
+15. 空老板阻断：租户 D 只有结构，requireReady 抛 ORGANIZATION_NOT_READY。
+16. 无上下文：14 张组织租户表在未设置 app.tenant_id 时各返回 0 行（FORCE RLS）。
+
+单元测试（不依赖数据库）：
+  EffectiveDatingTest      左闭右开、相邻区间不重叠、开放区间
+  OrganizationTreeTest     自指/子孙/已有环 → ORG_UNIT_CYCLE；移到根与兄弟移动允许
+  ReportingGraphTest       自汇报 REPORTING_SELF、三级实线环、虚线参与判环、多经理无环允许
+  OwnerReadinessTest       空 owner+trustee 双阻断、受托人必须独立、就绪时 requireReady 不抛
+
+HTTP 切片（OrganizationApiTest）：
+  树形嵌套返回（unitType=company）；移动缺票据 409 ORG_IMPACT_PREVIEW_REQUIRED；
+  apply-due batchSize=0 → 422 BATCH_SIZE_INVALID 且不调用服务；
+  readiness blockers 小写；owner roleType 非法 → 422 OWNER_ROLE_TYPE_INVALID；
+  变更列表 changeType=unit_move、status=scheduled 小写。

@@ -23,6 +23,11 @@ platform:
     poll-interval: ${PLATFORM_OUTBOX_POLL_INTERVAL:2s}
     max-attempts: ${PLATFORM_OUTBOX_MAX_ATTEMPTS:5}
     retry-delay: ${PLATFORM_OUTBOX_RETRY_DELAY:10s}
+  organization:
+    # 组织变更按业务日到期，30 秒一轮足够；到期扫描只看系统队列，成本不随租户数线性增长
+    change-poll-interval: ${PLATFORM_ORGANIZATION_CHANGE_POLL_INTERVAL:30s}
+    preview-ttl: ${PLATFORM_ORGANIZATION_PREVIEW_TTL:10m}
+    max-delegation-days: ${PLATFORM_ORGANIZATION_MAX_DELEGATION_DAYS:180}
 
 logging:
   # 与 API 同一套结构化格式：Worker 的每行日志都带事件里的 trace/correlation/tenant，
