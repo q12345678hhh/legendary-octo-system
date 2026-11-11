@@ -1,0 +1,17 @@
+GitHub Actions Run 13 —— 代码提交 83e84d9（feat(wp01-03): 建立数据库迁移与恢复基线）
+结论：completed successfully
+
+抓取时间：2026-11-11 12:22 +08:00
+抓取方式：curl.exe -sL -A "Mozilla/5.0" https://github.com/q12345678hhh/legendary-octo-system/actions
+
+页面 aria-label 统计（14 条）：
+  completed successfully: 13
+  skipped: 1                     （commit-lint：工作流里仅在 pull_request 上运行，本次是 push）
+
+运行页 https://github.com/q12345678hhh/legendary-octo-system/actions/runs/42957573768 中出现的作业：
+  secret-scan / commit-lint / backend / db / frontend / desktop-agent /
+  plugin-runner / contracts / tests / supply-chain / artifacts
+
+本工作包新增的 db 作业（postgres:16 服务容器 + 创建 NOBYPASSRLS 的 platform_app + 重跑
+scripts/db-verify.ps1）在本次运行中通过，说明迁移、RLS、并发、索引、锁等待与连接池断言
+在干净的 Linux 服务容器上同样成立，不依赖开发机的 WSL 状态。

@@ -10,6 +10,7 @@
 | `backup.txt` | `scripts/db-backup.ps1` 的输出 | 密文 12,864 字节、SHA-256 `4ded3818…`、明文 SHA-256 `bf00eabc…`；上传 MinIO 后 `mc stat` 返回 size 12864 与 etag；恢复基准 tenants=2 outbox=4 md5 `30ee01d6…` flyway=3 |
 | `manifest.sample.json` | 那次备份的清单原文 | 加密参数、两个哈希、对象键、恢复基准、对象存储核对结果 |
 | `restore-drill.txt` | `scripts/db-restore-drill.ps1` 的输出 | 截断密文解密 `exit=1`（`wrong final block length`）；正式密文哈希与清单一致；`--network none` 隔离实例 `pg_restore` 0.3s；四项一致性校验全部通过；全流程 4s |
+| `ci-run.txt` | GitHub Actions Run 13（提交 `83e84d9`）的结果 | `completed successfully`；13 个作业成功、`commit-lint` 在 push 上跳过；新增的 `db` 作业在干净的 `postgres:16` 服务容器里跑通同一套断言 |
 
 复现命令：
 
