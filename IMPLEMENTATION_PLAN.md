@@ -277,7 +277,7 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 - [x] 用 Docker Compose 编排 PostgreSQL、Redis、对象存储、邮件捕获、观测组件和应用依赖。
 - [x] Web、API 和 Worker 支持 VS Code 调试与容器化验收两种运行方式。
-- [ ] 工作助手在真实 Windows 测试机运行，不能用容器模拟替代原生验收。
+- [x] 工作助手在真实 Windows 测试机运行，不能用容器模拟替代原生验收。
 - [x] 配置开发数据重建、端口检查、健康检查和环境变量模板。
 - [x] 证明一条受保护请求写库、产生 outbox、被 Worker 消费并贯穿 trace_id。
 
@@ -293,8 +293,9 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 | 两种运行方式 | `.vscode/launch.json`（API / Worker / 组合 / 附加 5005 / Web）、`.vscode/tasks.json`、`backend/boot-api/Dockerfile`、`backend/boot-worker/Dockerfile`、`frontend/apps/web/Dockerfile` + `nginx.conf` | 容器档实测见证据文件；本机进程调试路径沿用 WP01-01 起已通过的 `mvn` 构建 |
 | 本地运行说明 | `docs/runbooks/local-dev.md` | 端口与账号表、单组件定位表、重建与冒烟步骤 |
 | 端到端 trace | `POST /api/v1/system/smoke/ping-events` → `platform_outbox` → Worker | 201 + 响应回写关联头；outbox `published` / `attempts=1`；Worker 日志 `correlationId` / `traceId` 与请求一致 |
+| 工作助手原生验收 | `desktop-agent/privacy-engine/.../Checks` 的 `--live` 采样，win-x64 发布后在本机运行 | `docs/evidence/wp01-02/desktop-agent-native-windows.txt`（Windows 11 26200 桌面；真实 QQ 12 个、Weixin 5 个进程全部排除） |
 
-**遗留与说明：** ①工作助手原生 Windows 验收未做，需真实测试机运行 `desktop-agent`，不得用容器替代；②`bitnamilegacy` 的 MinIO 归档镜像仅限本地；③容器扫描仍只覆盖 `plugin-runner`，应用镜像的扫描随发布流水线接入。
+**遗留与说明：** ①`bitnamilegacy` 的 MinIO 归档镜像仅限本地；②容器扫描仍只覆盖 `plugin-runner`，应用镜像的扫描随发布流水线接入；③工作助手原生验收只覆盖隐私边界与可运行性，托盘、状态提示与语音属 Phase 4 范围。
 
 ### WP01-03 数据库迁移和恢复基线
 

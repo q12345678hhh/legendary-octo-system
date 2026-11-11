@@ -1,4 +1,11 @@
 using WorkAssistant.PrivacyEngine;
+using WorkAssistant.PrivacyEngine.Checks;
+
+// --live 走真实 Windows 桌面采样，由人工在测试机上执行并归档证据
+if (args.Contains("--live"))
+{
+    return LiveWindowProbe.Run();
+}
 
 var failures = new List<string>();
 var passed = 0;

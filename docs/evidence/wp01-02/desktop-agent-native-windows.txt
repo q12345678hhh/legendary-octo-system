@@ -1,0 +1,82 @@
+WP01-02 本地拓扑 · 工作助手原生 Windows 验收记录
+=================================================
+
+日期        2026-11-11
+环境        真实 Windows 桌面（非容器、非 CI、非 WSL）
+            Microsoft Windows 11 专业版 10.0.26200 build 26200
+            ASUS TUF Gaming F15 FX507VV，AMD64
+            Session 1，用户 Administrator，机器名 YURI
+            .NET SDK 8.0.427，运行时 .NET 8.0.33
+版本        分支 main，基线 cdd59b4；本轮新增 Checks 的 --live 原生采样
+执行人      个人开发者（本机）
+
+一、构建与发布
+--------------
+命令     dotnet build desktop-agent\desktop-agent.sln -c Release
+实际     0 个警告，0 个错误（TreatWarningsAsErrors=true）
+命令     dotnet publish desktop-agent\privacy-engine\WorkAssistant.PrivacyEngine.Checks\
+           WorkAssistant.PrivacyEngine.Checks.csproj -c Release -r win-x64
+           --self-contained false -o %TEMP%\wa-native-publish
+实际     PUBLISH_EXIT=0，产出 WorkAssistant.PrivacyEngine.Checks.exe（152 KB，win-x64）
+结论     通过。验收运行的是发布出来的原生 exe，不是 dotnet run。
+
+二、隐私边界自检（与 CI 同一套断言）
+------------------------------------
+命令     %TEMP%\wa-native-publish\WorkAssistant.PrivacyEngine.Checks.exe
+实际
+```
+PASS 未开始时采集量为 0
+PASS 开始后允许采集普通工作应用
+PASS 微信被强制排除
+PASS QQ 被强制排除
+PASS 未知进程按排除处理
+PASS 暂停时不采集
+PASS 私人模式不采集
+PASS 私人模式下提示必须可见
+PASS 退出私人模式回到暂停
+PASS 未开始时暂停被拒绝
+PASS 未开始时进入私人模式被拒绝
+PASS 停止后重复停止被拒绝
+PASS 停止后不再显示采集提示
+PASS 停止后不采集
+检查通过 14 项，失败 0 项
+CHECK_EXIT=0
+```
+结论     通过。
+
+三、真实桌面采样（原生验收的关键一步）
+--------------------------------------
+命令     %TEMP%\wa-native-publish\WorkAssistant.PrivacyEngine.Checks.exe --live
+实际
+```
+== 原生 Windows 验收 ==
+OS        Microsoft Windows 10.0.26200
+Runtime   .NET 8.0.33
+Machine   YURI  User Administrator  Session 1
+判定依据   进程名 + 窗口标题；未读取窗口内容
+
+真实运行 Weixin 进程 5 个，全部按排除处理
+真实运行 QQ 进程 12 个，全部按排除处理
+
+采样可见窗口 17 个：标题关键字命中 0 个，未知进程 0 个，允许采集 15 个
+进程级排除 17 个（判定在读取窗口内容之前完成）
+
+检查通过 19 项，失败 0 项，窗口样本 17 个
+真实命中: Weixin x5、QQ x12
+LIVE_EXIT=0
+```
+结论     通过。采样对象是这台机器上真实运行的微信与 QQ，不是模拟快照：
+         12 个 QQ 进程、5 个 Weixin 进程全部在读取窗口内容之前被排除，
+         另有 15 个可见窗口按普通工作应用放行。
+
+四、判定边界
+------------
+- 采样只用 Win32 EnumWindows / GetWindowText 取标题，用 Process.ProcessName 取进程名。
+- 不读窗口正文、不进 UI Automation 控件树、不取剪贴板、不截屏。
+- 判定失败即拒绝：进程名取不到时按排除处理（本次真实桌面样本中未出现）。
+- 停止采集后采集量归零，采集提示随状态可见。
+
+五、未覆盖项
+------------
+- Windows 工作助手的 UI 外壳（托盘、状态提示、语音）属于 Phase 4 范围，本期只验隐私边界与原生可运行。
+- 只在 Windows 11 26200 单机上验证，未覆盖 Windows 10 与多显示器 / 高 DPI 场景。

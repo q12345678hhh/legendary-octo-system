@@ -27,7 +27,7 @@ powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1
 
 `-Reset` 会先 `down --volumes` 删掉 `pg_data`、`redis_data`、`minio_data` 再重建，数据不可恢复；`-Down` 只停容器、保留卷。
 
-## 3 两种运行方式
+## 3 运行方式
 
 ### 3.1 方式一：VS Code 调试（日常开发）
 
@@ -64,6 +64,18 @@ docker compose -f deploy/compose/compose.dev.yaml --profile app stop api worker 
 ```
 
 改完代码要重新验收时，重跑 `-App` 即可：`up --build` 会重建镜像，但前提是目标 jar / dist 已经是最新构建。
+
+### 3.3 方式三：工作助手原生 Windows 验收
+
+工作助手必须跑在真实 Windows 桌面上，不能用容器或 CI 代替：强制排除要看真实的进程与窗口。
+
+```powershell
+dotnet publish desktop-agent\privacy-engine\WorkAssistant.PrivacyEngine.Checks\WorkAssistant.PrivacyEngine.Checks.csproj `
+  -c Release -r win-x64 --self-contained false -o $env:TEMP\wa-native-publish
+& "$env:TEMP\wa-native-publish\WorkAssistant.PrivacyEngine.Checks.exe" --live
+```
+
+`--live` 只读进程名与窗口标题，不读窗口正文、控件树、剪贴板或屏幕像素。判定要求：正在运行的微信 / QQ 全部排除；无法识别进程按失败即拒绝；停止采集后采集量为 0。
 
 ## 4 端口、账号与入口
 
