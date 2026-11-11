@@ -52,8 +52,15 @@ $workerProcess = $null
 
 New-Item -ItemType Directory -Force -Path $evidence | Out-Null
 New-Item -ItemType Directory -Force -Path $work | Out-Null
-# 每次重新取证，避免旧结果混入。
-Get-ChildItem $evidence -Filter '*.txt' -ErrorAction SilentlyContinue | Remove-Item -Force
+# 每次重新取证，只清理本脚本自己的产物，避免误删同目录下 db-verify.txt 等其他脚本的证据。
+$ownedEvidence = @(
+    'db-migration.txt', 'idempotency.txt', 'jobs.txt', 'dead-letter-replay.txt',
+    'files.txt', 'metrics.txt', 'trace.txt', 'log-hygiene.txt', 'frontend-verify.txt'
+)
+foreach ($name in $ownedEvidence) {
+    $path = Join-Path $evidence $name
+    if (Test-Path $path) { Remove-Item $path -Force }
+}
 
 function Write-Step {
     param([string]$Text)
