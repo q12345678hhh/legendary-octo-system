@@ -1,0 +1,18 @@
+﻿租户冻结/注销/删除门禁证据（WP02-01）
+
+来源：TenantExecutionGateTest + TenantStatusTest + TenantApiBoundaryTest.frozenTenantWriteIsBlockedButAppealIsAllowed + TenantLifecycleDbTest
+
+[状态迁移与门禁]
+  PASS TenantStatusTest.wireNamesRoundTrip
+  PASS TenantStatusTest.onlyActiveIsWritableAndExecutable
+  PASS TenantStatusTest.onlyAllowedTransitionsArePermitted
+  PASS TenantExecutionGateTest.closingTenantIsBlockedAndDeletedTenantIsGone
+  PASS TenantExecutionGateTest.missingTenantOrContextIsRejected
+  PASS TenantExecutionGateTest.frozenTenantBlocksAllThreeExecutions
+  PASS TenantExecutionGateTest.activeTenantAllowsBusinessPluginAndAi
+  PASS TenantApiBoundaryTest.frozenTenantWriteIsBlockedButAppealIsAllowed
+
+[真实 PostgreSQL 状态机（db-verify 第 5b 步，-Dplatform.db.url 生效时执行）]
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- TenantLifecycleDbTest.lifecycleStateMachineBlocksWritesAndKeepsAudit
+  断言：freeze 后业务写/插件/AI 三种执行均为 423；closing 后 AI 仍 423；deleted 后为 410；
+        冷静期未到期删除为 409 COOLING_OFF_ACTIVE；到期删除后域名释放、支持访问撤销、审计链完整。

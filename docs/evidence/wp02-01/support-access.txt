@@ -1,0 +1,16 @@
+﻿支持访问（工单/独立审批/时限/只读/banner）证据（WP02-01）
+
+来源：SupportAccessRulesTest + TenantApiBoundaryTest.supportAccessIsReadOnlyAndReturnsBannerHeaders + TenantLifecycleDbTest
+
+[纯规则]
+  PASS SupportAccessRulesTest.expiryUsesApprovedExpiresAt
+  PASS SupportAccessRulesTest.rejectsMalformedTicketAndReasonAndDuration
+  PASS SupportAccessRulesTest.approverMustDifferFromRequester
+  PASS TenantApiBoundaryTest.supportAccessIsReadOnlyAndReturnsBannerHeaders
+
+[真实 PostgreSQL 链路]
+  TenantLifecycleDbTest.lifecycleStateMachineBlocksWritesAndKeepsAudit 覆盖：
+    申请 -> 非独立审批人 403 SUPPORT_SEPARATION_REQUIRED -> 独立审批 -> enter 返回 readOnly=true 与 banner ->
+    banner.remainingSeconds 递减 -> 到期后 enter 403 SUPPORT_ACCESS_EXPIRED 且记录置 expired ->
+    模板删除后 enter 410 TENANT_DELETED，撤销时 revokeAll 清空未到期授权。
+  运行结果：Tests run: 1, Failures: 0, Errors: 0, Skipped: 0

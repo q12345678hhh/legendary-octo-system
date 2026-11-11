@@ -1,0 +1,33 @@
+﻿== 5b 租户生命周期：RLS、同号并存、约束与状态机
+BEGIN
+aaaaaaaa-0000-4000-8000-000000000001
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+bbbbbbbb-0000-4000-8000-000000000002
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+aaaaaaaa-0000-4000-8000-000000000001
+DO
+COMMIT
+BEGIN
+aaaaaaaa-0000-4000-8000-000000000001
+DO
+COMMIT
+DO
+BEGIN
+aaaaaaaa-0000-4000-8000-000000000001
+DO
+COMMIT
+WP02-01 租户生命周期数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.489 s -- in com.acme.platform.tenancy.TenantLifecycleDbTest
+  状态机、冻结门禁、冷静期删除、审计链、同号跨租户与支持访问时限全部通过
+

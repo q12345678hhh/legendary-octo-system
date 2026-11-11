@@ -22,5 +22,27 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+    <!-- 租户生命周期、配置、配额与审计都必须在租户事务内读写，复用平台事务上下文 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>platform</artifactId>
+    </dependency>
+    <!-- 功能开关以 jsonb 存储，读取时使用与 Boot 一致的 Jackson 3 -->
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- 真实 PostgreSQL 用例：仅在 -Dplatform.db.url 存在时执行 -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
