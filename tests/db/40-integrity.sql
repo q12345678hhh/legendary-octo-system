@@ -37,7 +37,7 @@ BEGIN
         RAISE EXCEPTION 'V3 未生效：platform_outbox.last_attempt_at 不存在';
     END IF;
 
-    -- V4/V5/V6/V7：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
+    -- V4/V5/V6/V7/V8：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
     FOR rls IN
         SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity
           FROM pg_class c
@@ -50,6 +50,13 @@ BEGIN
                              'tenancy_lifecycle_audit', 'tenancy_support_access',
                              'tenancy_profile', 'tenancy_appeal',
                              'organization_person', 'organization_employment',
+                             'organization_legal_entity', 'organization_unit',
+                             'organization_job_level', 'organization_job',
+                             'organization_position', 'organization_cost_center',
+                             'organization_location', 'organization_employment_assignment',
+                             'organization_reporting_line', 'organization_delegation',
+                             'organization_owner_role', 'organization_change',
+                             'organization_change_history', 'organization_impact_preview',
                              'identity_user_account', 'identity_actor',
                              'identity_service_account', 'identity_tenant_member',
                              'identity_member_account_history', 'identity_password_history',
@@ -80,6 +87,13 @@ BEGIN
                          'tenancy_lifecycle_audit', 'tenancy_support_access',
                          'tenancy_profile', 'tenancy_appeal',
                          'organization_person', 'organization_employment',
+                         'organization_legal_entity', 'organization_unit',
+                         'organization_job_level', 'organization_job',
+                         'organization_position', 'organization_cost_center',
+                         'organization_location', 'organization_employment_assignment',
+                         'organization_reporting_line', 'organization_delegation',
+                         'organization_owner_role', 'organization_change',
+                         'organization_change_history', 'organization_impact_preview',
                          'identity_user_account', 'identity_actor',
                          'identity_service_account', 'identity_tenant_member',
                          'identity_member_account_history', 'identity_password_history',
@@ -87,8 +101,8 @@ BEGIN
                          'identity_recovery_code', 'identity_mfa_challenge',
                          'identity_session', 'identity_api_token',
                          'identity_identity_provider', 'identity_auth_event');
-    IF policy_count <> 31 THEN
-        RAISE EXCEPTION 'V4/V5/V6/V7 未完整生效：应有 31 张租户表，实际 %', policy_count;
+    IF policy_count <> 45 THEN
+        RAISE EXCEPTION 'V4/V5/V6/V7/V8 未完整生效：应有 45 张租户表，实际 %', policy_count;
     END IF;
 END
 $$;

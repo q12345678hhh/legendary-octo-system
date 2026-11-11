@@ -50,6 +50,11 @@
       <groupId>com.acme.platform</groupId>
       <artifactId>tenancy</artifactId>
     </dependency>
+    <!-- 组织变更到期应用：Worker 是唯一跨租户扫描平台级到期队列的进程 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>organization</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.acme.platform</groupId>
       <artifactId>worklog</artifactId>

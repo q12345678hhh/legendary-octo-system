@@ -27,10 +27,26 @@
       <groupId>com.acme.platform</groupId>
       <artifactId>platform</artifactId>
     </dependency>
+    <!-- 生效日期按租户时区换算，读 tenancy_profile -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>tenancy</artifactId>
+    </dependency>
+    <!-- 变更单 payload 是 jsonb，需要与 Jackson 3 共用同一套序列化 -->
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- 真实 PostgreSQL 用例：仅在 -Dplatform.db.url 存在时执行 -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

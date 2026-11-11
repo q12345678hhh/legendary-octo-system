@@ -224,7 +224,7 @@ try {
     $emptyChecksums = Get-Checksums $emptyDb
     Write-Host '  校验和（空库）：'
     $emptyChecksums | ForEach-Object { Write-Host "    $_" }
-    Assert-True ($emptyChecksums.Count -eq 7) "空库应安装 7 个版本，实际 $($emptyChecksums.Count)"
+    Assert-True ($emptyChecksums.Count -eq 8) "空库应安装 8 个版本，实际 $($emptyChecksums.Count)"
 
     # ---------------------------------------------------------------- 2 RLS
     Write-Step '2 RLS 正向与负例（platform_app 身份）'
@@ -338,7 +338,7 @@ COMMIT;
         Assert-True ($emptyChecksums -contains $line) "上一版本校验和与空库不一致（历史文件被改？）：$line"
         Assert-True ($afterChecksums -contains $line) "升级后校验和变化：$line"
     }
-    Assert-True ($afterChecksums.Count -eq 7) "升级后应有 7 个版本，实际 $($afterChecksums.Count)"
+    Assert-True ($afterChecksums.Count -eq 8) "升级后应有 8 个版本，实际 $($afterChecksums.Count)"
     # V6 在授权之后创建新表，重新授权确保平台应用账号可读写租户生命周期表
     Grant-AppRole $upgradeDb
 
@@ -418,6 +418,39 @@ COMMIT;
     Write-Host "  $identitySummary"
     Write-Host '  无账号员工、再雇佣、一人多雇佣、账号更换、auth_version 失效与跨租户令牌拒绝全部通过'
 
+    # ---------------------------------------------------------------- 5d 组织结构与生效日期
+    Write-Step '5d 组织结构：部门树、主兼岗、汇报线、委派、老板角色、变更历史与预览票据'
+    $organization = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '80-organization.sql'
+    Write-Host $organization.Output
+    Assert-True ($organization.Output -match 'WP02-03 组织结构数据库断言通过') '组织结构 SQL 断言未通过'
+
+    if (Test-Path $pinnedJavaHome) { $env:JAVA_HOME = $pinnedJavaHome }
+    # 与 5b/5c 一致：必须从聚合 POM 走 reactor，单独模块 POM 解析不到同仓 platform/tenancy。
+    $organizationArgs = @(
+        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'),
+        '-pl', 'modules/organization', '-am', 'test',
+        '-Dtest=OrganizationDbTest',
+        '-Dsurefire.failIfNoSpecifiedTests=false',
+        '-DfailIfNoTests=false',
+        '-Djacoco.skip=true',
+        "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
+        "-Dplatform.db.user=$AppUser",
+        "-Dplatform.db.password=$AppPassword"
+    )
+    if ($env:PLATFORM_MAVEN_REPO) { $organizationArgs += "-Dmaven.repo.local=$($env:PLATFORM_MAVEN_REPO)" }
+    $ErrorActionPreference = 'Continue'
+    $organizationOut = & mvn @organizationArgs 2>&1
+    $organizationCode = $LASTEXITCODE
+    if ($organizationCode -ne 0) {
+        throw "组织结构用例失败（exit=$organizationCode）：`n$((($organizationOut | ForEach-Object { "$_" }) -join "`n"))"
+    }
+    $organizationReport = Join-Path $repoRoot 'backend\modules\organization\target\surefire-reports\com.acme.platform.organization.OrganizationDbTest.txt'
+    Assert-True (Test-Path $organizationReport) "找不到组织结构用例报告：$organizationReport"
+    $organizationSummary = (Get-Content -Encoding UTF8 $organizationReport | Where-Object { $_ -match '^Tests run:' } | Select-Object -First 1)
+    Assert-True ($organizationSummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "组织结构用例未执行：$organizationSummary"
+    Write-Host "  $organizationSummary"
+    Write-Host '  三级汇报链、兼岗、限时代管、虚线、调动历史、未来变更切换与跨租户引用全部通过'
+
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'
     Invoke-Psql -Database $upgradeDb -User $OwnerUser -Password $OwnerPassword -Sql `
@@ -456,7 +489,7 @@ COMMIT;
     Write-Host '  事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户'
 
     Write-Host ''
-    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、并发、索引、锁等待评估、连接池隔离。'
+    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、并发、索引、锁等待评估、连接池隔离。'
 } finally {
     if (-not $KeepDatabases -and $script:pg) {
         foreach ($db in @($emptyDb, $upgradeDb)) {

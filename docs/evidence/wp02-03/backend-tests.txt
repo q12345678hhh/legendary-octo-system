@@ -1,0 +1,49 @@
+﻿[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.105 s -- in com.acme.platform.db.ConnectionPoolTenantContextTest
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building Module: platform 0.1.0-SNAPSHOT                          [3/20]
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.490 s -- in com.acme.platform.platform.OutboxEventPublisherTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building Module: tenancy 0.1.0-SNAPSHOT                           [4/20]
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.507 s -- in com.acme.platform.tenancy.SupportAccessRulesTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.324 s -- in com.acme.platform.tenancy.TenantExecutionGateTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s -- in com.acme.platform.tenancy.TenantStatusTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 1
+[INFO] Building Module: organization 0.1.0-SNAPSHOT                      [5/20]
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.300 s -- in com.acme.platform.organization.EffectiveDatingTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.068 s -- in com.acme.platform.organization.OrganizationTreeTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.113 s -- in com.acme.platform.organization.OwnerReadinessTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.029 s -- in com.acme.platform.organization.ReportingGraphTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 1
+[INFO] Building Module: identity 0.1.0-SNAPSHOT                          [6/20]
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.829 s -- in com.acme.platform.identity.IdentityProviderServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.497 s -- in com.acme.platform.identity.PasswordPolicyTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.511 s -- in com.acme.platform.identity.SessionServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.028 s -- in com.acme.platform.identity.TokenHasherTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.189 s -- in com.acme.platform.identity.TotpTest
+[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 1
+[INFO] Building Module: authorization 0.1.0-SNAPSHOT                     [7/20]
+[INFO] Building Module: department 0.1.0-SNAPSHOT                        [8/20]
+[INFO] Building Module: appcatalog 0.1.0-SNAPSHOT                        [9/20]
+[INFO] Building Module: lowcode 0.1.0-SNAPSHOT                          [10/20]
+[INFO] Building Module: workflow 0.1.0-SNAPSHOT                         [11/20]
+[INFO] Building Module: hr 0.1.0-SNAPSHOT                               [12/20]
+[INFO] Building Module: worklog 0.1.0-SNAPSHOT                          [13/20]
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.689 s -- in com.acme.platform.worklog.device.WorkAssistantSigningTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building Module: collaboration 0.1.0-SNAPSHOT                    [14/20]
+[INFO] Building Module: integration 0.1.0-SNAPSHOT                      [15/20]
+[INFO] Building Module: plugin 0.1.0-SNAPSHOT                           [16/20]
+[INFO] Building Module: ai 0.1.0-SNAPSHOT                               [17/20]
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.80 s -- in com.acme.platform.AuthApiTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.425 s -- in com.acme.platform.ModuleStructureTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.657 s -- in com.acme.platform.OrganizationApiTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.036 s -- in com.acme.platform.RequestContextBindingFilterTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.437 s -- in com.acme.platform.StorageHealthIndicatorTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.823 s -- in com.acme.platform.SystemHealthControllerTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.194 s -- in com.acme.platform.TenantApiBoundaryTest
+[INFO] Tests run: 30, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.851 s -- in com.acme.platform.worker.outbox.OutboxDispatcherTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.499 s -- in com.acme.platform.testsupport.TestTenantTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
