@@ -1,3 +1,20 @@
+# 本地开发拓扑（WP01-02）。
+#
+# 一次起齐 PostgreSQL、Redis、对象存储、邮件捕获和 OTLP 收集，供 WP01-03 起的
+# 迁移、RLS、outbox、文件预签名和链路追踪在同一套真实依赖上验证。
+#
+# 数据库固定两个角色，这是本文件的关键约束：
+#   platform_owner  建库、迁移、建表（Flyway 用）
+#   platform_app    运行期读写，NOSUPERUSER + NOBYPASSRLS，RLS 策略对它真实生效
+# 若用 owner 直接跑应用，RLS 会被表所有者绕过，跨租户负例将全部假绿。
+#
+# 用法：
+#   cd deploy/compose
+#   cp .env.example .env          # 首次，按需改端口与口令
+#   docker compose -f compose.dev.yaml up -d
+#   docker compose -f compose.dev.yaml ps
+name: platform-dev
+
 services:
   postgres:
     image: postgres:16
@@ -5,17 +22,106 @@ services:
     environment:
       POSTGRES_DB: platform
       POSTGRES_USER: platform_owner
-      POSTGRES_PASSWORD: dev_only_change_me
+      POSTGRES_PASSWORD: ${POSTGRES_OWNER_PASSWORD:?缺少 POSTGRES_OWNER_PASSWORD，请先复制 .env.example 为 .env}
       POSTGRES_INITDB_ARGS: "--data-checksums"
+      PLATFORM_APP_PASSWORD: ${POSTGRES_APP_PASSWORD:?缺少 POSTGRES_APP_PASSWORD，请先复制 .env.example 为 .env}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U platform_owner -d platform"]
       interval: 5s
       timeout: 3s
-      retries: 10
+      retries: 12
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: platform-redis-dev
+    command: ["redis-server", "--appendonly", "yes", "--save", ""]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  # MinIO 官方镜像已从 Docker Hub 下架，quay.io 匿名拉取被拒（401），
+  # 本地开发改用 Bitnami Legacy 的归档镜像。镜像内容仍是 MinIO 服务端，
+  # 所以 S3 兼容性与 /minio/health/live 探活端点不变。
+  # 注意：该仓库只归档到 2025 年 8 月之前发布的版本，仅限本地开发使用，
+  # 任何共享环境都必须换成自建镜像或受支持的对象存储。
+  minio:
+    image: bitnamilegacy/minio:2025.7.23-debian-12-r5
+    container_name: platform-minio-dev
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?缺少 MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?缺少 MINIO_ROOT_PASSWORD}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      # Bitnami 镜像的数据目录在 /bitnami/minio/data，不是 /data
+      - minio_data:/bitnami/minio/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
+  minio-init:
+    # 一次性任务：建桶并关掉匿名访问，保证对象存储默认不可匿名读。
+    image: bitnamilegacy/minio-client:2025.7.21-debian-12-r3
+    container_name: platform-minio-init-dev
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?缺少 MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?缺少 MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET:-platform-dev}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        i=0;
+        until mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"; do
+          i=$$((i + 1));
+          if [ $$i -ge 30 ]; then echo "minio 30 次重试仍未就绪"; exit 1; fi;
+          sleep 2;
+        done &&
+        mc mb --ignore-existing "local/$$MINIO_BUCKET" &&
+        mc anonymous set none "local/$$MINIO_BUCKET" &&
+        echo "bucket ready: $$MINIO_BUCKET"
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:v1.33.1
+    container_name: platform-mail-dev
+    ports:
+      - "${SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    restart: unless-stopped
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.165.0
+    container_name: platform-otel-dev
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ../observability/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    ports:
+      - "${OTLP_GRPC_PORT:-4317}:4317"
+      - "${OTLP_HTTP_PORT:-4318}:4318"
+    restart: unless-stopped
 
 volumes:
   pg_data:
+  redis_data:
+  minio_data:

@@ -26,6 +26,38 @@
       <artifactId>spring-modulith-starter-core</artifactId>
     </dependency>
 
+    <!-- 数据访问：运行期用 platform_app 连接，迁移用 platform_owner，见 application.yml -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+    <!-- Boot 4 把自动配置按技术拆成独立模块，Flyway 的自动配置不在 spring-boot-jdbc 里 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-flyway</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>db</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>com.acme.platform</groupId>
       <artifactId>tenancy</artifactId>

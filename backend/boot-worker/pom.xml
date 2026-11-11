@@ -26,6 +26,17 @@
       <artifactId>spring-modulith-starter-core</artifactId>
     </dependency>
 
+    <!-- 消费 outbox 需要直连数据库：运行期用 platform_app，迁移由 API 进程负责 -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-jdbc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
     <dependency>
       <groupId>com.acme.platform</groupId>
       <artifactId>tenancy</artifactId>

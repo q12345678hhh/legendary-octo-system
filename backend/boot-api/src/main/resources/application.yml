@@ -4,9 +4,46 @@ spring:
   main:
     banner-mode: off
 
+  datasource:
+    # 运行期账号：无建表权限、NOBYPASSRLS，RLS 策略对它真实生效
+    url: ${PLATFORM_DB_URL:jdbc:postgresql://localhost:5432/platform}
+    username: ${PLATFORM_DB_USER:platform_app}
+    password: ${PLATFORM_DB_PASSWORD:dev_only_change_me_app}
+    hikari:
+      maximum-pool-size: ${PLATFORM_DB_POOL_SIZE:10}
+
+  flyway:
+    enabled: true
+    # 迁移单独使用 owner 账号：建表、加策略、改类型都靠它，和运行期账号不得混用
+    user: ${PLATFORM_DB_MIGRATION_USER:platform_owner}
+    password: ${PLATFORM_DB_MIGRATION_PASSWORD:dev_only_change_me}
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${PLATFORM_REDIS_HOST:localhost}
+      port: ${PLATFORM_REDIS_PORT:6379}
+
+  mvc:
+    problemdetails:
+      # 错误统一走 RFC 9457 Problem Details，前端与集成方不需要解析自定义错误结构
+      enabled: true
+
 server:
   port: 8080
   shutdown: graceful
+
+platform:
+  storage:
+    health-url: ${PLATFORM_STORAGE_HEALTH_URL:http://localhost:9000/minio/health/live}
+  smoke:
+    # 冒烟端点只在本地验证「请求 → outbox → Worker」链路时打开
+    enabled: ${PLATFORM_SMOKE_ENABLED:false}
+
+logging:
+  pattern:
+    # 把关联 ID 与 trace ID 打进每一行日志：页面请求、写库、outbox 与 Worker 靠它对齐
+    level: "%5p [trace=%X{trace_id:-} corr=%X{correlation_id:-} tenant=%X{tenant_id:-}]"
 
 management:
   endpoints:
@@ -17,6 +54,9 @@ management:
     health:
       probes:
         enabled: true
+      # 只暴露组件状态，不暴露细节：本地能看到 db/redis/storage 是否 UP，
+      # 又不把连接串等内部信息写进响应。
+      show-components: always
   info:
     env:
       enabled: false

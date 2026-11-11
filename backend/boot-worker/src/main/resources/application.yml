@@ -5,8 +5,21 @@ spring:
     banner-mode: off
     web-application-type: none
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
+  datasource:
+    # 运行期账号：无建表权限、NOBYPASSRLS；Worker 与 API 共用同一套连接参数
+    url: ${PLATFORM_DB_URL:jdbc:postgresql://localhost:5432/platform}
+    username: ${PLATFORM_DB_USER:platform_app}
+    password: ${PLATFORM_DB_PASSWORD:dev_only_change_me_app}
+    hikari:
+      maximum-pool-size: ${PLATFORM_DB_POOL_SIZE:4}
+
+  flyway:
+    # 迁移只允许 API 进程执行，Worker 不参与建表，避免两个进程同时改结构
+    enabled: false
+
+platform:
+  outbox:
+    batch-size: ${PLATFORM_OUTBOX_BATCH_SIZE:20}
+    poll-interval: ${PLATFORM_OUTBOX_POLL_INTERVAL:2s}
+    max-attempts: ${PLATFORM_OUTBOX_MAX_ATTEMPTS:5}
+    retry-delay: ${PLATFORM_OUTBOX_RETRY_DELAY:10s}
