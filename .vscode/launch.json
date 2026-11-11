@@ -1,0 +1,52 @@
+{
+  // 两种运行方式之一：本机进程以调试模式跑 API 与 Worker。
+  // 另一种是容器化验收，见 docs/runbooks/local-dev.md 与任务 “topology: up (含应用容器)”。
+  // 前置：本机拓扑已起（任务 “topology: up”），否则数据源连不上会启动失败。
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "API（调试）",
+      "request": "launch",
+      "mainClass": "com.acme.platform.PlatformApiApplication",
+      "projectName": "boot-api",
+      "cwd": "${workspaceFolder}/backend",
+      "console": "internalConsole",
+      "env": {
+        "PLATFORM_SMOKE_ENABLED": "true"
+      }
+    },
+    {
+      "type": "java",
+      "name": "Worker（调试）",
+      "request": "launch",
+      "mainClass": "com.acme.platform.PlatformWorkerApplication",
+      "projectName": "boot-worker",
+      "cwd": "${workspaceFolder}/backend",
+      "console": "internalConsole"
+    },
+    {
+      // 已在命令行或容器里带 -agentlib:jdwp 起的进程，用这个挂上去
+      "type": "java",
+      "name": "API（附加，端口 5005）",
+      "request": "attach",
+      "hostName": "localhost",
+      "port": 5005
+    },
+    {
+      "type": "chrome",
+      "name": "Web（Chrome）",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend/apps/web/src",
+      "preLaunchTask": "web: dev"
+    }
+  ],
+  "compounds": [
+    {
+      // 一起起，才能在一次请求里同时看到 API 写 outbox 与 Worker 消费
+      "name": "API + Worker",
+      "configurations": ["API（调试）", "Worker（调试）"]
+    }
+  ]
+}

@@ -14,6 +14,10 @@
 .PARAMETER Down
     停栈并删除容器，保留数据卷
 
+.PARAMETER App
+    容器化验收档：先确保后端 jar 与前端 dist 存在，再额外构建并启动
+    api / worker / web 三个容器，最后从宿主机验证健康端点
+
 .PARAMETER TimeoutSeconds
     等待服务健康的超时秒数，默认 180
 
@@ -22,11 +26,15 @@
 
 .EXAMPLE
     powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1 -Reset
+
+.EXAMPLE
+    powershell -ExecutionPolicy Bypass -File scripts\dev-up.ps1 -App
 #>
 [CmdletBinding()]
 param(
     [switch]$Reset,
     [switch]$Down,
+    [switch]$App,
     [int]$TimeoutSeconds = 180
 )
 
@@ -38,6 +46,7 @@ $composeFile = 'compose.dev.yaml'
 $envFile = Join-Path $composeDir '.env'
 
 $requiredServices = @('postgres', 'redis', 'minio', 'mailpit', 'otel-collector')
+if ($App) { $requiredServices += @('api', 'worker', 'web') }
 # compose 里 extra_hosts 未用到，但 minio-init 是一次性任务，不纳入健康等待
 $portDefaults = [ordered]@{
     POSTGRES_PORT       = 5432
@@ -48,7 +57,13 @@ $portDefaults = [ordered]@{
     MAILPIT_UI_PORT     = 8025
     OTLP_GRPC_PORT      = 4317
     OTLP_HTTP_PORT      = 4318
+    API_PORT            = 8080
+    WEB_PORT            = 3000
 }
+# API / Web 端口只有容器化验收档才会占用，日常模式不检查，避免误报
+$appPortKeys = @('API_PORT', 'WEB_PORT')
+# 构建镜像前必须有 jar：本机默认 JAVA_HOME 可能仍是 1.8，这里显式钉住 21
+$pinnedJavaHome = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
 # 端口被这些进程占着，说明是容器运行时（WSL2 端口转发或 Docker Desktop）
 $containerRuntimePattern = '(?i)^(docker|com\.docker|vpnkit|wslrelay|wslhost|wslservice|vmmem|vmmemwsl)'
 
@@ -95,15 +110,18 @@ function Resolve-Docker {
 }
 
 $script:docker = $null
+# 容器化验收档才把 --profile app 带进每条 compose 命令，日常模式完全不受影响
+$script:profileArgs = if ($App) { @('--profile', 'app') } else { @() }
 
 function Invoke-ComposeText {
     param([string[]]$Arguments)
     # 原生命令的 stderr 在 ErrorActionPreference=Stop 下会被当成终止错误，这里改为自行判定退出码
     $ErrorActionPreference = 'Continue'
+    $profile = $script:profileArgs
     if ($script:docker.Mode -eq 'native') {
         Push-Location $composeDir
         try {
-            $out = & docker compose -f $composeFile @Arguments 2>&1
+            $out = & docker compose @profile -f $composeFile @Arguments 2>&1
         } finally {
             Pop-Location
         }
@@ -113,7 +131,7 @@ function Invoke-ComposeText {
         $argLine = ($Arguments | ForEach-Object {
                 if ($_ -match '[\s|{}]') { "'$_'" } else { $_ }
             }) -join ' '
-        $out = & wsl -d $script:docker.Distro -u root -- bash -lc "cd '$wslDir' && docker compose -f $composeFile $argLine" 2>&1
+        $out = & wsl -d $script:docker.Distro -u root -- bash -lc "cd '$wslDir' && docker compose $($script:profileArgs -join ' ') -f $composeFile $argLine" 2>&1
     }
     if ($LASTEXITCODE -ne 0) {
         throw ("docker compose {0} 失败（exit={1}）：`n{2}" -f ($Arguments -join ' '), $LASTEXITCODE, ($out -join "`n"))
@@ -141,6 +159,74 @@ function Initialize-WslEngine {
     if ($LASTEXITCODE -ne 0) { throw 'dockup.sh 启动 Docker Engine 失败，请查看 /var/log/dockerd.log' }
 }
 
+function Invoke-LocalBuild {
+    param([string]$Command, [string[]]$Arguments, [string]$WorkingDirectory)
+    # 构建命令的 stderr 同样会撞上 ErrorActionPreference=Stop，交给退出码判定
+    $ErrorActionPreference = 'Continue'
+    Push-Location $WorkingDirectory
+    try {
+        & $Command @Arguments
+        $code = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+    if ($code -ne 0) {
+        throw ("构建失败：{0} {1}（exit={2}），完整输出见上方" -f $Command, ($Arguments -join ' '), $code)
+    }
+}
+
+function Ensure-AppArtifacts {
+    # 镜像只搬运构建产物，不在容器里跑 Maven / pnpm：
+    # 缺产物时在这里补，保证本地、CI 与容器用的是同一份 jar 和 dist。
+    foreach ($module in @('boot-api', 'boot-worker')) {
+        $target = Join-Path $repoRoot "backend\$module\target"
+        $jar = @()
+        if (Test-Path $target) {
+            $jar = @(Get-ChildItem $target -Filter '*.jar' -File -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Name -notlike '*.original' })
+        }
+        if ($jar.Count -gt 0) { continue }
+
+        if (-not (Test-Path $pinnedJavaHome)) {
+            throw "缺少 JDK 21：$pinnedJavaHome。请按 WP00-02 的版本锁定表安装后重试"
+        }
+        $env:JAVA_HOME = $pinnedJavaHome
+        Write-Host "缺少 $module 的可执行 jar，先构建（首次会下载依赖，耗时较长）..."
+        Invoke-LocalBuild 'mvn' @('-B', '-pl', $module, '-am', 'package', '-DskipTests',
+            '-Ddependency-check.skip=true', '-Dmaven.repo.local=D:\DevCache\maven-repo') (Join-Path $repoRoot 'backend')
+    }
+
+    $dist = Join-Path $repoRoot 'frontend\apps\web\dist\index.html'
+    if (Test-Path $dist) { return }
+    $frontend = Join-Path $repoRoot 'frontend'
+    if (-not (Test-Path (Join-Path $frontend 'node_modules'))) {
+        Write-Host '安装前端依赖（pnpm install --frozen-lockfile）...'
+        Invoke-LocalBuild 'pnpm' @('install', '--frozen-lockfile') $frontend
+    }
+    Write-Host '缺少前端 dist，先构建...'
+    Invoke-LocalBuild 'pnpm' @('--filter', '@platform/web', 'build') $frontend
+}
+
+function Wait-HttpReady {
+    param([string]$Service, [string]$Url, [int]$Seconds)
+    $deadline = (Get-Date).AddSeconds($Seconds)
+    $last = '尚未响应'
+    while ((Get-Date) -lt $deadline) {
+        try {
+            $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5
+            if ($response.StatusCode -eq 200) {
+                Write-Host ("  {0} 就绪：{1}" -f $Service, $Url)
+                return
+            }
+            $last = "HTTP $($response.StatusCode)"
+        } catch {
+            $last = $_.Exception.Message
+        }
+        Start-Sleep -Seconds 2
+    }
+    throw ("{0} 在 {1}s 内未就绪（{2}）。排查：docker compose --profile app logs {0}" -f $Service, $Seconds, $last)
+}
+
 # 1. 环境变量模板
 if (-not (Test-Path $envFile)) {
     Copy-Item (Join-Path $composeDir '.env.example') $envFile
@@ -161,9 +247,10 @@ if ($script:docker.Mode -eq 'wsl') {
     Initialize-WslEngine
 }
 
-# 3. 端口检查（容器运行时自己占用的端口视为正常）
+# 3. 端口检查（容器运行时自己占用的端口视为正常；应用端口只在容器档检查）
 $conflicts = @()
 foreach ($key in $ports.Keys) {
+    if (-not $App -and $appPortKeys -contains $key) { continue }
     $port = $ports[$key]
     $owner = $null
     try {
@@ -191,8 +278,15 @@ if ($Reset) {
     Invoke-ComposeText @('down', '--volumes') | Out-Null
 }
 
-# 5. 起栈并等待健康
-Invoke-ComposeText @('up', '-d') | Out-Null
+# 5. 容器化验收：先确保镜像要搬运的产物存在，再带 --profile app 起栈
+if ($App) {
+    Ensure-AppArtifacts
+}
+
+# 6. 起栈并等待健康
+$upArgs = @('up', '-d')
+if ($App) { $upArgs += '--build' }
+Invoke-ComposeText $upArgs | Out-Null
 Write-Host ("已提交起栈，等待 {0} 个服务健康（上限 {1}s）" -f $requiredServices.Count, $TimeoutSeconds)
 
 $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
@@ -223,6 +317,12 @@ if ($pending.Count -gt 0) {
             $TimeoutSeconds, ($pending -join ', '), $composeFile)
 }
 
+# 7. 容器档额外做就绪判定：容器 running ≠ 应用能服务请求
+if ($App) {
+    Wait-HttpReady 'api' ("http://localhost:{0}/actuator/health" -f $ports['API_PORT']) 120
+    Wait-HttpReady 'web' ("http://localhost:{0}/" -f $ports['WEB_PORT']) 60
+}
+
 $elapsed = [int]((Get-Date) - $startedAt).TotalSeconds
 Write-Host ''
 Write-Host ("本地开发拓扑已就绪（{0}s）：" -f $elapsed)
@@ -231,8 +331,17 @@ Write-Host ("  Redis      {0}" -f $ports['REDIS_PORT'])
 Write-Host ("  MinIO      {0}  Console {1}" -f $ports['MINIO_API_PORT'], $ports['MINIO_CONSOLE_PORT'])
 Write-Host ("  Mailpit    SMTP {0}  界面 http://localhost:{1}" -f $ports['SMTP_PORT'], $ports['MAILPIT_UI_PORT'])
 Write-Host ("  OTLP       grpc {0}  http {1}" -f $ports['OTLP_GRPC_PORT'], $ports['OTLP_HTTP_PORT'])
-Write-Host ''
-Write-Host 'API 与 Worker 不在本脚本内启动：VS Code 调试或 java -jar 均可。'
+if ($App) {
+    Write-Host ''
+    Write-Host '容器化验收档：'
+    Write-Host ("  API    http://localhost:{0}/actuator/health" -f $ports['API_PORT'])
+    Write-Host ("  Web    http://localhost:{0}" -f $ports['WEB_PORT'])
+    Write-Host ("  冒烟   POST http://localhost:{0}/api/v1/system/smoke/ping-events（需要 X-Tenant-Id）" -f $ports['API_PORT'])
+    Write-Host '  Worker 无端口，消费证据看 docker compose --profile app logs worker'
+} else {
+    Write-Host ''
+    Write-Host 'API 与 Worker 不在本脚本内启动：VS Code 调试或 java -jar 均可；容器化验收用 -App。'
+}
 if ($script:docker.Mode -eq 'wsl') {
     Write-Host '提示：WSL 内的 Docker Engine 会随发行版空闲关停，届时重跑本脚本即可。'
 }

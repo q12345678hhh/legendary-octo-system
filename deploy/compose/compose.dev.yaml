@@ -121,6 +121,71 @@ services:
       - "${OTLP_HTTP_PORT:-4318}:4318"
     restart: unless-stopped
 
+  # ---------------------------------------------------------------- 应用容器档
+  # 只用于“容器化验收”：验证镜像能起、跨容器网络能连通、健康端点可用。
+  # 日常开发请在 VS Code 里调试本机进程（见 docs/runbooks/local-dev.md），
+  # 那里的断点、热重载和日志都更直接。
+  #
+  #   docker compose --profile app up -d         # 或 scripts/dev-up.ps1 -App
+  #
+  # 进容器的连接串一律用服务名，不用 localhost：容器里的 localhost 是它自己。
+  api:
+    profiles: ["app"]
+    build:
+      context: ../../backend/boot-api
+      dockerfile: Dockerfile
+    image: platform/api:dev
+    container_name: platform-api-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      PLATFORM_DB_URL: jdbc:postgresql://postgres:5432/platform
+      PLATFORM_DB_USER: platform_app
+      PLATFORM_DB_PASSWORD: ${POSTGRES_APP_PASSWORD:?缺少 POSTGRES_APP_PASSWORD}
+      PLATFORM_DB_MIGRATION_USER: platform_owner
+      PLATFORM_DB_MIGRATION_PASSWORD: ${POSTGRES_OWNER_PASSWORD:?缺少 POSTGRES_OWNER_PASSWORD}
+      PLATFORM_REDIS_HOST: redis
+      PLATFORM_STORAGE_HEALTH_URL: http://minio:9000/minio/health/live
+      # 容器化验收要跑通“请求 → outbox → Worker”，该端点默认打开，仅限本地
+      PLATFORM_SMOKE_ENABLED: ${PLATFORM_SMOKE_ENABLED:-true}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    restart: unless-stopped
+
+  worker:
+    profiles: ["app"]
+    build:
+      context: ../../backend/boot-worker
+      dockerfile: Dockerfile
+    image: platform/worker:dev
+    container_name: platform-worker-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PLATFORM_DB_URL: jdbc:postgresql://postgres:5432/platform
+      PLATFORM_DB_USER: platform_app
+      PLATFORM_DB_PASSWORD: ${POSTGRES_APP_PASSWORD:?缺少 POSTGRES_APP_PASSWORD}
+    restart: unless-stopped
+
+  web:
+    profiles: ["app"]
+    build:
+      context: ../../frontend/apps/web
+      dockerfile: Dockerfile
+    image: platform/web:dev
+    container_name: platform-web-dev
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    restart: unless-stopped
+
 volumes:
   pg_data:
   redis_data:

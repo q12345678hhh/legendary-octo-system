@@ -1,0 +1,79 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "topology: up",
+      "detail": "起 PostgreSQL / Redis / MinIO / Mailpit / OTLP，并等待全部健康",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "scripts\\dev-up.ps1"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "topology: down",
+      "detail": "停栈并保留数据卷",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "scripts\\dev-up.ps1", "-Down"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "topology: reset",
+      "detail": "删除 pg_data / redis_data / minio_data 后重建，数据不可恢复",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "scripts\\dev-up.ps1", "-Reset"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "topology: up (含应用容器)",
+      "detail": "容器化验收：构建并启动 api / worker / web 容器，再用本机端口做健康判定",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "scripts\\dev-up.ps1", "-App"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "backend: package",
+      "detail": "产出可执行 jar（容器镜像与 java -jar 都用它）",
+      "type": "shell",
+      "command": "mvn",
+      "args": [
+        "-B",
+        "package",
+        "-DskipTests",
+        "-Ddependency-check.skip=true",
+        "-Dmaven.repo.local=D:\\DevCache\\maven-repo"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/backend",
+        "env": { "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.12.101-hotspot" }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "web: dev",
+      // isBackground + 下面两条 pattern 让 launch.json 的 preLaunchTask 在 Vite 真正监听后才继续
+      "type": "shell",
+      "command": "pnpm",
+      "args": ["--filter", "@platform/web", "dev"],
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "vite",
+        // pattern 只决定是否往“问题”面板写条目；Vite 不输出这种格式，所以保持静默。
+        // 真正起作用的是 background 的起止行，VS Code 靠它判断服务已开始监听。
+        "pattern": { "regexp": "^\\[never\\] (.*)$", "message": 1 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "VITE v",
+          "endsPattern": "Local:\\s+http://localhost"
+        }
+      }
+    }
+  ]
+}

@@ -16,7 +16,12 @@ obj/
 # IDE
 .vs/
 .idea/
-.vscode/
+# 调试与任务配置是团队共享的启动方式，必须入库；个人偏好放 *.code-workspace
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+!.vscode/extensions.json
 *.user
 
 # 环境与日志

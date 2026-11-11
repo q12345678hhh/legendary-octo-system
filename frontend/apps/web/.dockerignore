@@ -1,0 +1,5 @@
+# 镜像只需要构建产物与 nginx 配置
+*
+!dist/
+dist/*
+!nginx.conf

@@ -1,0 +1,5 @@
+# 镜像只需要可执行 jar：源码、测试与临时文件都不进构建上下文
+*
+!target/
+target/*
+!target/*.jar
