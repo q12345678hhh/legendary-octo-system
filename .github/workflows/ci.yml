@@ -186,6 +186,13 @@ jobs:
         run: dotnet build desktop-agent.sln -c Release
       - name: 隐私边界行为自检
         run: dotnet run --project privacy-engine/WorkAssistant.PrivacyEngine.Checks -c Release --no-build
+      - name: 托盘与设备离线自检
+        run: |
+          dotnet run --project device/WorkAssistant.Device.Checks -c Release --no-build
+          $self = Start-Process -FilePath windows-app/WorkAssistant.WindowsApp/bin/Release/net8.0-windows/WorkAssistant.WindowsApp.exe `
+            -ArgumentList '--self-check', '--report', 'self-check.txt' -Wait -PassThru
+          Get-Content self-check.txt
+          exit $self.ExitCode
       - name: 依赖漏洞
         run: dotnet list desktop-agent.sln package --vulnerable --include-transitive
       - name: 生成 SBOM

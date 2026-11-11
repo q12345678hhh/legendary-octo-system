@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://acme.example/contracts/work-assistant/baseline-policy.v1.json",
+  "title": "工作助手强制排除基线",
+  "description": "硬编码下限：租户策略只能在该清单之上追加排除项，客户端也保留同一份下限。修改必须走 ADR-0006 的隐私评审。",
+  "x-contract-version": 1,
+  "processes": [
+    "WeChat",
+    "Weixin",
+    "QQ",
+    "TIM",
+    "QQNT",
+    "Telegram",
+    "DingTalk",
+    "Feishu",
+    "Slack",
+    "Discord"
+  ],
+  "title_keywords": [
+    "微信",
+    "WeChat",
+    "QQ",
+    "Telegram",
+    "钉钉",
+    "飞书",
+    "Slack",
+    "Discord"
+  ]
+}

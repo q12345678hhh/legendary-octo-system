@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-11T05:06:08.434Z",
+  "frozenAt": "2026-11-11T08:17:42.546Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "4d875fb76b4c5a2cd0cedd1e319dec2328bd9e306b5d6e8fae87b4fabcd300af",
+      "sha256": "e8506cac15b27af9dbb92acc9c642e27aad9fe09d25b7400c9b58fda76cc2b69",
       "tokens": {
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
@@ -123,6 +123,87 @@
           "defined": true
         },
         "response:POST /api/v1/system/outbox/dead-letters/{eventId}/replay:422": {
+          "defined": true
+        },
+        "operation:POST /api/v1/work-assistant/devices/register": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/work-assistant/devices/register:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/work-assistant/devices/register:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/work-assistant/devices/register:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/work-assistant/devices/register:422": {
+          "defined": true
+        },
+        "operation:POST /api/v1/work-assistant/devices/{deviceId}/heartbeat": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/work-assistant/devices/{deviceId}/heartbeat:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/work-assistant/devices/{deviceId}/heartbeat:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/work-assistant/devices/{deviceId}/policy": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/work-assistant/devices/{deviceId}/policy:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/work-assistant/devices/{deviceId}/policy:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/work-assistant/devices/{deviceId}/policy:503": {
+          "defined": true
+        },
+        "operation:POST /api/v1/work-assistant/devices/{deviceId}/revoke": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/work-assistant/devices/{deviceId}/revoke:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/work-assistant/devices/{deviceId}/revoke:404": {
+          "defined": true
+        },
+        "operation:POST /api/v1/work-assistant/segments": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/work-assistant/segments:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/work-assistant/segments:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/work-assistant/segments:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/work-assistant/segments:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/work-assistant/update-manifest": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/work-assistant/update-manifest:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/work-assistant/update-manifest:503": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/work-assistant/policies/current": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/work-assistant/policies/current:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/work-assistant/policies/current:422": {
+          "defined": true
+        },
+        "response:PUT /api/v1/work-assistant/policies/current:503": {
           "defined": true
         },
         "schema:SystemHealth.status": {
@@ -392,6 +473,194 @@
           "required": true,
           "enum": [
             "pending"
+          ]
+        },
+        "schema:RegisterDeviceRequest.deviceId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:RegisterDeviceRequest.deviceName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:RegisterDeviceRequest.publicKeySpki": {
+          "type": "string",
+          "required": true
+        },
+        "schema:RegisterDeviceRequest.appVersion": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SignedPolicy.policyVersion": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:SignedPolicy.issuedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SignedPolicy.keyId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SignedPolicy.processes": {
+          "type": "array",
+          "required": true
+        },
+        "schema:SignedPolicy.titleKeywords": {
+          "type": "array",
+          "required": true
+        },
+        "schema:SignedPolicy.uploadEnabled": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:SignedPolicy.signature": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WorkAssistantRegistration.deviceId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WorkAssistantRegistration.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "revoked"
+          ]
+        },
+        "schema:WorkAssistantRegistration.policy": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:WorkAssistantRegistration.policyPublicKeySpki": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WorkAssistantRegistration.policyKeyId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WorkAssistantRegistration.updatePublicKeySpki": {
+          "type": "object",
+          "required": false
+        },
+        "schema:WorkAssistantRegistration.updateKeyId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:WorkAssistantRegistration.serverTime": {
+          "type": "string",
+          "required": true
+        },
+        "schema:HeartbeatRequest.appVersion": {
+          "type": "string",
+          "required": true
+        },
+        "schema:HeartbeatRequest.policyVersion": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:HeartbeatResult.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "revoked"
+          ]
+        },
+        "schema:HeartbeatResult.minSupportedVersion": {
+          "type": "string",
+          "required": true
+        },
+        "schema:HeartbeatResult.updateRequired": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:HeartbeatResult.updateManifest": {
+          "type": "object",
+          "required": false
+        },
+        "schema:UpdateManifest.version": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UpdateManifest.packageSha256": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UpdateManifest.packageUrl": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UpdateManifest.minSupportedVersion": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UpdateManifest.releasedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UpdateManifest.keyId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:UpdateManifest.signature": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SegmentUploadRequest.deviceId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SegmentUploadRequest.clientSegmentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SegmentUploadRequest.capturedFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SegmentUploadRequest.capturedTo": {
+          "type": "string",
+          "required": true
+        },
+        "schema:SegmentUploadRequest.sourceType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "manual",
+            "voice",
+            "window"
+          ]
+        },
+        "schema:SegmentUploadRequest.summary": {
+          "type": "object",
+          "required": false
+        },
+        "schema:SegmentUploadRequest.policyVersion": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:SegmentUploadResult.accepted": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:SegmentUploadResult.duplicate": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:PolicyAppendRequest.additional_exclusions": {
+          "type": "array",
+          "required": true
+        },
+        "schema:RevokeResult.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "revoked"
           ]
         }
       }

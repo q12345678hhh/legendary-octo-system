@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>WorkAssistant.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\privacy-engine\WorkAssistant.PrivacyEngine\WorkAssistant.PrivacyEngine.csproj" />
+  </ItemGroup>
+
+</Project>

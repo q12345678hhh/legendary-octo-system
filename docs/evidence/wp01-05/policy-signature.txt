@@ -1,0 +1,21 @@
+# 客户端离线验签（来源：Device.Checks 离线自检）
+PASS offline/策略进程为服务端追加项与本地硬编码下限的并集
+PASS offline/策略关键字包含本地硬编码下限
+PASS offline/策略关闭上传时采集量为 0
+PASS offline/未注册时状态为未注册且策略版本为 0
+PASS offline/合法策略验签通过
+PASS offline/策略版本不前进时拒绝回滚
+PASS offline/策略 key id 不匹配时拒绝
+PASS offline/策略签名被篡改时拒绝
+PASS offline/策略含未知字段时拒收
+PASS offline/更新清单验签并暂存成功
+PASS offline/健康检查失败时回滚到上一版本
+PASS offline/更新清单 key id 不匹配时拒绝
+
+# 服务端策略边界（真实 API）
+追加排除项：status=200 policyVersion=2 processes=WeChat,Weixin,QQ,TIM,QQNT,Telegram,DingTalk,Feishu,Slack,Discord,Calculator
+未知字段 capture_enabled：status=422 code=POLICY_UNKNOWN_FIELD
+整体覆盖 processes：status=422 code=POLICY_UNKNOWN_FIELD
+无签名策略拉取：status=400
+无签名上传：status=400
+远程开始采集端点：status=404

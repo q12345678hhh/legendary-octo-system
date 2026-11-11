@@ -1,0 +1,8 @@
+# 来源：WorkAssistant.Device.Checks 离线自检（更新验签与回滚）
+PASS offline/策略版本不前进时拒绝回滚
+PASS offline/更新清单验签并暂存成功
+PASS offline/健康检查失败时回滚到上一版本
+PASS offline/拒绝降级或重复安装
+PASS offline/更新包哈希不符时拒绝
+PASS offline/更新清单签名无效时拒绝
+PASS offline/更新清单 key id 不匹配时拒绝

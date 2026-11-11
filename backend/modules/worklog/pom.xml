@@ -22,5 +22,21 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+    <!-- 租户事务与请求上下文：设备注册、心跳与上传都必须在租户事务内读写 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>platform</artifactId>
+    </dependency>
+    <!-- 策略追加项以 jsonb 存储，读取时用与 Boot 一致的 Jackson 3 -->
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

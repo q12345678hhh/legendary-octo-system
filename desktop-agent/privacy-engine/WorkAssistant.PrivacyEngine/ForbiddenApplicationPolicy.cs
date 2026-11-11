@@ -6,7 +6,10 @@ namespace WorkAssistant.PrivacyEngine;
 /// </summary>
 public sealed class ForbiddenApplicationPolicy
 {
-    /// <summary>默认强制排除的进程名（不区分大小写）。</summary>
+    /// <summary>
+    /// 默认强制排除的进程名（不区分大小写）。这是硬编码下限，与服务端基线一致；
+    /// 租户策略只能在此基础上追加，客户端永远不会因为下发策略而删减本清单。
+    /// </summary>
     public static readonly IReadOnlySet<string> DefaultForbiddenProcesses = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "WeChat",
@@ -14,6 +17,11 @@ public sealed class ForbiddenApplicationPolicy
         "QQ",
         "TIM",
         "QQNT",
+        "Telegram",
+        "DingTalk",
+        "Feishu",
+        "Slack",
+        "Discord",
     };
 
     /// <summary>默认排除的窗口标题关键字（社交软件常见主窗口）。</summary>
@@ -22,6 +30,11 @@ public sealed class ForbiddenApplicationPolicy
         "微信",
         "WeChat",
         "QQ",
+        "Telegram",
+        "钉钉",
+        "飞书",
+        "Slack",
+        "Discord",
     };
 
     private readonly IReadOnlySet<string> forbiddenProcesses;

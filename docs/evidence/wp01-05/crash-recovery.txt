@@ -1,0 +1,14 @@
+﻿# 崩溃前（上传成功但不删除本地条目）
+DEVICE 7af7cb15-a0e7-59af-7067-1dbe207dfd38
+PASS live/crash/崩溃前生成待上传片段
+PASS live/crash/上传成功但本地条目未删除（模拟崩溃时机）
+CRASH-SIMULATED 6e07d52b-fdac-4d68-ae1a-219865df1f08
+live/crash: 全部通过（2 项）
+
+# 重启后（保留条目 → 重传 → 服务端判定重复）
+DEVICE 7af7cb15-a0e7-59af-7067-1dbe207dfd38
+PASS live/recover/崩溃恢复保留未确认条目
+PASS live/recover/恢复后会话从未记录开始
+PASS live/recover/重传被服务端去重且队列清空
+live/recover: 全部通过（3 项）
+

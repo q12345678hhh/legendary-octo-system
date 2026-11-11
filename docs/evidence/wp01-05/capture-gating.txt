@@ -1,0 +1,19 @@
+# 来源：WorkAssistant.Device.Checks 离线自检（采集门禁与托盘提示）
+PASS offline/未开始时采集量为 0
+PASS offline/采集中允许产生片段
+PASS offline/暂停时采集量为 0
+PASS offline/私人模式下采集量为 0
+PASS offline/停止后采集量为 0
+PASS offline/策略关闭上传时采集量为 0
+PASS offline/采集中仍对聊天应用强制排除
+PASS offline/状态 Stopped 的提示可见性
+PASS offline/状态 Stopped 的提示文案
+PASS offline/状态 Capturing 的提示可见性
+PASS offline/状态 Capturing 的提示文案
+PASS offline/状态 Paused 的提示可见性
+PASS offline/状态 Paused 的提示文案
+PASS offline/状态 PrivateMode 的提示可见性
+PASS offline/状态 PrivateMode 的提示文案
+PASS offline/托盘动作不含隐藏或静默入口
+PASS offline/采集中必须提供私人模式
+PASS offline/暂停时提示文案声明不采集

@@ -37,12 +37,14 @@ BEGIN
         RAISE EXCEPTION 'V3 未生效：platform_outbox.last_attempt_at 不存在';
     END IF;
 
-    -- V4：四张租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
+    -- V4/V5：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
     FOR rls IN
         SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity
           FROM pg_class c
          WHERE c.relname IN ('platform_idempotency', 'platform_job', 'platform_file',
-                             'platform_outbox_replay')
+                             'platform_outbox_replay',
+                             'work_assistant_device', 'work_assistant_policy',
+                             'work_assistant_segment')
     LOOP
         IF NOT (rls.relrowsecurity AND rls.relforcerowsecurity) THEN
             RAISE EXCEPTION '% 必须同时 ENABLE 与 FORCE RLS，实际 enable=%, force=%',
@@ -58,9 +60,11 @@ BEGIN
     SELECT count(*) INTO policy_count
       FROM pg_class c
      WHERE c.relname IN ('platform_idempotency', 'platform_job', 'platform_file',
-                         'platform_outbox_replay');
-    IF policy_count <> 4 THEN
-        RAISE EXCEPTION 'V4 未完整生效：应有 4 张新表，实际 %', policy_count;
+                         'platform_outbox_replay',
+                         'work_assistant_device', 'work_assistant_policy',
+                         'work_assistant_segment');
+    IF policy_count <> 7 THEN
+        RAISE EXCEPTION 'V4/V5 未完整生效：应有 7 张租户表，实际 %', policy_count;
     END IF;
 END
 $$;
