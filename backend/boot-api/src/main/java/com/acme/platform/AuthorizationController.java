@@ -93,6 +93,27 @@ public class AuthorizationController {
         return Map.of("version", service.currentVersion());
     }
 
+    @GetMapping("/separation-rules")
+    public Map<String, Object> separationRules() {
+        guard.require("authorization.decision.check", "authorization.separation_rule", null,
+                Map.of());
+        return Map.of(
+                "rolePairs", com.acme.platform.authorization.SodRuleCatalog.rolePairs(),
+                "attributeRules",
+                com.acme.platform.authorization.SodRuleCatalog.attributeRules(),
+                "highPrivilegePermissions",
+                com.acme.platform.authorization.SodRuleCatalog.highPrivilegePermissions(),
+                "managementPermissions",
+                com.acme.platform.authorization.SodRuleCatalog.managementPermissions());
+    }
+
+    @GetMapping("/separation-conflicts")
+    public List<AuthorizationAdminService.SeparationConflictView> separationConflicts() {
+        guard.require("authorization.review.manage", "authorization.separation_rule", null,
+                Map.of());
+        return adminService.separationConflicts();
+    }
+
     @GetMapping("/audit/decisions")
     public List<DecisionLogView> audit(
             @RequestParam(defaultValue = "50") int limit) {

@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.5.0",
-    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期，以及统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本）。认证主体只来自会话 Cookie 或 Bearer 令牌。"
+    "version": "1.6.0",
+    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期，以及统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核）。认证主体只来自会话 Cookie 或 Bearer 令牌。"
   },
   "servers": [
     {
@@ -6901,6 +6901,663 @@
           }
         }
       }
+    },
+    "/api/v1/authorization/access-requests": {
+      "get": {
+        "operationId": "listAuthorizationAccessRequests",
+        "summary": "权限申请列表（审批人看全租户，其他主体只看自己）",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "申请列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorizationAccessRequest"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createAuthorizationAccessRequest",
+        "summary": "提交权限申请",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuthorizationAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "已提交",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-requests/{requestId}/approve": {
+      "post": {
+        "operationId": "approveAuthorizationAccessRequest",
+        "summary": "批准权限申请并生成授权",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizationAccessRequestDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已处理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-requests/{requestId}/reject": {
+      "post": {
+        "operationId": "rejectAuthorizationAccessRequest",
+        "summary": "驳回权限申请",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizationAccessRequestDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已处理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-requests/{requestId}/cancel": {
+      "post": {
+        "operationId": "cancelAuthorizationAccessRequest",
+        "summary": "撤回自己的权限申请",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "requestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已撤回",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-reviews": {
+      "get": {
+        "operationId": "listAuthorizationAccessReviews",
+        "summary": "季度访问复核列表",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "复核列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorizationAccessReview"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-reviews/{reviewId}": {
+      "get": {
+        "operationId": "getAuthorizationAccessReview",
+        "summary": "季度访问复核详情",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "复核详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessReviewDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm": {
+      "post": {
+        "operationId": "confirmAuthorizationAccessReviewItem",
+        "summary": "确认保留授权",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizationAccessRequestDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已处理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessReviewItem"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke": {
+      "post": {
+        "operationId": "revokeAuthorizationAccessReviewItem",
+        "summary": "撤销该条授权",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorizationAccessRequestDecision"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已处理",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessReviewItem"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-reviews/{reviewId}/close": {
+      "post": {
+        "operationId": "closeAuthorizationAccessReview",
+        "summary": "关闭已全部决完的复核",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已关闭",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessReview"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/access-reviews/generate": {
+      "post": {
+        "operationId": "generateAuthorizationAccessReview",
+        "summary": "补跑当季复核",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "当季复核",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationAccessReviewDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/separation-rules": {
+      "get": {
+        "operationId": "getSeparationOfDutyRules",
+        "summary": "只读职责分离规则",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "规则目录",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationSeparationRules"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/separation-conflicts": {
+      "get": {
+        "operationId": "listSeparationOfDutyConflicts",
+        "summary": "当前角色组合冲突清单",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "冲突清单",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorizationSeparationConflict"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/authorization/admin-actions": {
+      "get": {
+        "operationId": "listAuthorizationAdminActions",
+        "summary": "管理员操作审计",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "审计列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorizationAdminAction"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -11007,6 +11664,14 @@
               "null"
             ],
             "format": "uuid"
+          },
+          "requestId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "高权限授予必须引用一条已由他人批准的申请"
           }
         }
       },
@@ -11490,6 +12155,409 @@
           },
           "factors": {
             "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AuthorizationAccessRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "requesterActorId",
+          "requestedForActorId",
+          "roleCode",
+          "scopeType",
+          "reason",
+          "state",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requesterActorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "requestedForActorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roleCode": {
+            "type": "string"
+          },
+          "scopeType": {
+            "type": "string"
+          },
+          "scopeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "validTo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "cancelled"
+            ]
+          },
+          "decidedByActorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "decidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "decisionNote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "assignmentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateAuthorizationAccessRequest": {
+        "type": "object",
+        "required": [
+          "roleCode",
+          "scopeType",
+          "reason"
+        ],
+        "properties": {
+          "requestedForActorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "为空表示为自己申请"
+          },
+          "roleCode": {
+            "type": "string"
+          },
+          "scopeType": {
+            "type": "string"
+          },
+          "scopeId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "范围类型需要时必须提供"
+          },
+          "validTo": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthorizationAccessRequestDecision": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AuthorizationAccessReview": {
+        "type": "object",
+        "required": [
+          "id",
+          "periodStart",
+          "periodEnd",
+          "state",
+          "dueAt",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "periodStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "periodEnd": {
+            "type": "string",
+            "format": "date"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "overdue",
+              "closed"
+            ]
+          },
+          "dueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "AuthorizationAccessReviewItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "assignmentId",
+          "subjectActorId",
+          "state"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assignmentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subjectActorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reviewerActorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "解析不到主管与所有者时为空，由 review.manage 处理"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "revoked"
+            ]
+          },
+          "decidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "AuthorizationAccessReviewDetail": {
+        "type": "object",
+        "required": [
+          "review",
+          "items"
+        ],
+        "properties": {
+          "review": {
+            "$ref": "#/components/schemas/AuthorizationAccessReview"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorizationAccessReviewItem"
+            }
+          }
+        }
+      },
+      "AuthorizationSeparationRules": {
+        "type": "object",
+        "required": [
+          "rolePairs",
+          "attributeRules",
+          "highPrivilegePermissions",
+          "managementPermissions"
+        ],
+        "properties": {
+          "rolePairs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "group",
+                "left",
+                "right"
+              ],
+              "properties": {
+                "group": {
+                  "type": "string"
+                },
+                "left": {
+                  "type": "string"
+                },
+                "right": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "attributeRules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "permission",
+                "attributes",
+                "onlyWhenHighRisk"
+              ],
+              "properties": {
+                "permission": {
+                  "type": "string"
+                },
+                "attributes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "onlyWhenHighRisk": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "highPrivilegePermissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "managementPermissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AuthorizationSeparationConflict": {
+        "type": "object",
+        "required": [
+          "actorId",
+          "roleCodes",
+          "group",
+          "detail"
+        ],
+        "properties": {
+          "actorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roleCodes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "group": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthorizationAdminAction": {
+        "type": "object",
+        "required": [
+          "id",
+          "action",
+          "targetType",
+          "detail",
+          "occurredAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "为空表示系统作业"
+          },
+          "action": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "detail": {
+            "type": "string",
+            "description": "JSON 字符串"
           },
           "occurredAt": {
             "type": "string",

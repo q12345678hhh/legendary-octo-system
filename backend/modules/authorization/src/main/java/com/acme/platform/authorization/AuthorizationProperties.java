@@ -16,6 +16,8 @@ public class AuthorizationProperties {
     private Duration versionTtl = Duration.ofSeconds(1);
     private int maxTemporaryGrantDays = 90;
     private int maxDelegationDays = 180;
+    private int reviewWindowDays = 14;
+    private int reviewGraceDays = 7;
 
     public Duration getCacheTtl() {
         return cacheTtl;
@@ -47,5 +49,21 @@ public class AuthorizationProperties {
 
     public void setMaxDelegationDays(int maxDelegationDays) {
         this.maxDelegationDays = maxDelegationDays;
+    }
+
+    public int getReviewWindowDays() {
+        return reviewWindowDays;
+    }
+
+    public void setReviewWindowDays(int reviewWindowDays) {
+        this.reviewWindowDays = reviewWindowDays;
+    }
+
+    public int getReviewGraceDays() {
+        return reviewGraceDays;
+    }
+
+    public void setReviewGraceDays(int reviewGraceDays) {
+        this.reviewGraceDays = reviewGraceDays;
     }
 }

@@ -97,6 +97,45 @@ public class AuthorizationService {
         return tenantTransactions.inTenant(context -> versions.currentVersion());
     }
 
+    /**
+     * 只判断主体是否持有某权限，用于列表视角选择（例如审批人看全租户申请）。
+     *
+     * <p>不替代任何业务动作的判定：写操作仍必须走 {@link #check} / {@link #require}，
+     * 由完整决策链和职责分离属性共同约束。
+     */
+    public boolean holdsPermission(String permission) {
+        return tenantTransactions.inTenant(context -> {
+            ActorContext actor = ActorContextHolder.current().orElse(null);
+            if (actor == null) {
+                return false;
+            }
+            TenantMember member = actor.memberId() == null ? null
+                    : memberStore.findById(actor.memberId()).orElse(null);
+            EmploymentScope employment = member != null && member.personId() != null
+                    ? organizationScopes.scopeOfPerson(member.personId(), LocalDate.now(clock))
+                    .orElse(null)
+                    : null;
+            List<RoleGrant> grants = new ArrayList<>();
+            for (AuthorizationStore.AssignmentRow assignment
+                    : store.activeAssignments(actor.actorId(), OffsetDateTime.now(clock))) {
+                grants.add(new RoleGrant(assignment.roleCode(), assignment.scopeType(),
+                        assignment.scopeId(), "ASSIGNMENT", assignment.id()));
+            }
+            grants.addAll(derivedGrants.resolve(member, employment));
+            Set<String> roles = new LinkedHashSet<>();
+            for (RoleGrant grant : grants) {
+                roles.add(grant.roleCode());
+            }
+            Map<String, Set<String>> custom = store.customRolePermissions(roles);
+            for (RoleGrant grant : grants) {
+                if (permissionsOf(grant.roleCode(), custom).contains(permission)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
+
     public List<AuthorizationStore.DecisionLogRow> audit(int limit) {
         return tenantTransactions.inTenant(context -> store.decisionLogs(limit));
     }
@@ -225,10 +264,13 @@ public class AuthorizationService {
             factors.add("GRANT:" + grant.roleCode() + ":" + grant.source());
         }
 
-        if (separationOfDuty.conflicts(
-                new SeparationOfDutyChecker.AuthorizationSubject(request.actorId(), matchingRoles),
-                request.permission())) {
-            return AccessDecision.deny(DecisionReason.SOD_CONFLICT, version, now, factors);
+        SeparationOfDutyChecker.Result sod = separationOfDuty.check(
+                new SeparationOfDutyChecker.AuthorizationSubject(request.actorId(), matchingRoles,
+                        allRoles, request.attributes()),
+                request.permission());
+        if (!sod.allowed()) {
+            factors.add("SOD:" + sod.detail());
+            return AccessDecision.deny(sodReason(sod.code()), version, now, factors);
         }
         if (riskGate.blocked(
                 new RiskGate.AuthorizationSubject(request.actorId(), matchingRoles), request)) {
@@ -238,6 +280,13 @@ public class AuthorizationService {
         Map<String, FieldAccess> fieldRules = fields.rules(allRoles, request.resourceType());
         return new AccessDecision(true, DecisionReason.ALLOWED, factors, scope, fieldRules,
                 version, now, false);
+    }
+
+    private DecisionReason sodReason(String code) {
+        if (SodRuleCatalog.SOD_ATTRIBUTE_MISSING.equals(code)) {
+            return DecisionReason.SOD_ATTRIBUTE_MISSING;
+        }
+        return DecisionReason.SOD_CONFLICT;
     }
 
     private Set<String> permissionsOf(String roleCode, Map<String, Set<String>> customPermissions) {

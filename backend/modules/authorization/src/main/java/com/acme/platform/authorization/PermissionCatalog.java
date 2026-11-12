@@ -44,6 +44,23 @@ public final class PermissionCatalog {
         register(map, "tenant.admin", "tenant", "admin", true);
         register(map, "identity.member.manage", "identity.member", "manage", true);
         register(map, "business.work.read", "business.work", "read", true);
+        register(map, "authorization.access.request", "authorization.access", "request", true);
+        register(map, "authorization.access.approve", "authorization.access", "approve", true);
+        register(map, "authorization.review.read", "authorization.review", "read", true);
+        register(map, "authorization.review.decide", "authorization.review", "decide", true);
+        register(map, "authorization.review.manage", "authorization.review", "manage", true);
+        register(map, "authorization.admin_action.read", "authorization.admin_action", "read", true);
+        register(map, "payroll.run.prepare", "payroll.run", "prepare", true);
+        register(map, "payroll.run.review", "payroll.run", "review", true);
+        register(map, "payroll.run.approve", "payroll.run", "approve", true);
+        register(map, "payroll.export", "payroll", "export", true);
+        register(map, "plugin.upload", "plugin", "upload", true);
+        register(map, "plugin.install", "plugin", "install", true);
+        register(map, "ai.tool.register", "ai.tool", "register", true);
+        register(map, "ai.tool.rate", "ai.tool", "rate", true);
+        register(map, "ai.tool.enable", "ai.tool", "enable", true);
+        register(map, "module.activation.configure", "module.activation", "configure", true);
+        register(map, "module.activation.approve", "module.activation", "approve", true);
         PERMISSIONS = Collections.unmodifiableMap(map);
     }
 

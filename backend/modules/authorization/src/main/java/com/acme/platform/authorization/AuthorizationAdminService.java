@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * 授权治理：角色、授权、显式拒绝、字段/条件策略与权限模拟。
@@ -41,7 +43,11 @@ public class AuthorizationAdminService {
 
     public record GrantCommand(UUID actorId, UUID memberId, String roleCode, String scopeType,
                                UUID scopeId, OffsetDateTime validFrom, OffsetDateTime validTo,
-                               String reason, UUID delegatedFromId) {
+                               String reason, UUID delegatedFromId, UUID requestId) {
+    }
+
+    public record SeparationConflictView(UUID actorId, Set<String> roleCodes, String group,
+                                         String detail) {
     }
 
     public record DenyCommand(UUID actorId, String roleCode, String permissionCode,
@@ -86,7 +92,10 @@ public class AuthorizationAdminService {
     private final ConditionEvaluator conditions;
     private final OrganizationScopeQueries organizationScopes;
     private final MemberStore memberStore;
+    private final AccessRequestStore accessRequests;
+    private final AdminActionStore adminActions;
     private final AuthorizationProperties properties;
+    private final ObjectMapper objectMapper;
     private final Clock clock;
 
     public AuthorizationAdminService(TenantTransactions tenantTransactions,
@@ -97,7 +106,10 @@ public class AuthorizationAdminService {
                                      ConditionEvaluator conditions,
                                      OrganizationScopeQueries organizationScopes,
                                      MemberStore memberStore,
+                                     AccessRequestStore accessRequests,
+                                     AdminActionStore adminActions,
                                      AuthorizationProperties properties,
+                                     ObjectMapper objectMapper,
                                      Clock clock) {
         this.tenantTransactions = tenantTransactions;
         this.store = store;
@@ -107,7 +119,10 @@ public class AuthorizationAdminService {
         this.conditions = conditions;
         this.organizationScopes = organizationScopes;
         this.memberStore = memberStore;
+        this.accessRequests = accessRequests;
+        this.adminActions = adminActions;
         this.properties = properties;
+        this.objectMapper = objectMapper;
         this.clock = clock;
     }
 
@@ -144,6 +159,8 @@ public class AuthorizationAdminService {
                 store.insertRole(roleId, command.code(), command.name().trim(),
                         command.description());
                 store.replaceRolePermissions(roleId, permissions);
+                audit("ROLE_CREATED", "authorization.role", roleId,
+                        Map.of("code", command.code(), "permissions", permissions));
             } catch (DuplicateKeyException e) {
                 throw ApiException.conflict("ROLE_CODE_TAKEN", "角色码已存在：" + command.code());
             }
@@ -158,6 +175,9 @@ public class AuthorizationAdminService {
             AuthorizationStore.RoleRow role = store.findRole(roleId).orElseThrow(() ->
                     ApiException.notFound("ROLE_NOT_FOUND", "自定义角色不存在：" + roleId));
             store.replaceRolePermissions(roleId, permissions == null ? Set.of() : permissions);
+            audit("ROLE_PERMISSIONS_REPLACED", "authorization.role", roleId,
+                    Map.of("code", role.code(), "permissions",
+                            permissions == null ? Set.of() : permissions));
             versions.invalidateLocal();
             return new RoleView(role.code(), role.name(), role.description(), false, role.status(),
                     permissions == null ? Set.of() : permissions);
@@ -195,11 +215,6 @@ public class AuthorizationAdminService {
         if (command.validTo() != null && !command.validTo().isAfter(validFrom)) {
             throw ApiException.unprocessable("GRANT_PERIOD_INVALID", "到期时间必须晚于生效时间");
         }
-        boolean highRisk = SystemRoleCatalog.highRisk(command.roleCode());
-        if (highRisk && command.validTo() == null) {
-            throw ApiException.unprocessable("TEMPORARY_GRANT_REQUIRED",
-                    "高权限角色必须设置到期时间");
-        }
         if (command.validTo() != null) {
             long days = Duration.between(validFrom, command.validTo()).toDays();
             if (days > properties.getMaxTemporaryGrantDays()) {
@@ -213,14 +228,96 @@ public class AuthorizationAdminService {
                 throw ApiException.notFound("ACTOR_NOT_FOUND", "授权主体不存在");
             }
             requireRole(command.roleCode());
+            boolean highRisk = highRisk(command.roleCode());
+            if (highRisk && command.validTo() == null) {
+                throw ApiException.unprocessable("TEMPORARY_GRANT_REQUIRED",
+                        "高权限角色必须设置到期时间");
+            }
             validateScopeTarget(scopeType, command.scopeId());
             validateDelegation(command, scopeType, validFrom);
+            boolean emergency = validateHighPrivilegeGrant(command, highRisk);
+            validateRoleConflict(command.actorId(), command.roleCode());
             UUID id = UUID.randomUUID();
             store.insertAssignment(id, command.actorId(), command.memberId(), command.roleCode(),
                     scopeType, command.scopeId(), validFrom, command.validTo(),
-                    command.reason().trim(), currentActor(), command.delegatedFromId());
+                    command.reason().trim(), currentActor(), command.delegatedFromId(),
+                    command.requestId(), emergency);
+            Map<String, Object> detail = new LinkedHashMap<>();
+            detail.put("roleCode", command.roleCode());
+            detail.put("actorId", command.actorId());
+            detail.put("requestId", command.requestId());
+            detail.put("reviewRequired", emergency);
+            detail.put("emergency", emergency);
+            audit("ASSIGNMENT_GRANTED", "authorization.assignment", id, detail);
             invalidate(command.actorId(), context.tenantId());
             return store.findAssignment(id).orElseThrow();
+        });
+    }
+
+    /**
+     * 高权限双人校验：必须引用他人批准的申请；仅租户所有者可紧急直授并强制进入复核。
+     *
+     * @return 是否为紧急直授（需要 review_required=true）
+     */
+    private boolean validateHighPrivilegeGrant(GrantCommand command, boolean highRisk) {
+        UUID operator = currentActorId();
+        if (highRisk && operator != null && command.actorId().equals(operator)) {
+            throw ApiException.forbidden("SOD_SELF_APPROVAL", "不能给自己授予高权限");
+        }
+        if (command.requestId() != null) {
+            AccessRequestStore.AccessRequestRow request = accessRequests.find(command.requestId())
+                    .orElseThrow(() -> ApiException.notFound("ACCESS_REQUEST_NOT_FOUND",
+                            "引用的申请不存在"));
+            if (!"approved".equals(request.state())) {
+                throw ApiException.unprocessable("ACCESS_REQUEST_REQUIRED",
+                        "高权限授予必须引用已批准的申请");
+            }
+            if (!request.requestedForActorId().equals(command.actorId())
+                    || !request.roleCode().equals(command.roleCode())) {
+                throw ApiException.unprocessable("ACCESS_REQUEST_MISMATCH",
+                        "申请主体或角色与本次授予不一致");
+            }
+            if (highRisk && operator != null && request.requesterActorId().equals(operator)) {
+                throw ApiException.forbidden("SOD_SELF_APPROVAL",
+                        "不能批准并授予自己的高权限申请");
+            }
+            if (request.validTo() != null
+                    && (command.validTo() == null
+                        || command.validTo().isAfter(request.validTo()))) {
+                throw ApiException.unprocessable("GRANT_TOO_LONG", "授予到期不能晚于申请");
+            }
+            return false;
+        }
+        if (!highRisk) {
+            return false;
+        }
+        boolean owner = operator != null && store.findActorMember(operator)
+                .map(AuthorizationStore.ActorMemberRow::owner).orElse(false);
+        if (!owner) {
+            throw ApiException.unprocessable("ACCESS_REQUEST_REQUIRED",
+                    "高权限授予必须引用他人批准的申请");
+        }
+        return true;
+    }
+
+    /** 高权限按实际权限集合判定，自定义角色含高权限码同样受限时与双人规则。 */
+    private boolean highRisk(String roleCode) {
+        if (SystemRoleCatalog.highRisk(roleCode)) {
+            return true;
+        }
+        Set<String> permissions = store.customRolePermissions(Set.of(roleCode))
+                .getOrDefault(roleCode, Set.of());
+        return permissions.stream()
+                .anyMatch(SodRuleCatalog.highPrivilegePermissions()::contains);
+    }
+
+    private void validateRoleConflict(UUID actorId, String roleCode) {
+        Set<String> roles = new LinkedHashSet<>(store.activeRoleCodes(actorId,
+                OffsetDateTime.now(clock)));
+        roles.add(roleCode);
+        SodRuleCatalog.roleConflict(roles).ifPresent(conflict -> {
+            throw ApiException.unprocessable("SOD_ROLE_CONFLICT",
+                    "角色组合触发职责分离：" + conflict.detail());
         });
     }
 
@@ -231,6 +328,8 @@ public class AuthorizationAdminService {
             if (store.revokeAssignment(assignmentId, currentActor()) == 0) {
                 throw ApiException.conflict("ASSIGNMENT_ALREADY_REVOKED", "授权已撤销");
             }
+            audit("ASSIGNMENT_REVOKED", "authorization.assignment", assignmentId,
+                    Map.of("actorId", assignment.actorId(), "roleCode", assignment.roleCode()));
             invalidate(assignment.actorId(), context.tenantId());
             return null;
         });
@@ -270,6 +369,10 @@ public class AuthorizationAdminService {
             } catch (DuplicateKeyException e) {
                 throw ApiException.conflict("DENY_EXISTS", "相同的长期显式拒绝已存在");
             }
+            audit("DENY_ADDED", "authorization.deny", id,
+                    Map.of("permissionCode", command.permissionCode(),
+                            "actorId", String.valueOf(command.actorId()),
+                            "roleCode", String.valueOf(command.roleCode())));
             if (command.actorId() != null) {
                 invalidate(command.actorId(), context.tenantId());
             } else {
@@ -285,6 +388,7 @@ public class AuthorizationAdminService {
             if (store.deleteDeny(denyId) == 0) {
                 throw ApiException.notFound("DENY_NOT_FOUND", "显式拒绝不存在");
             }
+            audit("DENY_REMOVED", "authorization.deny", denyId, Map.of());
             versions.invalidateLocal();
             return null;
         });
@@ -308,6 +412,10 @@ public class AuthorizationAdminService {
             store.upsertFieldPolicy(command.roleCode(), command.resourceType(),
                     command.fieldName(), command.canView(), command.canEdit(), command.canExport(),
                     command.canUseAi(), command.effect());
+            audit("FIELD_POLICY_UPDATED", "authorization.field_policy", null,
+                    Map.of("roleCode", command.roleCode(),
+                            "resourceType", command.resourceType(),
+                            "fieldName", command.fieldName()));
             versions.invalidateLocal();
             return null;
         });
@@ -333,8 +441,36 @@ public class AuthorizationAdminService {
         tenantTransactions.inTenant(context -> {
             store.upsertConditionPolicy(command.permissionCode(), command.name(),
                     command.conditionJson(), command.effect(), command.priority());
+            audit("CONDITION_POLICY_UPDATED", "authorization.condition_policy", null,
+                    Map.of("permissionCode", command.permissionCode(), "name", command.name()));
             versions.invalidateLocal();
             return null;
+        });
+    }
+
+    // ---------------------------------------------------------------- 审计与冲突清单
+
+    public List<AdminActionStore.AdminActionRow> listAdminActions(int limit) {
+        return tenantTransactions.inTenant(context -> adminActions.list(limit));
+    }
+
+    /** 当前生效角色组合触发静态互斥的主体，供复核整改。 */
+    public List<SeparationConflictView> separationConflicts() {
+        return tenantTransactions.inTenant(context -> {
+            OffsetDateTime now = OffsetDateTime.now(clock);
+            Map<UUID, Set<String>> rolesByActor = new LinkedHashMap<>();
+            for (AuthorizationStore.AssignmentRow assignment
+                    : store.listActiveAssignments(now, 5000)) {
+                rolesByActor.computeIfAbsent(assignment.actorId(), key -> new LinkedHashSet<>())
+                        .add(assignment.roleCode());
+            }
+            List<SeparationConflictView> conflicts = new ArrayList<>();
+            for (Map.Entry<UUID, Set<String>> entry : rolesByActor.entrySet()) {
+                SodRuleCatalog.roleConflict(entry.getValue()).ifPresent(conflict ->
+                        conflicts.add(new SeparationConflictView(entry.getKey(),
+                                entry.getValue(), conflict.group(), conflict.detail())));
+            }
+            return conflicts;
         });
     }
 
@@ -527,6 +663,20 @@ public class AuthorizationAdminService {
             throw ApiException.unprocessable("ROLE_CODE_INVALID",
                     "角色码只能是小写字母、数字和连字符，长度 3-64");
         }
+    }
+
+    private void audit(String action, String targetType, UUID targetId,
+                       Map<String, Object> detail) {
+        try {
+            adminActions.insert(action, targetType, targetId,
+                    objectMapper.writeValueAsString(detail));
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("管理员审计写入失败", e);
+        }
+    }
+
+    private UUID currentActorId() {
+        return ActorContextHolder.current().map(ActorContext::actorId).orElse(null);
     }
 
     private String currentActor() {

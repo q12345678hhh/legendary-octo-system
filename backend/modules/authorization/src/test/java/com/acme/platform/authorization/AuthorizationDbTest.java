@@ -88,11 +88,13 @@ class AuthorizationDbTest {
                 new DerivedGrantResolver(), new ScopeResolver(organizationScopes),
                 new ConditionEvaluator(mapper), new FieldPolicyEvaluator(store),
                 new MemberStore(jdbc), organizationScopes,
-                (subject, permission) -> false, (subject, request) -> false,
+                (subject, permission) -> SeparationOfDutyChecker.Result.permit(),
+                (subject, request) -> false,
                 clock, mapper);
         admin = new AuthorizationAdminService(tenantTransactions, store, cache, versions,
                 new ScopeResolver(organizationScopes), new ConditionEvaluator(mapper),
-                organizationScopes, new MemberStore(jdbc), properties, clock);
+                organizationScopes, new MemberStore(jdbc), new AccessRequestStore(jdbc),
+                new AdminActionStore(jdbc), properties, mapper, clock);
 
         // 1. 缺主体、缺租户、未知权限：默认拒绝
         AccessDecision noSubject = as(manager, () -> service.check(new AccessRequest(tenantA, null,
@@ -146,7 +148,7 @@ class AuthorizationDbTest {
                 new AuthorizationAdminService.GrantCommand(employee.actorId(),
                         employee.memberId(), "temp-auditor", "org_unit", fixtures.employeeUnitId(),
                         OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusDays(1),
-                        "临时审计", null)).id());
+                        "临时审计", null, null)).id());
         AccessDecision temporary = as(employee, () -> service.check(new AccessRequest(tenantA,
                 employee.actorId(), "report.export", "report", null, Map.of())));
         assertThat(temporary.allowed()).isTrue();

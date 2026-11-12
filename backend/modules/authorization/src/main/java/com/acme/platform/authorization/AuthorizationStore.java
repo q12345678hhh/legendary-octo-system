@@ -28,7 +28,12 @@ public class AuthorizationStore {
     public record AssignmentRow(UUID id, UUID actorId, UUID memberId, String roleCode,
                                 ScopeType scopeType, UUID scopeId, OffsetDateTime validFrom,
                                 OffsetDateTime validTo, UUID delegatedFromId,
-                                OffsetDateTime revokedAt) {
+                                OffsetDateTime revokedAt, UUID sourceRequestId,
+                                boolean reviewRequired) {
+    }
+
+    public record ActorMemberRow(UUID actorId, UUID userId, UUID memberId, UUID personId,
+                                 boolean owner, boolean admin) {
     }
 
     public record DenyRow(UUID id, UUID actorId, String roleCode, String permissionCode,
@@ -70,7 +75,9 @@ public class AuthorizationStore {
                     rs.getObject("valid_from", OffsetDateTime.class),
                     rs.getObject("valid_to", OffsetDateTime.class),
                     rs.getObject("delegated_from_id", UUID.class),
-                    rs.getObject("revoked_at", OffsetDateTime.class));
+                    rs.getObject("revoked_at", OffsetDateTime.class),
+                    rs.getObject("source_request_id", UUID.class),
+                    rs.getBoolean("review_required"));
 
     private static final RowMapper<DenyRow> DENY_MAPPER = (rs, rowNum) -> new DenyRow(
             rs.getObject("id", UUID.class),
@@ -133,7 +140,8 @@ public class AuthorizationStore {
     public List<AssignmentRow> activeAssignments(UUID actorId, OffsetDateTime now) {
         return jdbcTemplate.query("""
                 SELECT id, actor_id, member_id, role_code, scope_type, scope_id,
-                       valid_from, valid_to, delegated_from_id, revoked_at
+                       valid_from, valid_to, delegated_from_id, revoked_at,
+                       source_request_id, review_required
                   FROM authorization_assignment
                  WHERE actor_id = ?
                    AND revoked_at IS NULL
@@ -292,7 +300,8 @@ public class AuthorizationStore {
         if (actorId == null) {
             return jdbcTemplate.query("""
                     SELECT id, actor_id, member_id, role_code, scope_type, scope_id,
-                           valid_from, valid_to, delegated_from_id, revoked_at
+                           valid_from, valid_to, delegated_from_id, revoked_at,
+                           source_request_id, review_required
                       FROM authorization_assignment
                      ORDER BY created_at DESC
                      LIMIT ?
@@ -300,7 +309,8 @@ public class AuthorizationStore {
         }
         return jdbcTemplate.query("""
                 SELECT id, actor_id, member_id, role_code, scope_type, scope_id,
-                       valid_from, valid_to, delegated_from_id, revoked_at
+                       valid_from, valid_to, delegated_from_id, revoked_at,
+                       source_request_id, review_required
                   FROM authorization_assignment
                  WHERE actor_id = ?
                  ORDER BY created_at DESC
@@ -311,7 +321,8 @@ public class AuthorizationStore {
     public Optional<AssignmentRow> findAssignment(UUID id) {
         return jdbcTemplate.query("""
                 SELECT id, actor_id, member_id, role_code, scope_type, scope_id,
-                       valid_from, valid_to, delegated_from_id, revoked_at
+                       valid_from, valid_to, delegated_from_id, revoked_at,
+                       source_request_id, review_required
                   FROM authorization_assignment WHERE id = ?
                 """, ASSIGNMENT_MAPPER, id).stream().findFirst();
     }
@@ -319,15 +330,77 @@ public class AuthorizationStore {
     public void insertAssignment(UUID id, UUID actorId, UUID memberId, String roleCode,
                                  ScopeType scopeType, UUID scopeId, OffsetDateTime validFrom,
                                  OffsetDateTime validTo, String reason, String grantedBy,
-                                 UUID delegatedFromId) {
+                                 UUID delegatedFromId, UUID sourceRequestId,
+                                 boolean reviewRequired) {
         jdbcTemplate.update("""
                 INSERT INTO authorization_assignment
                     (id, tenant_id, actor_id, member_id, role_code, scope_type, scope_id,
-                     valid_from, valid_to, reason, granted_by, delegated_from_id)
+                     valid_from, valid_to, reason, granted_by, delegated_from_id,
+                     source_request_id, review_required)
                 VALUES (?, nullif(current_setting('app.tenant_id', true), '')::uuid,
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, id, actorId, memberId, roleCode, scopeType.wire(), scopeId, validFrom, validTo,
-                reason, grantedBy, delegatedFromId);
+                reason, grantedBy, delegatedFromId, sourceRequestId, reviewRequired);
+    }
+
+    /** 主体当前生效的角色码，用于授予前的静态互斥预检。 */
+    public Set<String> activeRoleCodes(UUID actorId, OffsetDateTime now) {
+        return new LinkedHashSet<>(jdbcTemplate.queryForList("""
+                SELECT DISTINCT role_code FROM authorization_assignment
+                 WHERE actor_id = ?
+                   AND revoked_at IS NULL
+                   AND valid_from <= ?
+                   AND (valid_to IS NULL OR valid_to > ?)
+                """, String.class, actorId, now, now));
+    }
+
+    /** 全租户当前生效授权，供季度复核与冲突清单使用。 */
+    public List<AssignmentRow> listActiveAssignments(OffsetDateTime now, int limit) {
+        return jdbcTemplate.query("""
+                SELECT id, actor_id, member_id, role_code, scope_type, scope_id,
+                       valid_from, valid_to, delegated_from_id, revoked_at,
+                       source_request_id, review_required
+                  FROM authorization_assignment
+                 WHERE revoked_at IS NULL
+                   AND valid_from <= ?
+                   AND (valid_to IS NULL OR valid_to > ?)
+                 ORDER BY actor_id, role_code
+                 LIMIT ?
+                """, ASSIGNMENT_MAPPER, now, now, limit);
+    }
+
+    /** 主体对应的用户、成员与自然人；主体没有成员时返回空。 */
+    public Optional<ActorMemberRow> findActorMember(UUID actorId) {
+        return jdbcTemplate.query("""
+                SELECT a.id AS actor_id, a.user_id, m.id AS member_id, m.person_id,
+                       m.is_owner, m.is_admin
+                  FROM identity_actor a
+                  JOIN identity_tenant_member m
+                    ON m.user_id = a.user_id AND m.tenant_id = a.tenant_id
+                 WHERE a.id = ?
+                 ORDER BY m.created_at
+                 LIMIT 1
+                """, (rs, rowNum) -> new ActorMemberRow(
+                rs.getObject("actor_id", UUID.class),
+                rs.getObject("user_id", UUID.class),
+                rs.getObject("member_id", UUID.class),
+                rs.getObject("person_id", UUID.class),
+                rs.getBoolean("is_owner"),
+                rs.getBoolean("is_admin")), actorId).stream().findFirst();
+    }
+
+    /** 除指定主体外的安全管理员，用于所有者本人的高权限复核。 */
+    public List<UUID> activeSecurityAdminActors(UUID excludeActorId, OffsetDateTime now) {
+        return jdbcTemplate.query("""
+                SELECT DISTINCT actor_id FROM authorization_assignment
+                 WHERE role_code = 'security-admin'
+                   AND actor_id <> ?
+                   AND revoked_at IS NULL
+                   AND valid_from <= ?
+                   AND (valid_to IS NULL OR valid_to > ?)
+                 ORDER BY actor_id
+                """, (rs, rowNum) -> rs.getObject("actor_id", UUID.class),
+                excludeActorId, now, now);
     }
 
     public int revokeAssignment(UUID id, String revokedBy) {

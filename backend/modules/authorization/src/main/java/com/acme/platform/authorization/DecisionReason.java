@@ -13,6 +13,7 @@ public enum DecisionReason {
     CONDITION_FAILED("CONDITION_FAILED", "条件策略不通过"),
     EXPLICIT_DENY("EXPLICIT_DENY", "命中显式拒绝"),
     SOD_CONFLICT("SOD_CONFLICT", "职责分离冲突"),
+    SOD_ATTRIBUTE_MISSING("SOD_ATTRIBUTE_MISSING", "职责分离所需属性缺失"),
     RISK_BLOCKED("RISK_BLOCKED", "风险门禁拦截");
 
     private final String code;
