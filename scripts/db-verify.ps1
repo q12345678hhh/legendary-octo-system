@@ -224,7 +224,7 @@ try {
     $emptyChecksums = Get-Checksums $emptyDb
     Write-Host '  校验和（空库）：'
     $emptyChecksums | ForEach-Object { Write-Host "    $_" }
-    Assert-True ($emptyChecksums.Count -eq 10) "空库应安装 10 个版本，实际 $($emptyChecksums.Count)"
+    Assert-True ($emptyChecksums.Count -eq 11) "空库应安装 11 个版本，实际 $($emptyChecksums.Count)"
 
     # ---------------------------------------------------------------- 2 RLS
     Write-Step '2 RLS 正向与负例（platform_app 身份）'
@@ -338,7 +338,7 @@ COMMIT;
         Assert-True ($emptyChecksums -contains $line) "上一版本校验和与空库不一致（历史文件被改？）：$line"
         Assert-True ($afterChecksums -contains $line) "升级后校验和变化：$line"
     }
-    Assert-True ($afterChecksums.Count -eq 10) "升级后应有 10 个版本，实际 $($afterChecksums.Count)"
+    Assert-True ($afterChecksums.Count -eq 11) "升级后应有 11 个版本，实际 $($afterChecksums.Count)"
     # V6 在授权之后创建新表，重新授权确保平台应用账号可读写租户生命周期表
     Grant-AppRole $upgradeDb
 
@@ -548,6 +548,37 @@ COMMIT;
     Write-Host "  $crossSummary"
     Write-Host '  同姓名、同邮箱、同工号、同文件名下 17 个服务层攻击用例全部被拒'
 
+    # ---------------------------------------------------------------- 5h 平台运营端
+    Write-Step '5h 平台运营端：目录投影、审计不可变、设置白名单、指标与事件状态机'
+    $platformOps = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '93-platform-ops.sql'
+    Write-Host $platformOps.Output
+    Assert-True ($platformOps.Output -match 'WP02-07 平台运营数据库断言通过') '平台运营 SQL 断言未通过'
+
+    $platformOpsArgs = @(
+        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'),
+        '-pl', 'boot-api', '-am', 'test',
+        '-Dtest=PlatformOpsDbTest',
+        '-Dsurefire.failIfNoSpecifiedTests=false',
+        '-DfailIfNoTests=false',
+        '-Djacoco.skip=true',
+        "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
+        "-Dplatform.db.user=$AppUser",
+        "-Dplatform.db.password=$AppPassword"
+    )
+    if ($env:PLATFORM_MAVEN_REPO) { $platformOpsArgs += "-Dmaven.repo.local=$($env:PLATFORM_MAVEN_REPO)" }
+    $ErrorActionPreference = 'Continue'
+    $platformOpsOut = & mvn @platformOpsArgs 2>&1
+    $platformOpsCode = $LASTEXITCODE
+    if ($platformOpsCode -ne 0) {
+        throw "平台运营用例失败（exit=$platformOpsCode）：`n$((($platformOpsOut | ForEach-Object { "$_" }) -join "`n"))"
+    }
+    $platformOpsReport = Join-Path $repoRoot 'backend\boot-api\target\surefire-reports\com.acme.platform.platformops.PlatformOpsDbTest.txt'
+    Assert-True (Test-Path $platformOpsReport) "找不到平台运营用例报告：$platformOpsReport"
+    $platformOpsSummary = (Get-Content -Encoding UTF8 $platformOpsReport | Where-Object { $_ -match '^Tests run:' } | Select-Object -First 1)
+    Assert-True ($platformOpsSummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "平台运营用例未执行：$platformOpsSummary"
+    Write-Host "  $platformOpsSummary"
+    Write-Host '  目录同步、审计不可改删、设置白名单、指标幂等、事件状态机与平台表无 RLS 全部通过'
+
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'
     Invoke-Psql -Database $upgradeDb -User $OwnerUser -Password $OwnerPassword -Sql `
@@ -586,7 +617,7 @@ COMMIT;
     Write-Host '  事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户'
 
     Write-Host ''
-    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、统一授权、职责分离与访问复核、跨租户攻击套件、并发、索引、锁等待评估、连接池隔离。'
+    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、统一授权、职责分离与访问复核、跨租户攻击套件、平台运营端、并发、索引、锁等待评估、连接池隔离。'
 } finally {
     if (-not $KeepDatabases -and $script:pg) {
         foreach ($db in @($emptyDb, $upgradeDb)) {

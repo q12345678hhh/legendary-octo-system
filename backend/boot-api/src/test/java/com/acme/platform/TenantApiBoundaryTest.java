@@ -13,8 +13,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.acme.platform.identity.IdentityProperties;
 import com.acme.platform.identity.SessionPrincipal;
 import com.acme.platform.identity.SessionService;
+import com.acme.platform.identity.operator.PlatformActorContext;
+import com.acme.platform.identity.operator.PlatformOperatorService;
+import com.acme.platform.identity.operator.PlatformOpsProperties;
 import com.acme.platform.platform.ApiException;
 import com.acme.platform.platform.PlatformMetrics;
+import com.acme.platform.platform.audit.PlatformAuditStore;
+import com.acme.platform.platform.directory.PlatformDirectoryStore;
 import com.acme.platform.platform.idempotency.IdempotencyService;
 import com.acme.platform.tenancy.SupportAccessStatus;
 import com.acme.platform.tenancy.TenantExecutionGate;
@@ -23,6 +28,7 @@ import com.acme.platform.tenancy.TenantRecord;
 import com.acme.platform.tenancy.TenantStatus;
 import com.acme.platform.tenancy.TenantSupportAccess;
 import com.acme.platform.tenancy.TenantSupportAccessService;
+import jakarta.servlet.http.Cookie;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -63,33 +69,62 @@ class TenantApiBoundaryTest {
     @MockitoBean
     private IdentityProperties identityProperties;
 
+    @MockitoBean
+    private PlatformOperatorService platformOperatorService;
+
+    @MockitoBean
+    private PlatformOpsProperties platformOpsProperties;
+
+    @MockitoBean
+    private PlatformDirectoryStore platformDirectoryStore;
+
+    @MockitoBean
+    private PlatformAuditStore platformAuditStore;
+
     @Autowired
     private MockMvc mockMvc;
 
     private final UUID tenantId = UUID.randomUUID();
     private static final String BEARER = "Bearer test-session-token";
+    private static final String OPS_COOKIE = "plt_ops_session";
+    private static final String OPS_CSRF = "plt_ops_csrf";
+    private static final String OPS_EMAIL = "ops@example.test";
 
     @BeforeEach
     void authenticateRequests() {
         when(identityProperties.getCookieName()).thenReturn("plt_session");
         when(identityProperties.getCsrfCookieName()).thenReturn("plt_csrf");
+        when(platformOpsProperties.getCookieName()).thenReturn(OPS_COOKIE);
+        when(platformOpsProperties.getCsrfCookieName()).thenReturn(OPS_CSRF);
+        when(platformOpsProperties.getCookiePath()).thenReturn("/platform");
         when(sessionService.authenticateToken(any(), anyString())).thenReturn(
                 new SessionPrincipal(tenantId, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                         UUID.randomUUID(), "user", "admin@example.test", "管理员",
                         true, true, true, true));
+        when(platformOperatorService.authenticate("ops-token")).thenReturn(
+                new PlatformActorContext(UUID.randomUUID(), UUID.randomUUID(), OPS_EMAIL,
+                        "运营管理员", "platform-owner", true));
+    }
+
+    private static Cookie opsSession() {
+        return new Cookie(OPS_COOKIE, "ops-token");
+    }
+
+    private static Cookie opsCsrf() {
+        return new Cookie(OPS_CSRF, "csrf-token");
     }
 
     @Test
-    void platformRequestRequiresOperatorHeader() throws Exception {
+    void platformRequestWithoutOperatorSessionIsRejected() throws Exception {
         mockMvc.perform(get("/platform/api/v1/tenants/{id}", tenantId))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("PLATFORM_OPERATOR_REQUIRED"));
+                .andExpect(jsonPath("$.code").value("PLATFORM_SESSION_REQUIRED"));
     }
 
     @Test
     void platformRequestMustNotCarryTenantContext() throws Exception {
         mockMvc.perform(get("/platform/api/v1/tenants/{id}", tenantId)
-                        .header("X-Platform-Operator-Id", "ops-a")
+                        .cookie(opsSession())
                         .header("X-Tenant-Id", tenantId.toString()))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("PLATFORM_TENANT_CONTEXT_FORBIDDEN"));
@@ -101,8 +136,35 @@ class TenantApiBoundaryTest {
                         .header("Authorization", BEARER)
                         .header("X-Platform-Operator-Id", "ops-a")
                         .header("X-Tenant-Id", tenantId.toString()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PLATFORM_OPERATOR_HEADER_RETIRED"));
+    }
+
+    @Test
+    void tenantSessionCannotAccessPlatform() throws Exception {
+        mockMvc.perform(get("/platform/api/v1/tenants/{id}", tenantId)
+                        .cookie(new Cookie("plt_session", "tenant-token")))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("PLATFORM_OPERATOR_NOT_ALLOWED"));
+                .andExpect(jsonPath("$.code").value("TENANT_SESSION_NOT_ALLOWED_ON_PLATFORM"));
+    }
+
+    @Test
+    void platformSessionCannotAccessTenantDomain() throws Exception {
+        mockMvc.perform(get("/api/v1/tenant")
+                        .cookie(opsSession())
+                        .header("X-Tenant-Id", tenantId.toString()))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("PLATFORM_OPERATOR_SESSION_NOT_ALLOWED"));
+    }
+
+    @Test
+    void platformWriteRequiresCsrf() throws Exception {
+        mockMvc.perform(post("/platform/api/v1/tenants")
+                        .cookie(opsSession())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"slug\":\"demo\",\"name\":\"演示租户\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("PLATFORM_CSRF_REQUIRED"));
     }
 
     @Test
@@ -186,10 +248,11 @@ class TenantApiBoundaryTest {
 
     @Test
     void platformCreatePassesOperatorAsActor() throws Exception {
-        when(lifecycleService.create(any(), eq("ops-a"))).thenReturn(tenant(TenantStatus.PROVISIONING));
+        when(lifecycleService.create(any(), eq(OPS_EMAIL))).thenReturn(tenant(TenantStatus.PROVISIONING));
 
         mockMvc.perform(post("/platform/api/v1/tenants")
-                        .header("X-Platform-Operator-Id", "ops-a")
+                        .cookie(opsSession(), opsCsrf())
+                        .header("X-CSRF-Token", "csrf-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"slug":"demo","name":"演示租户","planCode":"standard",

@@ -1,5 +1,9 @@
 package com.acme.platform;
 
+import com.acme.platform.identity.operator.PlatformActorContext;
+import com.acme.platform.identity.operator.PlatformPermissionCatalog;
+import com.acme.platform.platform.audit.PlatformAuditStore;
+import com.acme.platform.platform.directory.PlatformDirectoryStore;
 import com.acme.platform.tenancy.TenantLifecycleService;
 import com.acme.platform.tenancy.TenantQuota;
 import com.acme.platform.tenancy.TenantSupportAccess;
@@ -13,143 +17,200 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 平台运营接口：只操作租户元数据与生命周期，不提供任何租户业务正文读取端点。
  *
  * <p>平台请求禁止携带 {@code X-Tenant-Id}；要进入目标租户上下文只能由服务端按
- * 路径里的 tenantId 调用 {@code TenantTransactions}，并经过 RLS。
+ * 路径里的 tenantId 调用 {@code TenantTransactions}，并经过 RLS。写操作同时写
+ * {@code platform_audit_event}，与租户生命周期审计互相印证。
  */
 @RestController
 @RequestMapping("/platform/api/v1/tenants")
 public class PlatformTenantController {
 
-    static final String OPERATOR_HEADER = "X-Platform-Operator-Id";
-
     private final TenantLifecycleService lifecycleService;
     private final TenantSupportAccessService supportAccessService;
+    private final PlatformDirectoryStore directoryStore;
+    private final PlatformAuditStore auditStore;
 
     public PlatformTenantController(TenantLifecycleService lifecycleService,
-                                    TenantSupportAccessService supportAccessService) {
+                                    TenantSupportAccessService supportAccessService,
+                                    PlatformDirectoryStore directoryStore,
+                                    PlatformAuditStore auditStore) {
         this.lifecycleService = lifecycleService;
         this.supportAccessService = supportAccessService;
+        this.directoryStore = directoryStore;
+        this.auditStore = auditStore;
+    }
+
+    @GetMapping
+    List<PlatformDirectoryStore.TenantSummary> list(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "50") int limit) {
+        PlatformActors.require(PlatformPermissionCatalog.TENANT_READ);
+        return directoryStore.list(status, q, limit);
     }
 
     @GetMapping("/{tenantId}")
     public TenantLifecycleService.TenantView view(@PathVariable UUID tenantId) {
+        PlatformActors.require(PlatformPermissionCatalog.TENANT_READ);
         return lifecycleService.view(tenantId);
     }
 
     @PostMapping
-    public Object create(@RequestHeader(OPERATOR_HEADER) String operator,
-                         @RequestBody CreateTenantRequest request) {
-        return lifecycleService.create(new TenantLifecycleService.CreateTenantCommand(
+    public Object create(@RequestBody CreateTenantRequest request) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.TENANT_MANAGE);
+        Object created = lifecycleService.create(new TenantLifecycleService.CreateTenantCommand(
                 request.tenantId(), request.slug(), request.name(), request.planCode(),
                 request.brandName(), request.brandColor(), request.locale(), request.timezone(),
-                request.primaryDomain(), request.domains(), request.features()), operator);
+                request.primaryDomain(), request.domains(), request.features()), actor.email());
+        audit(actor, "tenant.create", String.valueOf(request.tenantId()));
+        return created;
     }
 
     @PostMapping("/{tenantId}/initialize")
-    public Object initialize(@RequestHeader(OPERATOR_HEADER) String operator, @PathVariable UUID tenantId) {
-        return lifecycleService.initialize(tenantId, operator);
+    public Object initialize(@PathVariable UUID tenantId) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.TENANT_MANAGE);
+        Object result = lifecycleService.initialize(tenantId, actor.email());
+        audit(actor, "tenant.initialize", tenantId.toString());
+        return result;
     }
 
     @PostMapping("/{tenantId}/freeze")
-    public Object freeze(@RequestHeader(OPERATOR_HEADER) String operator,
-                         @PathVariable UUID tenantId,
-                         @RequestBody ReasonRequest request) {
-        return lifecycleService.freeze(tenantId, request.reason(), operator);
+    public Object freeze(@PathVariable UUID tenantId, @RequestBody ReasonRequest request) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.TENANT_MANAGE);
+        Object result = lifecycleService.freeze(tenantId, request.reason(), actor.email());
+        audit(actor, "tenant.freeze", tenantId.toString());
+        return result;
     }
 
     @PostMapping("/{tenantId}/restore")
-    public Object restore(@RequestHeader(OPERATOR_HEADER) String operator,
-                          @PathVariable UUID tenantId,
-                          @RequestBody ReasonRequest request) {
-        return lifecycleService.restore(tenantId, request.reason(), operator);
+    public Object restore(@PathVariable UUID tenantId, @RequestBody ReasonRequest request) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.TENANT_MANAGE);
+        Object result = lifecycleService.restore(tenantId, request.reason(), actor.email());
+        audit(actor, "tenant.restore", tenantId.toString());
+        return result;
     }
 
     @PostMapping("/{tenantId}/closing")
-    public Object requestClosing(@RequestHeader(OPERATOR_HEADER) String operator,
-                                 @PathVariable UUID tenantId,
-                                 @RequestBody ReasonRequest request) {
-        return lifecycleService.requestClosing(tenantId, request.reason(), operator);
+    public Object requestClosing(@PathVariable UUID tenantId, @RequestBody ReasonRequest request) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.TENANT_MANAGE);
+        Object result = lifecycleService.requestClosing(tenantId, request.reason(), actor.email());
+        audit(actor, "tenant.closing.request", tenantId.toString());
+        return result;
     }
 
     @PostMapping("/{tenantId}/closing/cancel")
-    public Object cancelClosing(@RequestHeader(OPERATOR_HEADER) String operator,
-                                @PathVariable UUID tenantId,
-                                @RequestBody ReasonRequest request) {
-        return lifecycleService.cancelClosing(tenantId, request.reason(), operator);
+    public Object cancelClosing(@PathVariable UUID tenantId, @RequestBody ReasonRequest request) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.TENANT_MANAGE);
+        Object result = lifecycleService.cancelClosing(tenantId, request.reason(), actor.email());
+        audit(actor, "tenant.closing.cancel", tenantId.toString());
+        return result;
     }
 
     @DeleteMapping("/{tenantId}")
-    public Object delete(@RequestHeader(OPERATOR_HEADER) String operator,
-                         @PathVariable UUID tenantId,
-                         @RequestBody ReasonRequest request) {
-        return lifecycleService.delete(tenantId, request.reason(), operator);
+    public Object delete(@PathVariable UUID tenantId, @RequestBody ReasonRequest request) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.TENANT_MANAGE);
+        Object result = lifecycleService.delete(tenantId, request.reason(), actor.email());
+        audit(actor, "tenant.delete", tenantId.toString());
+        return result;
     }
 
     @PutMapping("/{tenantId}/profile")
-    public Object updateProfile(@RequestHeader(OPERATOR_HEADER) String operator,
-                                @PathVariable UUID tenantId,
-                                @RequestBody ProfileRequest request) {
-        return lifecycleService.updateProfile(tenantId, new TenantLifecycleService.UpdateProfileCommand(
+    public Object updateProfile(@PathVariable UUID tenantId, @RequestBody ProfileRequest request) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.TENANT_MANAGE);
+        Object result = lifecycleService.updateProfile(tenantId, new TenantLifecycleService.UpdateProfileCommand(
                 request.brandName(), request.brandColor(), request.locale(), request.timezone(),
-                request.features()), operator);
+                request.features()), actor.email());
+        audit(actor, "tenant.profile.update", tenantId.toString());
+        return result;
     }
 
     @GetMapping("/{tenantId}/quotas")
     public List<TenantQuota> quotas(@PathVariable UUID tenantId) {
+        PlatformActors.require(PlatformPermissionCatalog.TENANT_READ);
         return lifecycleService.view(tenantId).quotas();
     }
 
     @GetMapping("/{tenantId}/audit")
     public List<?> audit(@PathVariable UUID tenantId) {
+        PlatformActors.require(PlatformPermissionCatalog.TENANT_READ);
         return lifecycleService.view(tenantId).audit();
     }
 
     @GetMapping("/{tenantId}/support-access")
     public List<TenantSupportAccess> supportAccess(@PathVariable UUID tenantId) {
+        PlatformActors.require(PlatformPermissionCatalog.TENANT_READ);
         return supportAccessService.listAll(tenantId);
     }
 
     @PostMapping("/{tenantId}/support-access")
-    public Object requestSupportAccess(@RequestHeader(OPERATOR_HEADER) String operator,
-                                       @PathVariable UUID tenantId,
+    public Object requestSupportAccess(@PathVariable UUID tenantId,
                                        @RequestBody SupportAccessRequest request) {
-        return supportAccessService.request(tenantId, operator, request.ticketId(),
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.SUPPORT_MANAGE);
+        Object result = supportAccessService.request(tenantId, actor.email(), request.ticketId(),
                 request.reason(), request.minutes());
+        audit(actor, "support_access.request", tenantId.toString());
+        return result;
     }
 
     @PostMapping("/{tenantId}/support-access/{accessId}/approve")
-    public Object approveSupportAccess(@RequestHeader(OPERATOR_HEADER) String operator,
-                                       @PathVariable UUID tenantId,
+    public Object approveSupportAccess(@PathVariable UUID tenantId,
                                        @PathVariable UUID accessId) {
-        return supportAccessService.approve(tenantId, accessId, operator);
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.SUPPORT_MANAGE);
+        Object result = supportAccessService.approve(tenantId, accessId, actor.email());
+        audit(actor, "support_access.approve", accessId.toString());
+        return result;
     }
 
     @PostMapping("/{tenantId}/support-access/{accessId}/deny")
-    public Object denySupportAccess(@RequestHeader(OPERATOR_HEADER) String operator,
-                                    @PathVariable UUID tenantId,
-                                    @PathVariable UUID accessId) {
-        return supportAccessService.deny(tenantId, accessId, operator);
+    public Object denySupportAccess(@PathVariable UUID tenantId, @PathVariable UUID accessId) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.SUPPORT_MANAGE);
+        Object result = supportAccessService.deny(tenantId, accessId, actor.email());
+        audit(actor, "support_access.deny", accessId.toString());
+        return result;
     }
 
     @PostMapping("/{tenantId}/support-access/{accessId}/revoke")
-    public Object revokeSupportAccess(@RequestHeader(OPERATOR_HEADER) String operator,
-                                      @PathVariable UUID tenantId,
-                                      @PathVariable UUID accessId) {
-        return supportAccessService.revoke(tenantId, accessId, operator);
+    public Object revokeSupportAccess(@PathVariable UUID tenantId, @PathVariable UUID accessId) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.SUPPORT_MANAGE);
+        Object result = supportAccessService.revoke(tenantId, accessId, actor.email());
+        audit(actor, "support_access.revoke", accessId.toString());
+        return result;
     }
 
     /** 进入支持访问：返回只读标记、到期时间与必须常驻展示的 banner。 */
     @PostMapping("/{tenantId}/support-access/{accessId}/enter")
-    public TenantSupportAccessService.SupportGrant enterSupportAccess(@PathVariable UUID tenantId,
-                                                                      @PathVariable UUID accessId) {
-        return supportAccessService.enter(tenantId, accessId);
+    public TenantSupportAccessService.SupportGrant enterSupportAccess(
+            @PathVariable UUID tenantId, @PathVariable UUID accessId) {
+        PlatformActorContext actor = PlatformActors.requireManage(
+                PlatformPermissionCatalog.SUPPORT_MANAGE);
+        TenantSupportAccessService.SupportGrant grant = supportAccessService.enter(tenantId, accessId);
+        auditStore.record(PlatformActors.ref(actor), "support_access.enter",
+                "tenancy_support_access", accessId.toString(),
+                Map.of("ticketId", grant.ticketId(), "readOnly", grant.readOnly()));
+        return grant;
+    }
+
+    private void audit(PlatformActorContext actor, String action, String targetId) {
+        auditStore.record(PlatformActors.ref(actor), action, "tenancy_tenant", targetId, Map.of());
     }
 
     public record CreateTenantRequest(

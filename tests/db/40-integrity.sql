@@ -116,6 +116,18 @@ BEGIN
     IF policy_count <> 57 THEN
         RAISE EXCEPTION 'V4/V5/V6/V7/V8/V9/V10 未完整生效：应有 57 张租户表，实际 %', policy_count;
     END IF;
+
+    -- WP02-07：平台目录投影是设计内例外，必须不启用 RLS，且同步触发器存在
+    IF (SELECT relrowsecurity FROM pg_class
+         WHERE oid = 'platform_tenant_directory'::regclass) THEN
+        RAISE EXCEPTION 'platform_tenant_directory 不应启用 RLS：平台列表必须跨租户读元数据';
+    END IF;
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger
+         WHERE tgname = 'tenancy_tenant_directory_sync' AND NOT tgisinternal
+    ) THEN
+        RAISE EXCEPTION 'V11 未生效：缺少 tenancy_tenant → platform_tenant_directory 同步触发器';
+    END IF;
 END
 $$;
 

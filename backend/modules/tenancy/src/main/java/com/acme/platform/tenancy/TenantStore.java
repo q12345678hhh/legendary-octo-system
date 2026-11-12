@@ -72,6 +72,33 @@ public class TenantStore {
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 平台全局限制：从非 RLS 的 platform_setting 读取，缺失或非法时回退默认值。
+     * 两个限制都只影响平台创建租户与支持访问时限，不改变租户内部权限。
+     */
+    public int maxTenants() {
+        return intSetting("limits.max_tenants", 20);
+    }
+
+    public int supportAccessMaxMinutes() {
+        return intSetting("limits.support_access_max_minutes", 60);
+    }
+
+    public long countDirectory() {
+        Long total = jdbcTemplate.queryForObject(
+                "SELECT count(*) FROM platform_tenant_directory", Long.class);
+        return total == null ? 0 : total;
+    }
+
+    private int intSetting(String key, int fallback) {
+        return jdbcTemplate.query("""
+                SELECT (value #>> '{}')::int AS v FROM platform_setting WHERE setting_key = ?
+                """, (rs, rowNum) -> rs.getInt("v"), key).stream()
+                .filter(value -> value > 0)
+                .findFirst()
+                .orElse(fallback);
+    }
+
     public TenantStore(JdbcTemplate jdbcTemplate, ObjectMapper objectMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
