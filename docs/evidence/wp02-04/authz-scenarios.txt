@@ -1,0 +1,61 @@
+WP02-04 统一授权决策：场景与断言清单
+
+运行入口
+- backend/modules/authorization/src/test/java/com/acme/platform/authorization/AuthorizationDbTest.java（真实 PostgreSQL）
+- backend/modules/authorization/src/test/java/com/acme/platform/authorization/{ConditionEvaluatorTest,FieldPolicyEvaluatorTest,AuthorizationCacheTest}.java
+- backend/boot-api/src/test/java/com/acme/platform/{PeopleAccessApiTest,AuthorizationApiTest}.java
+- tests/db/90-authorization.sql（platform_app 身份，显式租户事务）
+
+一、默认拒绝
+1. 缺少主体 actorId=null → SUBJECT_MISSING。
+2. 请求租户与当前上下文不一致 → TENANT_MISSING。
+3. 权限码不在全局目录 → PERMISSION_UNKNOWN。
+4. 主体无任何命中授权 → NO_ALLOW。
+5. 有授权但资源不在范围 → SCOPE_MISS。
+6. project_space / record_shared → SCOPE_UNSUPPORTED，不降级为租户范围。
+7. 成员停用或 person 缺失 → MEMBER_INACTIVE。
+
+二、范围
+8. 员工：本人 + 主岗部门目录；同部门可见，部门外的人不可见。
+9. 主管：直接下属与汇报链可见，因素包含 MANAGER。
+10. 代管人：限时代管的部门子树可见（含子部门的人）。
+11. 老板：organization_owner_role 派生 business-owner，租户范围可见。
+12. 租户 owner/admin：只进入管理命名空间，不自动获得业务正文。
+13. 部门范围用「本人或主岗部门在可见集合内」下推 SQL，不先查全量。
+
+三、显式拒绝与临时授权
+14. 员工被显式拒绝 directory.person.export → EXPLICIT_DENY，即使其他授权允许。
+15. 自定义角色 temp-auditor 授予 report.export，临时授权有效期内允许。
+16. 撤销或到期后同一权限 → NO_ALLOW。
+17. 高权限角色无 validTo → 422 TEMPORARY_GRANT_REQUIRED；超过 90 天 → 422 GRANT_TOO_LONG。
+18. 委托范围大于源授权 → 422 DELEGATION_SCOPE_BROADER；到期晚于源 → 422 DELEGATION_TOO_LONG。
+
+四、缓存与失效
+19. 同一请求第二次判定 cacheHit=true。
+20. 组织改名（触发器 bump）后版本递增，旧缓存不再命中。
+21. 撤销授权后本机缓存立即清除，其他实例靠 1 秒版本轮询。
+22. GET /authorization/cache/version 返回当前租户版本。
+
+五、解释器与模拟器
+23. explain 需要 authorization.decision.explain；无权限 403。
+24. 本人 check 不需要额外权限；查他人需要 authorization.decision.check。
+25. 模拟需要解释权限 + MFA；缺 MFA 返回 403 MFA_REQUIRED；模拟不写授权表。
+26. explain 只返回因素码，不返回策略原文。
+
+六、不能绕过
+27. 搜索：GET /people?q= 复用同一 AccessScope 与字段策略。
+28. 导出：format=csv 需要 directory.person.export，按导出字段位决定邮箱列，未授权 403。
+29. 批量：POST /people/batch-read 只返回命中范围的 person，未命中 ID 不出现。
+30. 详情：范围外与不存在统一 404 PERSON_NOT_FOUND，不泄露存在性。
+31. 文件：下载/完成前按 file.read 判定资源归属，非所有者 403。
+32. AI 工具：执行前必须调用同一 AuthorizationGuard（本包提供接口与测试替身）。
+
+七、数据库
+33. 53 张租户表全部 ENABLE + FORCE RLS，各恰好一条隔离策略。
+34. 无 app.tenant_id 时 8 张授权表 0 行；全局权限目录仍可读。
+35. authorization_decision_log 只允许 INSERT，UPDATE/DELETE 抛异常。
+36. 跨租户主体写入授权 → 复合外键拒绝。
+37. tenant 范围带 scope_id、org_unit 缺 scope_id → CHECK 拒绝。
+38. 授权/拒绝/字段/条件/成员/组织变化 → authorization_cache_version 递增。
+39. 已到期临时授权保留行但决策过滤；委托 delegated_from_id 自引用成立。
+40. 租户乙看不到租户甲的授权、拒绝与决策日志。

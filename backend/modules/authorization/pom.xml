@@ -22,5 +22,40 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+    <!-- 决策与授权表读写都在租户事务内完成 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>platform</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>tenancy</artifactId>
+    </dependency>
+    <!-- 成员状态与统一主体是决策的身份基线 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>identity</artifactId>
+    </dependency>
+    <!-- 部门子树、汇报链、委派与老板角色通过 organization 的公开只读查询获得 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>organization</artifactId>
+    </dependency>
+    <!-- 条件策略是 jsonb，与平台共用 Jackson 3 -->
+    <dependency>
+      <groupId>tools.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

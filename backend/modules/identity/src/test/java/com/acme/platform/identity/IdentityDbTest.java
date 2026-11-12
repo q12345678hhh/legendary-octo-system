@@ -3,6 +3,7 @@ package com.acme.platform.identity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.acme.platform.organization.DirectoryScope;
 import com.acme.platform.organization.Employment;
 import com.acme.platform.organization.EmploymentStatus;
 import com.acme.platform.organization.EmploymentStore;
@@ -201,14 +202,16 @@ class IdentityDbTest {
         Employment secondEmployment = withContext(tenantA, () ->
                 peopleService.addEmployment(person.id(), new PeopleService.AddEmploymentCommand(
                         "EMP-002", LocalDate.parse("2024-06-01"), "兼职顾问")));
-        Employment firstEmployment = withContext(tenantA, () -> peopleService.employments(person.id()))
+        Employment firstEmployment = withContext(tenantA, () ->
+                        peopleService.employments(person.id(), DirectoryScope.tenant(person.id(), false)))
                 .stream().filter(item -> "EMP-001".equals(item.employmentNo())).findFirst().orElseThrow();
         withContext(tenantA, () -> peopleService.endEmployment(firstEmployment.id(),
                 LocalDate.parse("2024-05-31")));
         Employment rehire = withContext(tenantA, () ->
                 peopleService.addEmployment(person.id(), new PeopleService.AddEmploymentCommand(
                         "EMP-003", LocalDate.parse("2025-01-01"), "高级工程师")));
-        List<Employment> history = withContext(tenantA, () -> peopleService.employments(person.id()));
+        List<Employment> history = withContext(tenantA, () ->
+                peopleService.employments(person.id(), DirectoryScope.tenant(person.id(), false)));
         assertThat(history).hasSize(3);
         assertThat(history.stream().filter(item -> item.status() == EmploymentStatus.ACTIVE))
                 .extracting(Employment::employmentNo).containsExactlyInAnyOrder("EMP-002", "EMP-003");

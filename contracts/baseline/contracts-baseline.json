@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-11T11:00:47.171Z",
+  "frozenAt": "2026-11-12T03:38:53.104Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "01fcc479ce1a54c17ddbe2698a6dc5a1b351d75e8df3c43c5437f631265a474e",
+      "sha256": "1ddeeccd61bd5c8deb7f61a39d8f2a6249ff434767429001d29d570e3dd259cd",
       "tokens": {
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
@@ -974,6 +974,21 @@
         "response:GET /api/v1/people:401": {
           "defined": true
         },
+        "response:GET /api/v1/people:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/people:query:q": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/people:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "parameter:GET /api/v1/people:query:format": {
+          "required": false,
+          "type": "string"
+        },
         "operation:POST /api/v1/people": {
           "requestBodyRequired": true
         },
@@ -1821,6 +1836,313 @@
         "parameter:GET /api/v1/organization/history:query:entityId": {
           "required": false,
           "type": "string"
+        },
+        "operation:POST /api/v1/people/batch-read": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/people/batch-read:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/people/batch-read:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/people/batch-read:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/authorization/permissions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/permissions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/permissions:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/permissions:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/authorization/roles": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/roles:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/roles:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/roles:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/authorization/roles": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/authorization/roles:201": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/roles:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/roles:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/roles:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/roles:422": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/authorization/roles/{roleId}/permissions": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/authorization/roles/{roleId}/permissions:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/roles/{roleId}/permissions:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/roles/{roleId}/permissions:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/roles/{roleId}/permissions:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/roles/{roleId}/permissions:422": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/authorization/roles/{roleId}/permissions:path:roleId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/authorization/assignments": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/assignments:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/assignments:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/assignments:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/authorization/assignments:query:actorId": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/authorization/assignments:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /api/v1/authorization/assignments": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/authorization/assignments:201": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/assignments:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/assignments:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/assignments:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/assignments:422": {
+          "defined": true
+        },
+        "operation:DELETE /api/v1/authorization/assignments/{assignmentId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/authorization/assignments/{assignmentId}:204": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/authorization/assignments/{assignmentId}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/authorization/assignments/{assignmentId}:403": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/authorization/assignments/{assignmentId}:404": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/authorization/assignments/{assignmentId}:409": {
+          "defined": true
+        },
+        "parameter:DELETE /api/v1/authorization/assignments/{assignmentId}:path:assignmentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/authorization/denies": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/denies:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/denies:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/denies:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/authorization/denies:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /api/v1/authorization/denies": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/authorization/denies:201": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/denies:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/denies:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/denies:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/denies:422": {
+          "defined": true
+        },
+        "operation:DELETE /api/v1/authorization/denies/{denyId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/authorization/denies/{denyId}:204": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/authorization/denies/{denyId}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/authorization/denies/{denyId}:403": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/authorization/denies/{denyId}:404": {
+          "defined": true
+        },
+        "parameter:DELETE /api/v1/authorization/denies/{denyId}:path:denyId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/authorization/field-policies": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/field-policies:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/field-policies:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/field-policies:403": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/authorization/field-policies": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/authorization/field-policies:204": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/field-policies:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/field-policies:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/field-policies:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/authorization/condition-policies": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/condition-policies:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/condition-policies:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/condition-policies:403": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/authorization/condition-policies": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/authorization/condition-policies:204": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/condition-policies:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/condition-policies:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/authorization/condition-policies:422": {
+          "defined": true
+        },
+        "operation:POST /api/v1/authorization/decisions/check": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/authorization/decisions/check:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/decisions/check:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/decisions/check:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/authorization/decisions/explain": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/authorization/decisions/explain:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/decisions/explain:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/decisions/explain:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/authorization/simulations": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/authorization/simulations:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/simulations:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/simulations:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/authorization/cache/version": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/cache/version:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/cache/version:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/cache/version:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/authorization/audit/decisions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/audit/decisions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/audit/decisions:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/audit/decisions:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/authorization/audit/decisions:query:limit": {
+          "required": false,
+          "type": "integer"
         },
         "schema:SessionPrincipal.tenantId": {
           "type": "string",
@@ -4147,6 +4469,512 @@
         },
         "schema:ApplyDueResult.applied": {
           "type": "integer",
+          "required": true
+        },
+        "schema:DirectoryEntry.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DirectoryEntry.displayName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DirectoryEntry.primaryEmail": {
+          "type": "object",
+          "required": false
+        },
+        "schema:DirectoryEntry.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DirectoryEntry.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:BatchReadPeopleRequest.ids": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AuthorizationPermission.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationPermission.resourceType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationPermission.action": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationPermission.description": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationPermission.sensitive": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:AccessScope.tenantWide": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:AccessScope.selfCreated": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:AccessScope.personIds": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AccessScope.orgUnitIds": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AccessScope.legalEntityIds": {
+          "type": "array",
+          "required": true
+        },
+        "schema:FieldAccess.view": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldAccess.edit": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldAccess.export": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldAccess.ai": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:AccessDecision.allowed": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:AccessDecision.reason": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "ALLOWED",
+            "CONDITION_FAILED",
+            "EXPLICIT_DENY",
+            "MEMBER_INACTIVE",
+            "NO_ALLOW",
+            "PERMISSION_UNKNOWN",
+            "RISK_BLOCKED",
+            "SCOPE_MISS",
+            "SCOPE_UNSUPPORTED",
+            "SOD_CONFLICT",
+            "SUBJECT_MISSING",
+            "TENANT_MISSING"
+          ]
+        },
+        "schema:AccessDecision.factors": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AccessDecision.scope": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:AccessDecision.fieldRules": {
+          "type": "object",
+          "required": true
+        },
+        "schema:AccessDecision.cacheVersion": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:AccessDecision.evaluatedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AccessDecision.cacheHit": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:DecisionCheckRequest.actorId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:DecisionCheckRequest.permission": {
+          "type": "string",
+          "required": true
+        },
+        "schema:DecisionCheckRequest.resourceType": {
+          "type": "object",
+          "required": false
+        },
+        "schema:DecisionCheckRequest.resourceId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:DecisionCheckRequest.attributes": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationRole.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationRole.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationRole.description": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationRole.system": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:AuthorizationRole.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationRole.permissions": {
+          "type": "array",
+          "required": true
+        },
+        "schema:CreateAuthorizationRoleRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationRoleRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationRoleRequest.description": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationRoleRequest.permissions": {
+          "type": "array",
+          "required": false
+        },
+        "schema:RolePermissionsRequest.permissions": {
+          "type": "array",
+          "required": true
+        },
+        "schema:CreateAuthorizationAssignmentRequest.actorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationAssignmentRequest.memberId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationAssignmentRequest.roleCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationAssignmentRequest.scopeType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationAssignmentRequest.scopeId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationAssignmentRequest.validFrom": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationAssignmentRequest.validTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationAssignmentRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationAssignmentRequest.delegatedFromId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAssignment.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAssignment.actorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAssignment.memberId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAssignment.roleCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAssignment.scopeType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAssignment.scopeId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAssignment.validFrom": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAssignment.validTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAssignment.delegatedFromId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAssignment.revokedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationDenyRequest.actorId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationDenyRequest.roleCode": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationDenyRequest.permissionCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationDenyRequest.resourceType": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationDenyRequest.resourceId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationDenyRequest.scopeType": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationDenyRequest.scopeId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationDenyRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationDenyRequest.expiresAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDeny.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationDeny.actorId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDeny.roleCode": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDeny.permissionCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationDeny.resourceType": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDeny.resourceId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDeny.scopeType": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDeny.scopeId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDeny.expiresAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:FieldPolicyRequest.roleCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FieldPolicyRequest.resourceType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FieldPolicyRequest.fieldName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FieldPolicyRequest.canView": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldPolicyRequest.canEdit": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldPolicyRequest.canExport": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldPolicyRequest.canUseAi": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldPolicyRequest.effect": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "schema:FieldPolicy.roleCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FieldPolicy.fieldName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:FieldPolicy.canView": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldPolicy.canEdit": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldPolicy.canExport": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldPolicy.canUseAi": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:FieldPolicy.effect": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "schema:ConditionPolicyRequest.permissionCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ConditionPolicyRequest.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ConditionPolicyRequest.condition": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ConditionPolicyRequest.effect": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "schema:ConditionPolicyRequest.priority": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ConditionPolicy.permissionCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ConditionPolicy.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ConditionPolicy.condition": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ConditionPolicy.effect": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "allow",
+            "deny"
+          ]
+        },
+        "schema:ConditionPolicy.priority": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:AuthorizationSimulationRequest.grants": {
+          "type": "array",
+          "required": false
+        },
+        "schema:AuthorizationSimulationRequest.denies": {
+          "type": "array",
+          "required": false
+        },
+        "schema:AuthorizationSimulationRequest.checks": {
+          "type": "array",
+          "required": false
+        },
+        "schema:AuthorizationSimulationResult.decisions": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AuthorizationDecisionLog.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationDecisionLog.actorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationDecisionLog.permissionCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationDecisionLog.resourceType": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDecisionLog.resourceId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationDecisionLog.allowed": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:AuthorizationDecisionLog.reasonCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationDecisionLog.factors": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationDecisionLog.occurredAt": {
+          "type": "string",
           "required": true
         }
       }

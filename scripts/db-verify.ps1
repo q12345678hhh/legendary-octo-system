@@ -224,7 +224,7 @@ try {
     $emptyChecksums = Get-Checksums $emptyDb
     Write-Host '  校验和（空库）：'
     $emptyChecksums | ForEach-Object { Write-Host "    $_" }
-    Assert-True ($emptyChecksums.Count -eq 8) "空库应安装 8 个版本，实际 $($emptyChecksums.Count)"
+    Assert-True ($emptyChecksums.Count -eq 9) "空库应安装 9 个版本，实际 $($emptyChecksums.Count)"
 
     # ---------------------------------------------------------------- 2 RLS
     Write-Step '2 RLS 正向与负例（platform_app 身份）'
@@ -338,7 +338,7 @@ COMMIT;
         Assert-True ($emptyChecksums -contains $line) "上一版本校验和与空库不一致（历史文件被改？）：$line"
         Assert-True ($afterChecksums -contains $line) "升级后校验和变化：$line"
     }
-    Assert-True ($afterChecksums.Count -eq 8) "升级后应有 8 个版本，实际 $($afterChecksums.Count)"
+    Assert-True ($afterChecksums.Count -eq 9) "升级后应有 9 个版本，实际 $($afterChecksums.Count)"
     # V6 在授权之后创建新表，重新授权确保平台应用账号可读写租户生命周期表
     Grant-AppRole $upgradeDb
 
@@ -451,6 +451,39 @@ COMMIT;
     Write-Host "  $organizationSummary"
     Write-Host '  三级汇报链、兼岗、限时代管、虚线、调动历史、未来变更切换与跨租户引用全部通过'
 
+    # ---------------------------------------------------------------- 5e 统一授权决策
+    Write-Step '5e 统一授权：权限目录、角色、授权、显式拒绝、字段/条件策略与缓存版本'
+    $authorization = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '90-authorization.sql'
+    Write-Host $authorization.Output
+    Assert-True ($authorization.Output -match 'WP02-04 统一授权数据库断言通过') '统一授权 SQL 断言未通过'
+
+    if (Test-Path $pinnedJavaHome) { $env:JAVA_HOME = $pinnedJavaHome }
+    # 与 5b/5c/5d 一致：必须从聚合 POM 走 reactor，单独模块 POM 解析不到同仓 platform/tenancy。
+    $authorizationArgs = @(
+        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'),
+        '-pl', 'modules/authorization', '-am', 'test',
+        '-Dtest=AuthorizationDbTest',
+        '-Dsurefire.failIfNoSpecifiedTests=false',
+        '-DfailIfNoTests=false',
+        '-Djacoco.skip=true',
+        "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
+        "-Dplatform.db.user=$AppUser",
+        "-Dplatform.db.password=$AppPassword"
+    )
+    if ($env:PLATFORM_MAVEN_REPO) { $authorizationArgs += "-Dmaven.repo.local=$($env:PLATFORM_MAVEN_REPO)" }
+    $ErrorActionPreference = 'Continue'
+    $authorizationOut = & mvn @authorizationArgs 2>&1
+    $authorizationCode = $LASTEXITCODE
+    if ($authorizationCode -ne 0) {
+        throw "统一授权用例失败（exit=$authorizationCode）：`n$((($authorizationOut | ForEach-Object { "$_" }) -join "`n"))"
+    }
+    $authorizationReport = Join-Path $repoRoot 'backend\modules\authorization\target\surefire-reports\com.acme.platform.authorization.AuthorizationDbTest.txt'
+    Assert-True (Test-Path $authorizationReport) "找不到授权用例报告：$authorizationReport"
+    $authorizationSummary = (Get-Content -Encoding UTF8 $authorizationReport | Where-Object { $_ -match '^Tests run:' } | Select-Object -First 1)
+    Assert-True ($authorizationSummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "统一授权用例未执行：$authorizationSummary"
+    Write-Host "  $authorizationSummary"
+    Write-Host '  默认拒绝、显式拒绝优先、临时授权到期、委托引用、缓存版本递增与跨租户隔离全部通过'
+
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'
     Invoke-Psql -Database $upgradeDb -User $OwnerUser -Password $OwnerPassword -Sql `
@@ -489,7 +522,7 @@ COMMIT;
     Write-Host '  事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户'
 
     Write-Host ''
-    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、并发、索引、锁等待评估、连接池隔离。'
+    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、统一授权、并发、索引、锁等待评估、连接池隔离。'
 } finally {
     if (-not $KeepDatabases -and $script:pg) {
         foreach ($db in @($emptyDb, $upgradeDb)) {

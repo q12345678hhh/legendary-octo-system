@@ -303,7 +303,8 @@ class OrganizationDbTest {
     }
 
     private Employment firstEmployment(UUID tenantId, PeopleService people, UUID personId) {
-        return withContext(tenantId, () -> people.employments(personId)).getFirst();
+        return withContext(tenantId, () ->
+                people.employments(personId, DirectoryScope.tenant(personId, false))).getFirst();
     }
 
     private <T> T withContext(UUID tenantId, java.util.function.Supplier<T> action) {

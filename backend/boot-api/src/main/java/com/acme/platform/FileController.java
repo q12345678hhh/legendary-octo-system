@@ -1,5 +1,6 @@
 package com.acme.platform;
 
+import com.acme.platform.authorization.AuthorizationGuard;
 import com.acme.platform.platform.file.FileRecord;
 import com.acme.platform.platform.file.FileService;
 import jakarta.validation.Valid;
@@ -8,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,9 +65,11 @@ class FileController {
     }
 
     private final FileService service;
+    private final AuthorizationGuard authorization;
 
-    FileController(FileService service) {
+    FileController(FileService service, AuthorizationGuard authorization) {
         this.service = service;
+        this.authorization = authorization;
     }
 
     @PostMapping("/uploads")
@@ -79,6 +83,7 @@ class FileController {
 
     @PostMapping("/{fileId}/complete")
     FileResponse complete(@PathVariable UUID fileId) {
+        authorise(fileId);
         return FileResponse.from(service.complete(fileId));
     }
 
@@ -89,7 +94,14 @@ class FileController {
 
     @GetMapping("/{fileId}/download")
     DownloadResponse download(@PathVariable UUID fileId) {
+        authorise(fileId);
         FileService.DownloadGrant grant = service.authorizeDownload(fileId);
         return new DownloadResponse(grant.fileId(), grant.url(), grant.expiresAt());
+    }
+
+    /** 文件与人员共用同一决策：资源归属交给范围解析，未授权统一 403。 */
+    private void authorise(UUID fileId) {
+        FileRecord file = service.find(fileId);
+        authorization.require("file.read", "file", fileId, Map.of("ownerId", file.subjectId()));
     }
 }
