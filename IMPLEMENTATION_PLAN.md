@@ -505,10 +505,14 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP02-06 多租户攻击测试
 
-- [ ] 使用两个相似租户测试 UUID 猜测、列表、批量、搜索、导出、附件、缓存、作业、Webhook 和 RLS。
-- [ ] 测试连接池复用、缺失 RLS 变量、异常事务和只读分析角色。
-- [ ] 测试对象存储路径、预签名 URL、搜索索引和日志关联隔离。
-- [ ] 自动化跨租户越权套件在双租户同业务编号、同姓名数据上通过率 100%，失败即阻断 G2。
+- [x] 使用两个相似租户测试 UUID 猜测、列表、批量、搜索、导出、附件、缓存、作业、Webhook 和 RLS。
+- [x] 测试连接池复用、缺失 RLS 变量、异常事务和只读分析角色。
+- [x] 测试对象存储路径、预签名 URL、搜索索引和日志关联隔离。
+- [x] 自动化跨租户越权套件在双租户同业务编号、同姓名数据上通过率 100%，失败即阻断 G2。
+
+**验收证据：** `tests/db/92-cross-tenant.sql`（58 张 FORCE RLS 表逐表 UUID 猜测矩阵、列表/批量/搜索/导出/附件/作业/授权/复核/审计、变量注入与连接复用）；`CrossTenantAttackDbTest`（17 个服务层用例）；`TenantHeaderMismatchTest`（5 个头部用例）；`tests/security/isolation-invariants.test.mjs`（4 条静态不变量）；证据见 `docs/evidence/wp02-06/`。
+
+**遗留与说明（WP02-06）：** ①`platform_outbox` 按设计不启用 RLS（Worker 必须跨租户投递），隔离责任落在查询显式携带 `tenant_id`，用例断言该设计而非假装有 RLS。②Webhook 投递表尚未实现，攻击面暂由 Outbox/作业用例替代，脚本以 `RAISE NOTICE` 显式登记。③受 FORCE RLS 保护的租户表总数为 58（`40-integrity.sql` 的 57 张 + `tenancy_tenant` 自身），新表纳入时该计数与矩阵断言会同时失败，强制同步更新。
 
 ### WP02-07 平台运营端
 
