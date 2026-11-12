@@ -517,6 +517,37 @@ COMMIT;
     Write-Host "  $separationSummary"
     Write-Host '  申请批准后授权生效、静态冲突拦截、季度生成幂等、逾期升级、宽限期后自动暂停与审计不可改删全部通过'
 
+    # ---------------------------------------------------------------- 5g 跨租户攻击套件
+    Write-Step '5g 跨租户攻击：双相似租户、逐表 UUID 猜测、连接复用与服务层越权'
+    $crossTenant = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '92-cross-tenant.sql'
+    Write-Host $crossTenant.Output
+    Assert-True ($crossTenant.Output -match 'WP02-06 跨租户数据库断言通过') '跨租户 SQL 断言未通过'
+
+    $crossArgs = @(
+        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'),
+        '-pl', 'boot-api', '-am', 'test',
+        '-Dtest=CrossTenantAttackDbTest',
+        '-Dsurefire.failIfNoSpecifiedTests=false',
+        '-DfailIfNoTests=false',
+        '-Djacoco.skip=true',
+        "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
+        "-Dplatform.db.user=$AppUser",
+        "-Dplatform.db.password=$AppPassword"
+    )
+    if ($env:PLATFORM_MAVEN_REPO) { $crossArgs += "-Dmaven.repo.local=$($env:PLATFORM_MAVEN_REPO)" }
+    $ErrorActionPreference = 'Continue'
+    $crossOut = & mvn @crossArgs 2>&1
+    $crossCode = $LASTEXITCODE
+    if ($crossCode -ne 0) {
+        throw "跨租户攻击用例失败（exit=$crossCode）：`n$((($crossOut | ForEach-Object { "$_" }) -join "`n"))"
+    }
+    $crossReport = Join-Path $repoRoot 'backend\boot-api\target\surefire-reports\com.acme.platform.security.CrossTenantAttackDbTest.txt'
+    Assert-True (Test-Path $crossReport) "找不到跨租户用例报告：$crossReport"
+    $crossSummary = (Get-Content -Encoding UTF8 $crossReport | Where-Object { $_ -match '^Tests run:' } | Select-Object -First 1)
+    Assert-True ($crossSummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "跨租户用例未执行：$crossSummary"
+    Write-Host "  $crossSummary"
+    Write-Host '  同姓名、同邮箱、同工号、同文件名下 17 个服务层攻击用例全部被拒'
+
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'
     Invoke-Psql -Database $upgradeDb -User $OwnerUser -Password $OwnerPassword -Sql `
@@ -555,7 +586,7 @@ COMMIT;
     Write-Host '  事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户'
 
     Write-Host ''
-    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、统一授权、职责分离与访问复核、并发、索引、锁等待评估、连接池隔离。'
+    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、统一授权、职责分离与访问复核、跨租户攻击套件、并发、索引、锁等待评估、连接池隔离。'
 } finally {
     if (-not $KeepDatabases -and $script:pg) {
         foreach ($db in @($emptyDb, $upgradeDb)) {
