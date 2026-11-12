@@ -10,11 +10,11 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties(AuthorizationProperties.class)
 public class AuthorizationConfiguration {
 
-    /** WP02-04 默认放行；WP02-05 注入真实职责分离规则。 */
+    /** 兜底放行：正常装配使用 {@link SodChecker}；仅在测试或替换实现时生效。 */
     @Bean
     @ConditionalOnMissingBean
     SeparationOfDutyChecker separationOfDutyChecker() {
-        return (subject, permission) -> false;
+        return (subject, permission) -> SeparationOfDutyChecker.Result.permit();
     }
 
     /** WP02-04 默认放行；后续安全模块按设备/网络/风险等级拦截。 */

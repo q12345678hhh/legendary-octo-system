@@ -1,0 +1,89 @@
+﻿命令: mvn -B -ntp -f backend/pom.xml clean install（真实库用例由 scripts/db-verify.ps1 执行；本命令中 *DbTest 因缺少数据库连接而跳过）
+
+[INFO] Building Enterprise Application Platform 0.1.0-SNAPSHOT           [1/20]
+[INFO] Building Database migrations 0.1.0-SNAPSHOT                       [2/20]
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.083 s -- in com.acme.platform.db.ConnectionPoolTenantContextTest
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\db\target\db-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: platform 0.1.0-SNAPSHOT                          [3/20]
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.186 s -- in com.acme.platform.platform.OutboxEventPublisherTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\platform\target\platform-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: tenancy 0.1.0-SNAPSHOT                           [4/20]
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.356 s -- in com.acme.platform.tenancy.SupportAccessRulesTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.442 s -- in com.acme.platform.tenancy.TenantExecutionGateTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.001 s -- in com.acme.platform.tenancy.TenantLifecycleDbTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.011 s -- in com.acme.platform.tenancy.TenantStatusTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 1
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\tenancy\target\tenancy-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: organization 0.1.0-SNAPSHOT                      [5/20]
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.309 s -- in com.acme.platform.organization.EffectiveDatingTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.acme.platform.organization.OrganizationDbTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in com.acme.platform.organization.OrganizationTreeTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.092 s -- in com.acme.platform.organization.OwnerReadinessTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.019 s -- in com.acme.platform.organization.ReportingGraphTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 1
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\organization\target\organization-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: identity 0.1.0-SNAPSHOT                          [6/20]
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.024 s -- in com.acme.platform.identity.IdentityDbTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.329 s -- in com.acme.platform.identity.IdentityProviderServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.446 s -- in com.acme.platform.identity.PasswordPolicyTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.428 s -- in com.acme.platform.identity.SessionServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s -- in com.acme.platform.identity.TokenHasherTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.125 s -- in com.acme.platform.identity.TotpTest
+[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 1
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\identity\target\identity-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: authorization 0.1.0-SNAPSHOT                     [7/20]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.404 s -- in com.acme.platform.authorization.AuthorizationCacheTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.001 s -- in com.acme.platform.authorization.AuthorizationDbTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.acme.platform.authorization.AuthorizationSodDbTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.616 s -- in com.acme.platform.authorization.ConditionEvaluatorTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.326 s -- in com.acme.platform.authorization.FieldPolicyEvaluatorTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.099 s -- in com.acme.platform.authorization.SodRuleCatalogTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 2
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\authorization\target\authorization-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: department 0.1.0-SNAPSHOT                        [8/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\department\target\department-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: appcatalog 0.1.0-SNAPSHOT                        [9/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\appcatalog\target\appcatalog-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: lowcode 0.1.0-SNAPSHOT                          [10/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\lowcode\target\lowcode-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: workflow 0.1.0-SNAPSHOT                         [11/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\workflow\target\workflow-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: hr 0.1.0-SNAPSHOT                               [12/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\hr\target\hr-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: worklog 0.1.0-SNAPSHOT                          [13/20]
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.479 s -- in com.acme.platform.worklog.device.WorkAssistantSigningTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\worklog\target\worklog-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: collaboration 0.1.0-SNAPSHOT                    [14/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\collaboration\target\collaboration-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: integration 0.1.0-SNAPSHOT                      [15/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\integration\target\integration-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: plugin 0.1.0-SNAPSHOT                           [16/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\plugin\target\plugin-0.1.0-SNAPSHOT.jar
+[INFO] Building Module: ai 0.1.0-SNAPSHOT                               [17/20]
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\modules\ai\target\ai-0.1.0-SNAPSHOT.jar
+[INFO] Building Bootstrap: API 0.1.0-SNAPSHOT                           [18/20]
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.949 s -- in com.acme.platform.AccessReviewApiTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.618 s -- in com.acme.platform.AuthApiTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.954 s -- in com.acme.platform.AuthorizationApiTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.634 s -- in com.acme.platform.FileAccessApiTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.396 s -- in com.acme.platform.ModuleStructureTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.968 s -- in com.acme.platform.OrganizationApiTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.680 s -- in com.acme.platform.PeopleAccessApiTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.023 s -- in com.acme.platform.RequestContextBindingFilterTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.370 s -- in com.acme.platform.StorageHealthIndicatorTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.513 s -- in com.acme.platform.SystemHealthControllerTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.728 s -- in com.acme.platform.TenantApiBoundaryTest
+[INFO] Tests run: 44, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\boot-api\target\boot-api-0.1.0-SNAPSHOT.jar
+[INFO] Building Bootstrap: Worker 0.1.0-SNAPSHOT                        [19/20]
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.614 s -- in com.acme.platform.worker.outbox.OutboxDispatcherTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\boot-worker\target\boot-worker-0.1.0-SNAPSHOT.jar
+[INFO] Building Test support 0.1.0-SNAPSHOT                             [20/20]
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.305 s -- in com.acme.platform.testsupport.TestTenantTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Building jar: D:\Projects\temp_20261109_01\backend\test-support\target\test-support-0.1.0-SNAPSHOT.jar
+[INFO] BUILD SUCCESS

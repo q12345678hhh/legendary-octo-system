@@ -37,7 +37,7 @@ BEGIN
         RAISE EXCEPTION 'V3 未生效：platform_outbox.last_attempt_at 不存在';
     END IF;
 
-    -- V4/V5/V6/V7/V8/V9：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
+    -- V4/V5/V6/V7/V8/V9/V10：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
     FOR rls IN
         SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity
           FROM pg_class c
@@ -67,7 +67,9 @@ BEGIN
                              'authorization_role', 'authorization_role_permission',
                              'authorization_assignment', 'authorization_deny',
                              'authorization_field_policy', 'authorization_condition_policy',
-                             'authorization_cache_version', 'authorization_decision_log')
+                             'authorization_cache_version', 'authorization_decision_log',
+                             'authorization_access_request', 'authorization_access_review',
+                             'authorization_access_review_item', 'authorization_admin_action')
     LOOP
         IF NOT (rls.relrowsecurity AND rls.relforcerowsecurity) THEN
             RAISE EXCEPTION '% 必须同时 ENABLE 与 FORCE RLS，实际 enable=%, force=%',
@@ -108,9 +110,11 @@ BEGIN
                          'authorization_role', 'authorization_role_permission',
                          'authorization_assignment', 'authorization_deny',
                          'authorization_field_policy', 'authorization_condition_policy',
-                         'authorization_cache_version', 'authorization_decision_log');
-    IF policy_count <> 53 THEN
-        RAISE EXCEPTION 'V4/V5/V6/V7/V8/V9 未完整生效：应有 53 张租户表，实际 %', policy_count;
+                         'authorization_cache_version', 'authorization_decision_log',
+                         'authorization_access_request', 'authorization_access_review',
+                         'authorization_access_review_item', 'authorization_admin_action');
+    IF policy_count <> 57 THEN
+        RAISE EXCEPTION 'V4/V5/V6/V7/V8/V9/V10 未完整生效：应有 57 张租户表，实际 %', policy_count;
     END IF;
 END
 $$;

@@ -92,6 +92,19 @@ class AuthorizationApiTest {
     }
 
     @Test
+    void separationRulesAreReadOnlyAndExposeCatalog() throws Exception {
+        when(guard.require(eq("authorization.decision.check"), anyString(), any(), any()))
+                .thenReturn(allowed());
+
+        mockMvc.perform(get("/api/v1/authorization/separation-rules")
+                        .header("Authorization", BEARER)
+                        .header("X-Tenant-Id", TENANT.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rolePairs[?(@.left=='payroll-preparer')]").exists())
+                .andExpect(jsonPath("$.highPrivilegePermissions").isArray());
+    }
+
+    @Test
     void explainRequiresSecurityPermissionAndReturnsFactors() throws Exception {
         when(guard.require(eq("authorization.decision.explain"), anyString(), any(), any()))
                 .thenReturn(allowed());

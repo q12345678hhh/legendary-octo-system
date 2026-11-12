@@ -1,17 +1,39 @@
 package com.acme.platform.authorization;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 /**
- * 职责分离检查扩展点。
+ * 职责分离检查扩展点：在范围与条件之后、字段规则之前调用。
  *
- * <p>WP02-04 只固定调用位置与默认放行；具体冲突规则（权限申请/批准、薪酬制单/复核/批准、
- * 插件上传/安装、AI 工具注册/启用）由 WP02-05 实现并注入。
+ * <p>返回值携带稳定的原因码，调用方据此区分「互斥角色」与「属性缺失」，
+ * 而不是把所有冲突都压成同一个 403。
  */
 @FunctionalInterface
 public interface SeparationOfDutyChecker {
 
-    boolean conflicts(AuthorizationSubject subject, String permission);
+    Result check(AuthorizationSubject subject, String permission);
 
-    /** 判定所需的最小主体视图，避免把内部记录暴露给后续模块。 */
-    record AuthorizationSubject(java.util.UUID actorId, java.util.Set<String> roleCodes) {
+    /** 判定所需的主体视图：全部角色、命中角色与请求属性。 */
+    record AuthorizationSubject(UUID actorId, Set<String> matchingRoleCodes,
+                                Set<String> allRoleCodes, Map<String, Object> attributes) {
+
+        public AuthorizationSubject {
+            matchingRoleCodes = matchingRoleCodes == null ? Set.of() : Set.copyOf(matchingRoleCodes);
+            allRoleCodes = allRoleCodes == null ? Set.of() : Set.copyOf(allRoleCodes);
+            attributes = attributes == null ? Map.of() : Map.copyOf(attributes);
+        }
+    }
+
+    record Result(boolean allowed, String code, String detail) {
+
+        public static Result permit() {
+            return new Result(true, null, null);
+        }
+
+        public static Result blocked(String code, String detail) {
+            return new Result(false, code, detail);
+        }
     }
 }

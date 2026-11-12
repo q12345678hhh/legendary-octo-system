@@ -174,6 +174,59 @@ public class OrganizationScopeQueries {
                 personId, today, today).stream().findFirst();
     }
 
+    /**
+     * 人员当前实线主管对应的登录主体；主管没有账号时返回空。
+     *
+     * <p>季度复核据此解析复核人：直接主管优先，无法解析时由调用方回退租户所有者。
+     */
+    public Optional<UUID> managerActorOf(UUID personId, LocalDate today) {
+        if (personId == null) {
+            return Optional.empty();
+        }
+        return jdbcTemplate.query("""
+                SELECT a.id
+                  FROM organization_employment e
+                  JOIN organization_reporting_line r
+                    ON r.subordinate_employment_id = e.id
+                   AND r.tenant_id = e.tenant_id
+                   AND r.line_type = 'solid'
+                   AND r.effective_from <= ?
+                   AND (r.effective_to IS NULL OR r.effective_to > ?)
+                  JOIN organization_employment me
+                    ON me.id = r.manager_employment_id AND me.tenant_id = r.tenant_id
+                  JOIN identity_tenant_member m
+                    ON m.person_id = me.person_id
+                   AND m.tenant_id = me.tenant_id
+                   AND m.status = 'active'
+                  JOIN identity_actor a
+                    ON a.user_id = m.user_id
+                   AND a.tenant_id = m.tenant_id
+                   AND a.actor_type = 'user'
+                 WHERE e.person_id = ?
+                   AND e.status = 'active'
+                   AND e.effective_from <= ?
+                   AND (e.effective_to IS NULL OR e.effective_to > ?)
+                 ORDER BY r.effective_from DESC
+                 LIMIT 1
+                """, (rs, rowNum) -> rs.getObject("id", UUID.class),
+                today, today, personId, today, today).stream().findFirst();
+    }
+
+    /** 当前租户所有者对应的登录主体，用于复核人回退。 */
+    public List<UUID> ownerActorIds(LocalDate today) {
+        return jdbcTemplate.query("""
+                SELECT DISTINCT a.id
+                  FROM identity_tenant_member m
+                  JOIN identity_actor a
+                    ON a.user_id = m.user_id
+                   AND a.tenant_id = m.tenant_id
+                   AND a.actor_type = 'user'
+                 WHERE m.is_owner = true
+                   AND m.status = 'active'
+                 ORDER BY a.id
+                """, (rs, rowNum) -> rs.getObject("id", UUID.class));
+    }
+
     public boolean unitExists(UUID unitId) {
         if (unitId == null) {
             return false;

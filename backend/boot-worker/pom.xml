@@ -55,6 +55,11 @@
       <groupId>com.acme.platform</groupId>
       <artifactId>organization</artifactId>
     </dependency>
+    <!-- 季度访问复核：Worker 跨租户认领到期队列并逐租户生成/升级/暂停 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>authorization</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.acme.platform</groupId>
       <artifactId>worklog</artifactId>

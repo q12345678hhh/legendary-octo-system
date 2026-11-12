@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-12T03:38:53.104Z",
+  "frozenAt": "2026-11-12T05:22:59.291Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "1ddeeccd61bd5c8deb7f61a39d8f2a6249ff434767429001d29d570e3dd259cd",
+      "sha256": "8f71cef021f8764686c8ab61b434a418d0816bba2e935972ca0fcae2014ae3dc",
       "tokens": {
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
@@ -2141,6 +2141,296 @@
           "defined": true
         },
         "parameter:GET /api/v1/authorization/audit/decisions:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:GET /api/v1/authorization/access-requests": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/access-requests:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/access-requests:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/access-requests:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/authorization/access-requests:query:state": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/authorization/access-requests:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /api/v1/authorization/access-requests": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/authorization/access-requests:201": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests:422": {
+          "defined": true
+        },
+        "operation:POST /api/v1/authorization/access-requests/{requestId}/approve": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/approve:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/approve:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/approve:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/approve:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/approve:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/approve:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/authorization/access-requests/{requestId}/approve:path:requestId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/authorization/access-requests/{requestId}/reject": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/reject:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/reject:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/reject:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/reject:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/reject:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/reject:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/authorization/access-requests/{requestId}/reject:path:requestId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/authorization/access-requests/{requestId}/cancel": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/cancel:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/cancel:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/cancel:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/cancel:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-requests/{requestId}/cancel:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/authorization/access-requests/{requestId}/cancel:path:requestId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/authorization/access-reviews": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/access-reviews:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/access-reviews:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/access-reviews:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/authorization/access-reviews:query:state": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/authorization/access-reviews:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:GET /api/v1/authorization/access-reviews/{reviewId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/access-reviews/{reviewId}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/access-reviews/{reviewId}:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/access-reviews/{reviewId}:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/access-reviews/{reviewId}:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/authorization/access-reviews/{reviewId}:path:reviewId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm:path:reviewId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/confirm:path:itemId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke:path:reviewId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:POST /api/v1/authorization/access-reviews/{reviewId}/items/{itemId}/revoke:path:itemId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/authorization/access-reviews/{reviewId}/close": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/close:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/close:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/close:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/close:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/{reviewId}/close:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/authorization/access-reviews/{reviewId}/close:path:reviewId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/authorization/access-reviews/generate": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/authorization/access-reviews/generate:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/generate:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/generate:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/generate:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/authorization/access-reviews/generate:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/authorization/separation-rules": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/separation-rules:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/separation-rules:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/separation-rules:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/authorization/separation-conflicts": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/separation-conflicts:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/separation-conflicts:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/separation-conflicts:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/authorization/admin-actions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/authorization/admin-actions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/admin-actions:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/authorization/admin-actions:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/authorization/admin-actions:query:limit": {
           "required": false,
           "type": "integer"
         },
@@ -4697,6 +4987,10 @@
           "type": "object",
           "required": false
         },
+        "schema:CreateAuthorizationAssignmentRequest.requestId": {
+          "type": "object",
+          "required": false
+        },
         "schema:AuthorizationAssignment.id": {
           "type": "string",
           "required": true
@@ -4974,6 +5268,230 @@
           "required": true
         },
         "schema:AuthorizationDecisionLog.occurredAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessRequest.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessRequest.requesterActorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessRequest.requestedForActorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessRequest.roleCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessRequest.scopeType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessRequest.scopeId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessRequest.validTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessRequest.state": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "approved",
+            "cancelled",
+            "pending",
+            "rejected"
+          ]
+        },
+        "schema:AuthorizationAccessRequest.decidedByActorId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessRequest.decidedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessRequest.decisionNote": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessRequest.assignmentId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessRequest.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationAccessRequest.requestedForActorId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationAccessRequest.roleCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationAccessRequest.scopeType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateAuthorizationAccessRequest.scopeId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationAccessRequest.validTo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:CreateAuthorizationAccessRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessRequestDecision.note": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessReview.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessReview.periodStart": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessReview.periodEnd": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessReview.state": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "closed",
+            "open",
+            "overdue"
+          ]
+        },
+        "schema:AuthorizationAccessReview.dueAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessReview.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessReview.closedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessReviewItem.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessReviewItem.assignmentId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessReviewItem.subjectActorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAccessReviewItem.reviewerActorId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessReviewItem.state": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "confirmed",
+            "pending",
+            "revoked"
+          ]
+        },
+        "schema:AuthorizationAccessReviewItem.decidedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessReviewItem.note": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAccessReviewDetail.review": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:AuthorizationAccessReviewDetail.items": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AuthorizationSeparationRules.rolePairs": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AuthorizationSeparationRules.attributeRules": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AuthorizationSeparationRules.highPrivilegePermissions": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AuthorizationSeparationRules.managementPermissions": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AuthorizationSeparationConflict.actorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationSeparationConflict.roleCodes": {
+          "type": "array",
+          "required": true
+        },
+        "schema:AuthorizationSeparationConflict.group": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationSeparationConflict.detail": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAdminAction.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAdminAction.actorId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAdminAction.action": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAdminAction.targetType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAdminAction.targetId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AuthorizationAdminAction.detail": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AuthorizationAdminAction.occurredAt": {
           "type": "string",
           "required": true
         }

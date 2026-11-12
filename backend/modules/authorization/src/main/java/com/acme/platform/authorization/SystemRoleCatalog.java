@@ -26,6 +26,18 @@ public final class SystemRoleCatalog {
     public static final String MANAGER = "manager";
     public static final String DELEGATE_MANAGER = "delegate-manager";
     public static final String EMPLOYEE = "employee";
+    public static final String PAYROLL_PREPARER = "payroll-preparer";
+    public static final String PAYROLL_REVIEWER = "payroll-reviewer";
+    public static final String PAYROLL_APPROVER = "payroll-approver";
+    public static final String PAYROLL_EXPORTER = "payroll-exporter";
+    public static final String PLUGIN_PUBLISHER = "plugin-publisher";
+    public static final String PLUGIN_INSTALLER = "plugin-installer";
+    public static final String AI_TOOL_DEVELOPER = "ai-tool-developer";
+    public static final String AI_TOOL_REVIEWER = "ai-tool-reviewer";
+    public static final String AI_TOOL_ENABLER = "ai-tool-enabler";
+    public static final String MODULE_CONFIGURER = "module-configurer";
+    public static final String MODULE_APPROVER = "module-approver";
+    public static final String AUDITOR = "auditor";
 
     private static final Map<String, RoleTemplate> ROLES;
 
@@ -40,7 +52,10 @@ public final class SystemRoleCatalog {
                 "authorization.role.manage", "authorization.assignment.manage",
                 "authorization.deny.manage", "authorization.policy.manage",
                 "authorization.decision.check", "authorization.decision.explain",
-                "authorization.audit.read", "authorization.cache.read")));
+                "authorization.audit.read", "authorization.cache.read",
+                "authorization.access.approve", "authorization.review.manage",
+                "authorization.review.read", "authorization.review.decide",
+                "authorization.admin_action.read")));
         map.put(TENANT_ADMIN, new RoleTemplate(TENANT_ADMIN, "租户管理员", Set.of(
                 "tenant.admin", "identity.member.manage",
                 "organization.structure.read", "organization.structure.manage",
@@ -54,17 +69,48 @@ public final class SystemRoleCatalog {
                 "authorization.role.manage", "authorization.assignment.manage",
                 "authorization.deny.manage", "authorization.policy.manage",
                 "authorization.decision.check", "authorization.decision.explain",
-                "authorization.audit.read", "authorization.cache.read")));
+                "authorization.audit.read", "authorization.cache.read",
+                "authorization.access.approve", "authorization.review.manage",
+                "authorization.review.read", "authorization.review.decide",
+                "authorization.admin_action.read")));
         map.put(HR_ADMIN, new RoleTemplate(HR_ADMIN, "HR 核心管理员", Set.of(
                 "directory.person.read", "directory.employment.read",
                 "directory.person.manage", "directory.person.export",
                 "organization.structure.read", "file.read", "search.read", "report.read")));
         map.put(MANAGER, new RoleTemplate(MANAGER, "部门主管", Set.of(
-                "directory.person.read", "business.work.read")));
+                "directory.person.read", "business.work.read",
+                "authorization.review.read", "authorization.review.decide")));
         map.put(DELEGATE_MANAGER, new RoleTemplate(DELEGATE_MANAGER, "代管人", Set.of(
                 "directory.person.read", "business.work.read")));
         map.put(EMPLOYEE, new RoleTemplate(EMPLOYEE, "普通员工", Set.of(
-                "directory.person.read", "file.read")));
+                "directory.person.read", "file.read", "authorization.access.request")));
+        map.put(PAYROLL_PREPARER, new RoleTemplate(PAYROLL_PREPARER, "薪酬制单", Set.of(
+                "payroll.run.prepare")));
+        map.put(PAYROLL_REVIEWER, new RoleTemplate(PAYROLL_REVIEWER, "薪酬复核", Set.of(
+                "payroll.run.review")));
+        map.put(PAYROLL_APPROVER, new RoleTemplate(PAYROLL_APPROVER, "薪酬批准", Set.of(
+                "payroll.run.approve")));
+        map.put(PAYROLL_EXPORTER, new RoleTemplate(PAYROLL_EXPORTER, "薪酬导出", Set.of(
+                "payroll.export")));
+        map.put(PLUGIN_PUBLISHER, new RoleTemplate(PLUGIN_PUBLISHER, "插件发布", Set.of(
+                "plugin.upload")));
+        map.put(PLUGIN_INSTALLER, new RoleTemplate(PLUGIN_INSTALLER, "插件安装", Set.of(
+                "plugin.install")));
+        map.put(AI_TOOL_DEVELOPER, new RoleTemplate(AI_TOOL_DEVELOPER, "AI 工具开发", Set.of(
+                "ai.tool.register")));
+        map.put(AI_TOOL_REVIEWER, new RoleTemplate(AI_TOOL_REVIEWER, "AI 工具评级", Set.of(
+                "ai.tool.rate")));
+        map.put(AI_TOOL_ENABLER, new RoleTemplate(AI_TOOL_ENABLER, "AI 工具启用", Set.of(
+                "ai.tool.enable")));
+        map.put(MODULE_CONFIGURER, new RoleTemplate(MODULE_CONFIGURER, "模块配置", Set.of(
+                "module.activation.configure")));
+        map.put(MODULE_APPROVER, new RoleTemplate(MODULE_APPROVER, "模块批准", Set.of(
+                "module.activation.approve")));
+        map.put(AUDITOR, new RoleTemplate(AUDITOR, "审计员", Set.of(
+                "directory.person.read", "directory.employment.read",
+                "organization.structure.read", "file.read", "search.read", "report.read",
+                "authorization.audit.read", "authorization.review.read",
+                "authorization.admin_action.read", "authorization.cache.read")));
         ROLES = Collections.unmodifiableMap(map);
     }
 
@@ -89,9 +135,6 @@ public final class SystemRoleCatalog {
 
     /** 高权限角色：临时授权必须有到期时间，委托也不得无限期。 */
     public static boolean highRisk(String code) {
-        Set<String> permissions = permissions(code);
-        return permissions.contains("tenant.admin")
-                || permissions.contains("authorization.assignment.manage")
-                || permissions.contains("authorization.role.manage");
+        return SodRuleCatalog.highPrivilege(code);
     }
 }
