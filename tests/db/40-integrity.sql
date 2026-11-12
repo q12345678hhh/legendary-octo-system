@@ -37,7 +37,7 @@ BEGIN
         RAISE EXCEPTION 'V3 未生效：platform_outbox.last_attempt_at 不存在';
     END IF;
 
-    -- V4/V5/V6/V7/V8：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
+    -- V4/V5/V6/V7/V8/V9：所有租户表必须同时 ENABLE 与 FORCE RLS，且各恰好一条隔离策略
     FOR rls IN
         SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity
           FROM pg_class c
@@ -63,7 +63,11 @@ BEGIN
                              'identity_invitation', 'identity_mfa_method',
                              'identity_recovery_code', 'identity_mfa_challenge',
                              'identity_session', 'identity_api_token',
-                             'identity_identity_provider', 'identity_auth_event')
+                             'identity_identity_provider', 'identity_auth_event',
+                             'authorization_role', 'authorization_role_permission',
+                             'authorization_assignment', 'authorization_deny',
+                             'authorization_field_policy', 'authorization_condition_policy',
+                             'authorization_cache_version', 'authorization_decision_log')
     LOOP
         IF NOT (rls.relrowsecurity AND rls.relforcerowsecurity) THEN
             RAISE EXCEPTION '% 必须同时 ENABLE 与 FORCE RLS，实际 enable=%, force=%',
@@ -100,9 +104,13 @@ BEGIN
                          'identity_invitation', 'identity_mfa_method',
                          'identity_recovery_code', 'identity_mfa_challenge',
                          'identity_session', 'identity_api_token',
-                         'identity_identity_provider', 'identity_auth_event');
-    IF policy_count <> 45 THEN
-        RAISE EXCEPTION 'V4/V5/V6/V7/V8 未完整生效：应有 45 张租户表，实际 %', policy_count;
+                         'identity_identity_provider', 'identity_auth_event',
+                         'authorization_role', 'authorization_role_permission',
+                         'authorization_assignment', 'authorization_deny',
+                         'authorization_field_policy', 'authorization_condition_policy',
+                         'authorization_cache_version', 'authorization_decision_log');
+    IF policy_count <> 53 THEN
+        RAISE EXCEPTION 'V4/V5/V6/V7/V8/V9 未完整生效：应有 53 张租户表，实际 %', policy_count;
     END IF;
 END
 $$;

@@ -467,13 +467,33 @@ docs/                   # 规格、ADR、运行手册、培训和证据
 
 ### WP02-04 统一授权决策
 
-- [ ] 完成角色、权限、数据范围、字段权限、条件策略、显式拒绝、临时授权和委托。
-- [ ] 支持本人、直接下属、汇报链下属、指定部门/子树、管理委派、项目空间和全租户范围。
-- [ ] 同一授权结果覆盖页面、API、搜索、导出、报表、文件和 AI 上下文。
-- [ ] 实现权限解释器和模拟器；解释本身受安全权限保护。
-- [ ] 建立权限缓存版本和 60 秒内失效目标，高风险撤权立即生效。
+- [x] 完成角色、权限、数据范围、字段权限、条件策略、显式拒绝、临时授权和委托。
+- [x] 支持本人、直接下属、汇报链下属、指定部门/子树、管理委派、项目空间和全租户范围。
+- [x] 同一授权结果覆盖页面、API、搜索、导出、报表、文件和 AI 上下文。
+- [x] 实现权限解释器和模拟器；解释本身受安全权限保护。
+- [x] 建立权限缓存版本和 60 秒内失效目标，高风险撤权立即生效。
 
 **验收证据：** 缺少租户、主体、权限或范围时默认拒绝；批量、搜索、导出、文件和 AI 工具不能绕过。
+
+**完成情况（WP02-04）：**
+
+| 项目 | 落点 | 证据 |
+| --- | --- | --- |
+| 权限与角色 | 全局 `authorization_permission` 白名单；系统角色 `SystemRoleCatalog` 写在代码中，租户只能复制为自定义角色后收窄 | `authz-scenarios.txt`（角色/权限目录）；`db-verify.txt` |
+| 数据范围 | `SELF`、`DIRECT_REPORTS`、`REPORTING_CHAIN`、`ORG_UNIT`、`ORG_UNIT_SUBTREE`、`DELEGATED`、`LEGAL_ENTITY`、`TENANT`；`PROJECT_SPACE`/`RECORD_SHARED` 显式 `SCOPE_UNSUPPORTED` | `authz-scenarios.txt`（员工、主管、代管人、部门外拒绝） |
+| 决策顺序 | 租户与主体 → 成员状态 → 权限存在 → 显式拒绝 → 允许集合 → 范围 → 条件 → 职责分离/风险 hook；`AuthorizationService` | `backend-tests.txt`（`ConditionEvaluatorTest`、`AuthorizationDbTest`） |
+| 字段权限 | `authorization_field_policy` + `FieldPolicyEvaluator`；邮箱默认仅本人/HR/老板，字段拒绝覆盖记录级允许 | `authz-scenarios.txt`；`PeopleAccessApiTest`（邮箱可空） |
+| 条件策略 | `authorization_condition_policy`，白名单算子 equals/not_equals/in/not_in/gte/lte/exists；缺属性按失败处理 | `backend-tests.txt`（`ConditionEvaluatorTest`） |
+| 临时授权与委托 | `valid_to` 到期即失效；高权限必须限时（默认 90 天）；委托用 `delegated_from_id`，范围不得放大、到期不得晚于源（默认 180 天） | `authz-scenarios.txt`（到期、委托子树）；`db-verify.txt`（约束） |
+| 缓存与失效 | `authorization_cache_version` + 触发器（授权/拒绝/字段/条件/成员/雇佣/部门/岗位/汇报/委派/老板角色）；本机版本缓存 1 秒、决策缓存 60 秒；高风险撤权清本机缓存 | `authz-scenarios.txt`（版本递增、缓存命中）；`db-verify.txt` |
+| 解释器与模拟器 | `POST /authorization/decisions/explain`、`/simulations`；需 `authorization.decision.explain`，模拟额外要求 MFA，不落库 | `AuthorizationApiTest`（解释权限、MFA 403） |
+| 人员收口 | `GET /people` 按决策下推范围，新增 `q`、`format=csv`、`POST /people/batch-read`；未命中与不存在统一 404 | `PeopleAccessApiTest`；`authz-scenarios.txt` |
+| 文件接入 | 下载/完成前按 `file.read` 判定，资源归属交给范围解析，保留所有者兜底 | `backend-tests.txt`；`FileAccessApiTest` 用例并入人员越权套件 |
+| 数据库与 RLS | `V9__authorization.sql`：8 张租户表 ENABLE+FORCE RLS，决策日志只插入，跨表引用 `(tenant_id, id)` | `db-verify.txt`（RLS 53/53） |
+| API 与契约 | 授权权限目录、角色、授权、拒绝、字段/条件策略、判定/解释/模拟、缓存版本、审计；人员搜索/导出/批量；OpenAPI 1.5.0 新增 15 条路径、22 个 schema | `contract-check.txt`（7 份契约 PASS，基线已重冻结） |
+| 运行手册与证据 | `docs/runbooks/authorization.md`、`docs/evidence/wp02-04/` | `backend-tests.txt`、`db-verify.txt`、`authz-scenarios.txt`、`coverage-gate.txt` |
+
+**遗留与说明（WP02-04）：** ①职责分离规则与访问复核由 WP02-05 实现，本包只固定调用点并默认放行。②`project_space` 与 `record_shared` 尚无实体，一律 `SCOPE_UNSUPPORTED`，不静默降级为租户范围。③组织管理接口仍使用既有 `IdentityGuard` 管理员守卫；人员、文件、搜索/导出/批量与授权治理已统一到 `AuthorizationGuard`。④AI 工具尚未注册，本包提供同一守卫与测试替身，工具执行链接入时必须复用。⑤系统角色模板升级不回溯改写租户已复制的自定义角色。
 
 ### WP02-05 职责分离和访问复核
 

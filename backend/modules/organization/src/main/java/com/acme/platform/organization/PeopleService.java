@@ -4,6 +4,7 @@ import com.acme.platform.platform.ActorContextHolder;
 import com.acme.platform.platform.ApiException;
 import com.acme.platform.platform.TenantTransactions;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -28,6 +29,7 @@ public class PeopleService {
     private static final int MAX_NAME = 200;
     private static final int MAX_TITLE = 200;
     private static final int LIST_LIMIT = 200;
+    private static final int EXPORT_LIMIT = 5000;
 
     private final TenantTransactions tenantTransactions;
     private final PersonStore personStore;
@@ -65,8 +67,34 @@ public class PeopleService {
                 ApiException.notFound("PERSON_NOT_FOUND", "自然人不存在：" + personId)));
     }
 
-    public List<Person> list() {
-        return tenantTransactions.inTenant(ctx -> personStore.list(LIST_LIMIT));
+    /** 目录详情：不在可见范围内与不存在返回同一个错误，避免泄露存在性。 */
+    public DirectoryEntry directoryEntry(UUID personId, DirectoryScope scope) {
+        return tenantTransactions.inTenant(ctx -> personStore.findInScope(personId, scope)
+                .map(person -> DirectoryEntry.from(person, scope))
+                .orElseThrow(() -> ApiException.notFound("PERSON_NOT_FOUND",
+                        "自然人不存在：" + personId)));
+    }
+
+    public List<DirectoryEntry> directory(DirectoryScope scope, String query, int limit) {
+        int effectiveLimit = Math.max(1, Math.min(limit, LIST_LIMIT));
+        return tenantTransactions.inTenant(ctx ->
+                personStore.listInScope(scope, query, effectiveLimit).stream()
+                        .map(person -> DirectoryEntry.from(person, scope))
+                        .toList());
+    }
+
+    public List<DirectoryEntry> export(DirectoryScope scope, String query) {
+        return tenantTransactions.inTenant(ctx ->
+                personStore.listInScope(scope, query, EXPORT_LIMIT).stream()
+                        .map(person -> DirectoryEntry.from(person, scope))
+                        .toList());
+    }
+
+    public List<DirectoryEntry> batchRead(Collection<UUID> ids, DirectoryScope scope) {
+        return tenantTransactions.inTenant(ctx ->
+                personStore.listInScopeByIds(ids, scope, LIST_LIMIT).stream()
+                        .map(person -> DirectoryEntry.from(person, scope))
+                        .toList());
     }
 
     public Employment addEmployment(UUID personId, AddEmploymentCommand command) {
@@ -88,9 +116,9 @@ public class PeopleService {
         }
     }
 
-    public List<Employment> employments(UUID personId) {
+    public List<Employment> employments(UUID personId, DirectoryScope scope) {
         return tenantTransactions.inTenant(ctx -> {
-            if (!personStore.exists(personId)) {
+            if (!personStore.existsInScope(personId, scope)) {
                 throw ApiException.notFound("PERSON_NOT_FOUND", "自然人不存在：" + personId);
             }
             return employmentStore.listByPerson(personId);
@@ -153,6 +181,16 @@ public class PeopleService {
 
     private String trimToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    public record DirectoryEntry(UUID id, String displayName, String primaryEmail, String status,
+                                 java.time.OffsetDateTime createdAt) {
+
+        static DirectoryEntry from(Person person, DirectoryScope scope) {
+            String email = scope.emailVisibleFor(person.id()) ? person.primaryEmail() : null;
+            return new DirectoryEntry(person.id(), person.displayName(), email,
+                    person.status().wire(), person.createdAt());
+        }
     }
 
     public record CreatePersonCommand(String displayName,

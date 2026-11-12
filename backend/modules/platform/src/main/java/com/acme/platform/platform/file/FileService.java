@@ -111,6 +111,14 @@ public class FileService {
         return transactions.inTenant(context, ctx -> store.list(bounded));
     }
 
+    /** 只读文件元数据：供调用方在下载/完成前把归属交给统一授权决策。 */
+    public FileRecord find(UUID fileId) {
+        RequestContext context = requireIdentity();
+        return transactions.inTenant(context, ctx -> store.find(fileId)
+                .orElseThrow(() -> ApiException.notFound("FILE_NOT_FOUND",
+                        "文件不存在或不属于当前租户")));
+    }
+
     public DownloadGrant authorizeDownload(UUID fileId) {
         RequestContext context = requireIdentity();
         FileRecord file = transactions.inTenant(context, ctx -> store.find(fileId)
