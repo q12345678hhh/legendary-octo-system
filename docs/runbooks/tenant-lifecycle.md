@@ -9,7 +9,7 @@
 
 | 项 | 现状 | 约束 |
 |---|---|---|
-| 平台运营身份 | `X-Platform-Operator-Id` 请求头（占位） | 平台域请求**禁止**携带 `X-Tenant-Id`；租户域请求**禁止**携带平台运营头。真实身份由 WP02-02 接入 |
+| 平台运营身份 | `plt_ops_session` 运营会话 Cookie（WP02-07） | 平台域请求**禁止**携带 `X-Tenant-Id`；租户域请求**禁止**携带运营 Cookie。`X-Platform-Operator-Id` 已退役，携带即 `400 PLATFORM_OPERATOR_HEADER_RETIRED` |
 | 业务正文 | 平台接口只返回租户元数据、配置、配额、审计与申诉 | 不提供跨租户业务正文读取端点；需要看业务数据只能走「支持访问」 |
 | 支持访问 | 工单 + 独立审批 + ≤60 分钟 + 只读 | 审批人不得等于申请人；进入后前端必须常驻展示 banner，不允许折叠或仅放通知中心 |
 | 最终删除 | 只改状态、释放域名、撤销支持访问、写审计 | 业务数据物理清理由 WP02-08 负责；本阶段不做物理删除 |
@@ -39,32 +39,43 @@ deleted      → 终态
 ## 2. 创建与启用
 
 ```powershell
-# 1) 创建：状态 provisioning，套餐缺省 trial
-curl.exe -X POST -H "X-Platform-Operator-Id: ops-a" -H "Content-Type: application/json" `
+# 0) 平台运营登录，换取 plt_ops_session + plt_ops_csrf（Path=/platform）
+curl.exe -c ops-cookies.txt -X POST -H "Content-Type: application/json" `
+  -d '{"email":"ops@platform.test","password":"<password>","totpCode":"123456"}' `
+  "http://127.0.0.1:18080/platform/api/v1/auth/login"
+
+# 1) 创建：状态 provisioning，套餐缺省 trial；超过 limits.max_tenants 返回 429
+curl.exe -b ops-cookies.txt -H "X-CSRF-Token: <csrf>" -H "Content-Type: application/json" `
   -d '{"slug":"demo","name":"演示租户","planCode":"standard","primaryDomain":"demo.example.test","domains":["demo-alias.example.test"]}' `
   "http://127.0.0.1:18080/platform/api/v1/tenants"
 
 # 2) 校验域名、品牌与配额后启用
-curl.exe -X POST -H "X-Platform-Operator-Id: ops-a" `
+curl.exe -b ops-cookies.txt -H "X-CSRF-Token: <csrf>" -X POST `
   "http://127.0.0.1:18080/platform/api/v1/tenants/<tenantId>/initialize"
 
 # 3) 查看配置、配额与最近审计
-curl.exe -H "X-Platform-Operator-Id: ops-a" `
+curl.exe -b ops-cookies.txt `
   "http://127.0.0.1:18080/platform/api/v1/tenants/<tenantId>"
+
+# 4) 租户目录（只含生命周期元数据，不含业务字段）
+curl.exe -b ops-cookies.txt `
+  "http://127.0.0.1:18080/platform/api/v1/tenants?status=active&limit=20"
 ```
 
-- 短标识与域名冲突返回 `409 TENANT_CONFLICT`；套餐不存在返回 `422 PLAN_UNKNOWN`。
+- 平台身份只来自运营会话 Cookie；`plt_ops_session` 的作用域是 `Path=/platform`，租户域 `/api/**` 不会带上它。
+- 所有写操作必须带 `X-CSRF-Token`，其值等于 `plt_ops_csrf` Cookie。
+- 短标识与域名冲突返回 `409 TENANT_CONFLICT`；套餐不存在返回 `422 PLAN_UNKNOWN`；租户数达到上限返回 `429 TENANT_LIMIT_REACHED`（上限见 `platform_setting` 的 `limits.max_tenants`）。
 - 创建时按套餐写入默认配额（`users`、`storage_mb`、`ai_tokens`、`plugin_installations`）。
 - 每个状态变更都会写 `tenancy_lifecycle_audit`，`correlationId`/`traceId` 与请求一致。
 
 ## 3. 冻结与恢复
 
 ```powershell
-curl.exe -X POST -H "X-Platform-Operator-Id: ops-a" -H "Content-Type: application/json" `
+curl.exe -b ops-cookies.txt -H "X-CSRF-Token: <csrf>" -X POST -H "Content-Type: application/json" `
   -d '{"reason":"账单逾期，按合同暂停服务"}' `
   "http://127.0.0.1:18080/platform/api/v1/tenants/<tenantId>/freeze"
 
-curl.exe -X POST -H "X-Platform-Operator-Id: ops-a" -H "Content-Type: application/json" `
+curl.exe -b ops-cookies.txt -H "X-CSRF-Token: <csrf>" -X POST -H "Content-Type: application/json" `
   -d '{"reason":"账单已结清，恢复服务"}' `
   "http://127.0.0.1:18080/platform/api/v1/tenants/<tenantId>/restore"
 ```
@@ -90,7 +101,7 @@ curl.exe -X POST -H "X-Tenant-Id: <tenant>" -H "X-Subject-Id: admin-1" -H "Conte
   -d '{"reason":"业务继续，撤回注销"}' "http://127.0.0.1:18080/api/v1/tenant/closing/cancel"
 
 # 冷静期结束后最终删除（平台）
-curl.exe -X DELETE -H "X-Platform-Operator-Id: ops-a" -H "Content-Type: application/json" `
+curl.exe -b ops-cookies.txt -H "X-CSRF-Token: <csrf>" -X DELETE -H "Content-Type: application/json" `
   -d '{"reason":"冷静期已结束，执行最终删除"}' `
   "http://127.0.0.1:18080/platform/api/v1/tenants/<tenantId>"
 ```
@@ -103,19 +114,21 @@ curl.exe -X DELETE -H "X-Platform-Operator-Id: ops-a" -H "Content-Type: applicat
 ## 5. 平台支持访问（工单 → 审批 → 限时只读）
 
 ```powershell
-# 1) 申请
-curl.exe -X POST -H "X-Platform-Operator-Id: ops-a" -H "Content-Type: application/json" `
+# 1) 申请（需要 platform.support.manage）
+curl.exe -b ops-a-cookies.txt -H "X-CSRF-Token: <csrf-a>" -X POST -H "Content-Type: application/json" `
   -d '{"ticketId":"TCK-1001","reason":"核对受控导出结果与审计链","minutes":30}' `
   "http://127.0.0.1:18080/platform/api/v1/tenants/<tenantId>/support-access"
 
-# 2) 独立审批（ops-b ≠ ops-a）
-curl.exe -X POST -H "X-Platform-Operator-Id: ops-b" `
+# 2) 独立审批：必须换另一个运营账号的会话（ops-b ≠ ops-a）
+curl.exe -b ops-b-cookies.txt -H "X-CSRF-Token: <csrf-b>" -X POST `
   "http://127.0.0.1:18080/platform/api/v1/tenants/<tenantId>/support-access/<accessId>/approve"
 
 # 3) 进入只读会话
-curl.exe -X POST `
+curl.exe -b ops-a-cookies.txt -H "X-CSRF-Token: <csrf-a>" -X POST `
   "http://127.0.0.1:18080/platform/api/v1/tenants/<tenantId>/support-access/<accessId>/enter"
 ```
+
+时限上限来自 `platform_setting` 的 `limits.support_access_max_minutes`（预置 60），服务端另有 60 分钟硬上限，配置更大也不会突破。
 
 规则与错误码：
 
@@ -163,9 +176,10 @@ curl.exe -X POST -H "X-Tenant-Id: <tenant>" -H "X-Subject-Id: admin-1" `
 
 | 现象 | 先查 | 处置 |
 |---|---|---|
-| 平台请求 `401 PLATFORM_OPERATOR_REQUIRED` | 是否带 `X-Platform-Operator-Id` | 补头；该头不是租户上下文 |
+| 平台请求 `401 PLATFORM_SESSION_REQUIRED` | 是否带 `plt_ops_session`，或会话是否过期 | 重新 `POST /platform/api/v1/auth/login`；不要把租户 `plt_session` 拿来用 |
+| 平台请求 `400 PLATFORM_OPERATOR_HEADER_RETIRED` | 是否还带 `X-Platform-Operator-Id` | 删除该头；身份只认运营会话 Cookie |
+| 平台写请求 `403 CSRF_INVALID` | 是否带 `X-CSRF-Token` 且与 `plt_ops_csrf` 一致 | 从 Cookie 读取并回填请求头 |
 | 平台请求 `403 PLATFORM_TENANT_CONTEXT_FORBIDDEN` | 是否同时带了 `X-Tenant-Id` | 去掉租户头，平台按路径 tenantId 进入租户事务 |
-| 租户请求 `403 PLATFORM_OPERATOR_NOT_ALLOWED` | 是否误带平台运营头 | 去掉平台头 |
 | 业务写 `423 TENANT_FROZEN` | `select status, frozen_reason from tenancy_tenant where id = '<tenant>'` | 按流程恢复，或走申诉/导出 |
 | 审计缺失某次变更 | `select action, from_status, to_status, actor, reason, occurred_at from tenancy_lifecycle_audit where tenant_id = '<tenant>' order by occurred_at desc` | 若确认绕过接口改库，按事故处理并补审计说明 |
 | 删除返回 `409 COOLING_OFF_ACTIVE` | `select cooling_off_until from tenancy_tenant where id = '<tenant>'` | 等冷静期结束；提前删除属违规 |
@@ -184,6 +198,6 @@ curl.exe -X POST -H "X-Tenant-Id: <tenant>" -H "X-Subject-Id: admin-1" `
 
 ## 9. 已知边界
 
-- 平台跨租户目录（列出所有租户、搜索）不在本包，见 WP02-07。
-- 真实身份与权限（谁可以冻结、谁可以审批）见 WP02-02/02-04；当前用请求头占位，共享环境必须关闭。
+- 平台跨租户目录（列出所有租户、搜索）已在 WP02-07 落地：`GET /platform/api/v1/tenants`，只含生命周期元数据。
+- 平台身份与权限已由 WP02-07 的独立运营账号与 12 个权限码接管；旧的 `X-Platform-Operator-Id` 占位头已退役。
 - 最终删除后的物理清理与备份留存见 WP02-08。

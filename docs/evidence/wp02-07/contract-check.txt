@@ -1,0 +1,31 @@
+# contract-check (WP02-07)
+PASS openapi/platform-api.v1.json
+PASS events/employee.hired.v1.json
+PASS events/platform.file.scanned.v1.json
+PASS events/platform.file.uploaded.v1.json
+PASS events/platform.job.requested.v1.json
+PASS plugins/plugin-manifest.v1.json
+PASS events/event-catalog.json
+
+契约门禁通过：7 份契约，3 类覆盖完整
+
+--- contract-check self test ---
+▶ contract-check
+  ✔ 通过当契约与基线一致 (480.2144ms)
+  ✔ 阻断 OpenAPI 删除必填字段 (270.3946ms)
+  ✔ 放行 OpenAPI 新增可选字段 (424.1918ms)
+  ✔ 阻断领域事件字段类型变更 (358.7805ms)
+  ✔ 阻断插件协议删除限额字段 (691.2053ms)
+  ✔ 阻断事件目录与 schema 不同步 (380.4577ms)
+  ✔ 缺任一类契约直接失败 (263.8591ms)
+  ✔ 已批准且未到期的破坏性变更放行并给出告警 (233.6437ms)
+  ✔ 过期的审批不能放行破坏性变更 (243.1904ms)
+✔ contract-check (3350.2548ms)
+ℹ tests 9
+ℹ suites 1
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3620.9303

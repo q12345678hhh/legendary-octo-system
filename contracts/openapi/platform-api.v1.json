@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.6.0",
-    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期，以及统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核）。认证主体只来自会话 Cookie 或 Bearer 令牌。"
+    "version": "1.7.0",
+    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。"
   },
   "servers": [
     {
@@ -1024,14 +1024,1195 @@
         }
       }
     },
+    "/platform/api/v1/auth/login": {
+      "post": {
+        "operationId": "platformLogin",
+        "summary": "平台运营登录",
+        "description": "平台运营账号与租户成员完全分离。成功后下发 plt_ops_session（Path=/platform、HttpOnly、Secure、SameSite=Strict）与 plt_ops_csrf 两个 Cookie；失败统一返回 PLATFORM_LOGIN_FAILED，不区分账号不存在与密码错误。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformLoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功，响应头写入运营会话与 CSRF Cookie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformLoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "423": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/auth/logout": {
+      "post": {
+        "operationId": "platformLogout",
+        "summary": "平台运营登出",
+        "description": "撤销当前运营会话并清空 plt_ops_session 与 plt_ops_csrf。写操作，必须带 X-CSRF-Token。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "已登出"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/auth/me": {
+      "get": {
+        "operationId": "getPlatformOperatorMe",
+        "summary": "当前运营账号与权限",
+        "description": "返回运营账号、角色、MFA 是否满足与 12 个权限码。用于六个运营界面的前端门禁。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "运营主体",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOperatorView"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/auth/mfa/start": {
+      "post": {
+        "operationId": "startPlatformMfaEnrollment",
+        "summary": "开始运营账号 MFA 绑定",
+        "description": "返回一次性 TOTP 密钥与 otpauth URI；密钥只在本次响应出现。写操作，必须带 X-CSRF-Token。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "绑定材料",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformMfaEnrollment"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/auth/mfa/confirm": {
+      "post": {
+        "operationId": "confirmPlatformMfaEnrollment",
+        "summary": "确认运营账号 MFA 绑定",
+        "description": "校验一次 TOTP 后置为已绑定。写操作，必须带 X-CSRF-Token。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformMfaConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "已绑定"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/overview": {
+      "get": {
+        "operationId": "getPlatformOverview",
+        "summary": "运营总览",
+        "description": "租户数、30 日活跃、容量、AI 成本、outbox 健康、未闭环安全事件与集成健康。所有跨租户数字来自 Worker 预聚合表，不含业务正文。需要 platform.overview.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "总览",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOverview"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/catalog/apps": {
+      "get": {
+        "operationId": "listPlatformApps",
+        "summary": "内置应用版本目录",
+        "description": "需要 platform.catalog.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "应用版本列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformAppVersion"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "upsertPlatformApp",
+        "summary": "新增或更新内置应用版本",
+        "description": "按 appCode + version 幂等写入；需要 platform.catalog.manage 且 MFA。写操作同时写平台审计。PUT 与 POST 等价。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformAppInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAppVersion"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "upsertPlatformAppByPut",
+        "summary": "新增或更新内置应用版本（PUT）",
+        "description": "与 POST 等价，便于幂等客户端复用。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformAppInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformAppVersion"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/catalog/connectors": {
+      "get": {
+        "operationId": "listPlatformConnectors",
+        "summary": "连接器目录",
+        "description": "需要 platform.catalog.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "连接器列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformConnector"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "upsertPlatformConnector",
+        "summary": "新增或更新连接器",
+        "description": "按 connectorCode 幂等写入；需要 platform.catalog.manage 且 MFA。PUT 与 POST 等价。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformConnectorInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformConnector"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "upsertPlatformConnectorByPut",
+        "summary": "新增或更新连接器（PUT）",
+        "description": "与 POST 等价。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformConnectorInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformConnector"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/catalog/plugin-signatures": {
+      "get": {
+        "operationId": "listPlatformPluginSignatures",
+        "summary": "插件签名目录",
+        "description": "需要 platform.catalog.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "插件签名列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformPluginSignature"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "upsertPlatformPluginSignature",
+        "summary": "新增或更新插件签名",
+        "description": "按 pluginCode + version 幂等写入，sha256 必须为 64 位小写十六进制；需要 platform.catalog.manage 且 MFA。PUT 与 POST 等价。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformPluginSignatureInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformPluginSignature"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "upsertPlatformPluginSignatureByPut",
+        "summary": "新增或更新插件签名（PUT）",
+        "description": "与 POST 等价。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformPluginSignatureInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformPluginSignature"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/catalog/model-providers": {
+      "get": {
+        "operationId": "listPlatformModelProviders",
+        "summary": "模型供应商目录",
+        "description": "需要 platform.catalog.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "模型供应商列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformModelProvider"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "upsertPlatformModelProvider",
+        "summary": "新增或更新模型供应商",
+        "description": "按 providerCode 幂等写入；需要 platform.catalog.manage 且 MFA。PUT 与 POST 等价。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformModelProviderInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformModelProvider"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "upsertPlatformModelProviderByPut",
+        "summary": "新增或更新模型供应商（PUT）",
+        "description": "与 POST 等价。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformModelProviderInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "写入后的条目",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformModelProvider"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/security/events": {
+      "get": {
+        "operationId": "listPlatformSecurityEvents",
+        "summary": "安全事件台账",
+        "description": "按分类与状态过滤，默认 50 条；只含摘要与计数，不含凭据与业务正文。需要 platform.security.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "open",
+                "acknowledged",
+                "resolved"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "安全事件列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformSecurityEvent"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "recordPlatformSecurityEvent",
+        "summary": "登记安全事件",
+        "description": "需要 platform.security.manage 且 MFA；写操作同时写平台审计。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformSecurityEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "新事件 ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/security/events/{eventId}/acknowledge": {
+      "post": {
+        "operationId": "acknowledgePlatformSecurityEvent",
+        "summary": "确认安全事件",
+        "description": "open → acknowledged；重复确认保持幂等。需要 platform.security.manage 且 MFA。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          },
+          {
+            "$ref": "#/components/parameters/PlatformEventIdPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "事件",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSecurityEvent"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/security/events/{eventId}/resolve": {
+      "post": {
+        "operationId": "resolvePlatformSecurityEvent",
+        "summary": "闭环安全事件",
+        "description": "open/acknowledged → resolved。需要 platform.security.manage 且 MFA。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          },
+          {
+            "$ref": "#/components/parameters/PlatformEventIdPath"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "事件",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSecurityEvent"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/security/secret-rotations": {
+      "post": {
+        "operationId": "recordPlatformSecretRotation",
+        "summary": "登记秘密轮换",
+        "description": "只记录秘密名称与说明，不接收密钥明文。需要 platform.security.manage 且 MFA。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformSecretRotationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "新事件 ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformIdResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/operations/overview": {
+      "get": {
+        "operationId": "getPlatformOperationsOverview",
+        "summary": "作业与队列健康",
+        "description": "最近一次迁移、outbox 待处理/失败/死信与 24 小时运行记录数。需要 platform.operations.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "作业总览",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOperationsOverview"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/operations/runs": {
+      "get": {
+        "operationId": "listPlatformOperationRuns",
+        "summary": "作业运行记录",
+        "description": "按类型过滤，默认 50 条。需要 platform.operations.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "migration",
+                "backup",
+                "restore_drill",
+                "queue_requeue",
+                "catalog_seed"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "运行记录列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformOperationRun"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "recordPlatformOperationRun",
+        "summary": "登记作业运行记录",
+        "description": "需要 platform.operations.manage 且 MFA；迁移记录由启动器自动写入，手工登记用于备份与恢复演练。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformOperationRunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "运行记录",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOperationRun"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/operations/audit": {
+      "get": {
+        "operationId": "listPlatformAuditEvents",
+        "summary": "平台级审计",
+        "description": "平台审计表只追加不可改删，默认 50 条。需要 platform.operations.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "审计事件列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformAuditEvent"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/settings": {
+      "get": {
+        "operationId": "listPlatformSettings",
+        "summary": "平台设置清单",
+        "description": "密钥类设置只回 configured=true，永不回显明文。需要 platform.settings.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "设置列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformSetting"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/platform/api/v1/settings/{key}": {
+      "put": {
+        "operationId": "updatePlatformSetting",
+        "summary": "更新平台设置",
+        "description": "键必须在白名单内且值通过类型校验；需要 platform.settings.manage 且 MFA。写操作同时写平台审计，密钥类设置只记录「已变更」。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          },
+          {
+            "$ref": "#/components/parameters/PlatformSettingKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformSettingUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的设置",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSetting"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
     "/platform/api/v1/tenants": {
+      "get": {
+        "operationId": "listTenants",
+        "summary": "租户目录列表",
+        "description": "只返回生命周期元数据（id、slug、名称、状态、套餐与时间戳），不含任何业务字段。数据来自 platform_tenant_directory 投影。需要 platform.tenant.read。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/PlatformSessionCookie"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "provisioning",
+                "active",
+                "frozen",
+                "closing",
+                "deleted"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "按 slug 或名称模糊匹配",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "租户目录",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlatformTenantSummary"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
       "post": {
         "operationId": "createTenant",
         "summary": "创建租户（provisioning）",
-        "description": "平台请求必须带 X-Platform-Operator-Id 且严禁携带 X-Tenant-Id；创建与初始化分两步，便于校验域名与品牌配置。",
+        "description": "平台请求必须带 plt_ops_session 且严禁携带 X-Tenant-Id；创建与初始化分两步，便于校验域名与品牌配置。超过 platform_setting 的 limits.max_tenants 返回 429 TENANT_LIMIT_REACHED。",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           }
         ],
         "requestBody": {
@@ -1069,6 +2250,9 @@
           },
           "422": {
             "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
           }
         }
       }
@@ -1080,7 +2264,7 @@
         "description": "只返回租户元数据、配置、配额与审计，不提供业务正文读取端点。",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1114,7 +2298,7 @@
         "description": "只更新状态、释放域名、撤销支持访问并写审计；业务数据物理清理由 WP02-08 负责。",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1162,7 +2346,7 @@
         "summary": "provisioning → active",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1201,7 +2385,7 @@
         "description": "冻结后阻断业务写入、插件与 AI 新执行，仅保留受控导出与申诉。",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1243,7 +2427,7 @@
         "summary": "解冻租户（frozen → active）",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1285,7 +2469,7 @@
         "summary": "平台代租户发起注销（进入冷静期）",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1327,7 +2511,7 @@
         "summary": "平台撤回注销（closing → active）",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1369,7 +2553,7 @@
         "summary": "平台更新租户品牌与区域配置",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1414,7 +2598,7 @@
         "summary": "平台查看租户配额与使用量",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1446,7 +2630,7 @@
         "summary": "平台查看租户生命周期审计",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1478,7 +2662,7 @@
         "summary": "列出支持访问申请与授权",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1509,7 +2693,7 @@
         "description": "工单格式 ^[A-Z][A-Z0-9-]{3,31}$，理由 10–500 字，时限 1–60 分钟；审批人必须与申请人不同。",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1555,7 +2739,7 @@
         "description": "审批人不得与申请人相同，否则返回 403 SUPPORT_SEPARATION_REQUIRED。",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1593,7 +2777,7 @@
         "summary": "拒绝支持访问申请",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -1631,7 +2815,7 @@
         "summary": "撤销已生效的支持访问",
         "parameters": [
           {
-            "$ref": "#/components/parameters/PlatformOperatorHeader"
+            "$ref": "#/components/parameters/PlatformSessionCookie"
           },
           {
             "$ref": "#/components/parameters/TenantIdPath"
@@ -7568,6 +8752,12 @@
         "name": "plt_session",
         "description": "浏览器会话 Cookie，HttpOnly；写操作还必须带与 plt_csrf 一致的 X-CSRF-Token 头"
       },
+      "platformOpsSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "plt_ops_session",
+        "description": "平台运营会话 Cookie，Path=/platform、HttpOnly、Secure、SameSite=Strict；与租户 plt_session 名称和路径都不同，写操作还必须带与 plt_ops_csrf 一致的 X-CSRF-Token 头"
+      },
       "serviceToken": {
         "type": "http",
         "scheme": "bearer",
@@ -7733,13 +8923,32 @@
           "type": "string"
         }
       },
-      "PlatformOperatorHeader": {
-        "name": "X-Platform-Operator-Id",
-        "in": "header",
+      "PlatformSessionCookie": {
+        "name": "plt_ops_session",
+        "in": "cookie",
         "required": true,
-        "description": "平台运营主体；出现该头的请求不得再携带 X-Tenant-Id，否则 403 PLATFORM_TENANT_CONTEXT_FORBIDDEN",
+        "description": "平台运营会话 Cookie，只能由 POST /platform/api/v1/auth/login 下发；Path=/platform、HttpOnly、Secure、SameSite=Strict。写操作还必须带与 plt_ops_csrf 一致的 X-CSRF-Token 头。旧的 X-Platform-Operator-Id 请求头已退役，携带即 400 PLATFORM_OPERATOR_HEADER_RETIRED。",
         "schema": {
           "type": "string"
+        }
+      },
+      "PlatformEventIdPath": {
+        "name": "eventId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "PlatformSettingKey": {
+        "name": "key",
+        "in": "path",
+        "required": true,
+        "description": "平台设置键，必须在白名单内，例如 limits.max_tenants、mail.from_address、storage.bucket",
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.]{1,63}$"
         }
       },
       "SupportAccessHeader": {
@@ -7804,6 +9013,838 @@
       }
     },
     "schemas": {
+      "PlatformLoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          },
+          "totpCode": {
+            "type": "string",
+            "description": "已绑定 MFA 的运营账号必填"
+          }
+        }
+      },
+      "PlatformLoginResponse": {
+        "type": "object",
+        "required": [
+          "operator",
+          "sessionExpiresAt"
+        ],
+        "properties": {
+          "operator": {
+            "$ref": "#/components/schemas/PlatformOperatorView"
+          },
+          "sessionExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformOperatorView": {
+        "type": "object",
+        "required": [
+          "operatorId",
+          "email",
+          "roleCode",
+          "mfaSatisfied",
+          "permissions"
+        ],
+        "properties": {
+          "operatorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "roleCode": {
+            "type": "string",
+            "enum": [
+              "platform-owner",
+              "platform-ops",
+              "platform-security",
+              "platform-auditor"
+            ]
+          },
+          "mfaSatisfied": {
+            "type": "boolean"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PlatformMfaEnrollment": {
+        "type": "object",
+        "required": [
+          "secret",
+          "otpauthUri"
+        ],
+        "properties": {
+          "secret": {
+            "type": "string",
+            "description": "一次性展示的 TOTP 密钥"
+          },
+          "otpauthUri": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformMfaConfirmRequest": {
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformOverview": {
+        "type": "object",
+        "required": [
+          "generatedAt",
+          "tenantTotal",
+          "stale"
+        ],
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "tenantsByStatus": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "tenantTotal": {
+            "type": "integer"
+          },
+          "activeTenants30d": {
+            "type": "integer"
+          },
+          "activeUsers30d": {
+            "type": "integer"
+          },
+          "storageBytes": {
+            "type": "integer"
+          },
+          "aiTokens30d": {
+            "type": "integer"
+          },
+          "aiCostCents30d": {
+            "type": "integer"
+          },
+          "apiRequests30d": {
+            "type": "integer"
+          },
+          "errorRequests30d": {
+            "type": "integer"
+          },
+          "httpErrorRate": {
+            "type": "number"
+          },
+          "outboxPending": {
+            "type": "integer"
+          },
+          "outboxFailed": {
+            "type": "integer"
+          },
+          "outboxDead": {
+            "type": "integer"
+          },
+          "securityOpen": {
+            "type": "integer"
+          },
+          "connectors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlatformConnectorHealth"
+            }
+          },
+          "metricsCollectedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "stale": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlatformConnectorHealth": {
+        "type": "object",
+        "required": [
+          "connectorCode",
+          "status"
+        ],
+        "properties": {
+          "connectorCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformTenantSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "status",
+          "planCode"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "planCode": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformAppVersion": {
+        "type": "object",
+        "required": [
+          "id",
+          "appCode",
+          "version",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "appCode": {
+            "type": "string"
+          },
+          "appName": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "releasedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformAppInput": {
+        "type": "object",
+        "required": [
+          "appCode",
+          "version",
+          "status"
+        ],
+        "properties": {
+          "appCode": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+          },
+          "appName": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "retired"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformConnector": {
+        "type": "object",
+        "required": [
+          "id",
+          "connectorCode",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "connectorCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "authType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformConnectorInput": {
+        "type": "object",
+        "required": [
+          "connectorCode",
+          "status"
+        ],
+        "properties": {
+          "connectorCode": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "authType": {
+            "type": "string",
+            "enum": [
+              "none",
+              "api-key",
+              "oauth2",
+              "hmac",
+              "basic"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "disabled"
+            ]
+          }
+        }
+      },
+      "PlatformPluginSignature": {
+        "type": "object",
+        "required": [
+          "id",
+          "pluginCode",
+          "version",
+          "sha256",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "pluginCode": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "signer": {
+            "type": "string"
+          },
+          "keyId": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "status": {
+            "type": "string"
+          },
+          "signedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformPluginSignatureInput": {
+        "type": "object",
+        "required": [
+          "pluginCode",
+          "version",
+          "sha256",
+          "status"
+        ],
+        "properties": {
+          "pluginCode": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+          },
+          "version": {
+            "type": "string"
+          },
+          "signer": {
+            "type": "string"
+          },
+          "keyId": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "trusted",
+              "revoked"
+            ]
+          }
+        }
+      },
+      "PlatformModelProvider": {
+        "type": "object",
+        "required": [
+          "id",
+          "providerCode",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "providerCode": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gatewayRoute": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformModelProviderInput": {
+        "type": "object",
+        "required": [
+          "providerCode",
+          "status"
+        ],
+        "properties": {
+          "providerCode": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gatewayRoute": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "enabled",
+              "disabled"
+            ]
+          }
+        }
+      },
+      "PlatformSecurityEvent": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "severity",
+          "status",
+          "occurredAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tenantId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "acknowledged",
+              "resolved"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acknowledgedBy": {
+            "type": "string"
+          },
+          "acknowledgedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "resolvedBy": {
+            "type": "string"
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformSecurityEventRequest": {
+        "type": "object",
+        "required": [
+          "category",
+          "severity",
+          "summary"
+        ],
+        "properties": {
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "abnormal_login",
+              "cross_tenant_blocked",
+              "secret_rotation",
+              "vulnerability",
+              "incident"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "PlatformSecretRotationRequest": {
+        "type": "object",
+        "required": [
+          "secretName"
+        ],
+        "properties": {
+          "secretName": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformIdResponse": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "PlatformOperationRun": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "startedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "migration",
+              "backup",
+              "restore_drill",
+              "queue_requeue",
+              "catalog_seed"
+            ]
+          },
+          "tenantId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "succeeded",
+              "failed"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "operatorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformOperationRunRequest": {
+        "type": "object",
+        "required": [
+          "kind",
+          "status"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "migration",
+              "backup",
+              "restore_drill",
+              "queue_requeue",
+              "catalog_seed"
+            ]
+          },
+          "tenantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "running",
+              "succeeded",
+              "failed"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      },
+      "PlatformOperationsOverview": {
+        "type": "object",
+        "required": [
+          "outboxPending",
+          "outboxFailed",
+          "outboxDead",
+          "runsLast24h",
+          "generatedAt"
+        ],
+        "properties": {
+          "latestMigration": {
+            "$ref": "#/components/schemas/PlatformOperationRun"
+          },
+          "outboxPending": {
+            "type": "integer"
+          },
+          "outboxFailed": {
+            "type": "integer"
+          },
+          "outboxDead": {
+            "type": "integer"
+          },
+          "runsLast24h": {
+            "type": "integer"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformAuditEvent": {
+        "type": "object",
+        "required": [
+          "id",
+          "action",
+          "targetType",
+          "occurredAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operatorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string"
+          },
+          "targetId": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "correlationId": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformSetting": {
+        "type": "object",
+        "required": [
+          "key",
+          "category",
+          "secret",
+          "configured"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "value": {
+            "description": "密钥类设置恒为 null，只回 configured"
+          },
+          "secret": {
+            "type": "boolean"
+          },
+          "configured": {
+            "type": "boolean"
+          },
+          "updatedBy": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PlatformSettingUpdate": {
+        "type": "object",
+        "required": [
+          "value"
+        ],
+        "properties": {
+          "value": {
+            "description": "与设置键声明类型一致；密钥类只接受字符串"
+          }
+        }
+      },
       "SessionPrincipal": {
         "type": "object",
         "required": [

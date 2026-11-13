@@ -1,0 +1,16 @@
+# backend-tests (WP02-07)
+
+mvn -B -ntp -f backend/pom.xml clean install
+
+[INFO] Reactor Summary for Enterprise Application Platform 0.1.0-SNAPSHOT:
+[INFO] BUILD SUCCESS
+[INFO] Total time:  02:42 min
+[INFO] Finished at: 2026-11-12T18:45:23+08:00
+
+关键用例：
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.310 s -- in com.acme.platform.ModuleStructureTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.556 s -- in com.acme.platform.PlatformOperatorAuthApiTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.acme.platform.platformops.PlatformOpsDbTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.339 s -- in com.acme.platform.PlatformScreenAuthzTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.479 s -- in com.acme.platform.TenantApiBoundaryTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.257 s -- in com.acme.platform.TenantHeaderMismatchTest

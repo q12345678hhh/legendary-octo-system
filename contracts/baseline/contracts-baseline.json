@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-12T05:22:59.291Z",
+  "frozenAt": "2026-11-12T10:44:12.577Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "8f71cef021f8764686c8ab61b434a418d0816bba2e935972ca0fcae2014ae3dc",
+      "sha256": "706b11227743ad47ac71365f493bccc5678c5526b28bf91b668578fbd8b05274",
       "tokens": {
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
@@ -314,6 +314,444 @@
         "response:POST /api/v1/tenant/business-numbers/{scope}:423": {
           "defined": true
         },
+        "operation:POST /platform/api/v1/auth/login": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/auth/login:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/login:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/login:423": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/auth/logout": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/auth/logout:204": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/logout:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/logout:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/auth/me": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/auth/me:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/auth/me:401": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/auth/mfa/start": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/auth/mfa/start:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/mfa/start:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/mfa/start:403": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/auth/mfa/confirm": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/auth/mfa/confirm:204": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/mfa/confirm:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/mfa/confirm:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/auth/mfa/confirm:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/overview": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/overview:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/overview:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/overview:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/catalog/apps": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/catalog/apps:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/catalog/apps:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/catalog/apps:403": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/catalog/apps": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/catalog/apps:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/apps:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/apps:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/apps:403": {
+          "defined": true
+        },
+        "operation:PUT /platform/api/v1/catalog/apps": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /platform/api/v1/catalog/apps:200": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/apps:400": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/apps:401": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/apps:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/catalog/connectors": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/catalog/connectors:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/catalog/connectors:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/catalog/connectors:403": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/catalog/connectors": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/catalog/connectors:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/connectors:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/connectors:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/connectors:403": {
+          "defined": true
+        },
+        "operation:PUT /platform/api/v1/catalog/connectors": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /platform/api/v1/catalog/connectors:200": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/connectors:400": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/connectors:401": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/connectors:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/catalog/plugin-signatures": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/catalog/plugin-signatures:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/catalog/plugin-signatures:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/catalog/plugin-signatures:403": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/catalog/plugin-signatures": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/catalog/plugin-signatures:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/plugin-signatures:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/plugin-signatures:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/plugin-signatures:403": {
+          "defined": true
+        },
+        "operation:PUT /platform/api/v1/catalog/plugin-signatures": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /platform/api/v1/catalog/plugin-signatures:200": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/plugin-signatures:400": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/plugin-signatures:401": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/plugin-signatures:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/catalog/model-providers": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/catalog/model-providers:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/catalog/model-providers:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/catalog/model-providers:403": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/catalog/model-providers": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/catalog/model-providers:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/model-providers:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/model-providers:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/catalog/model-providers:403": {
+          "defined": true
+        },
+        "operation:PUT /platform/api/v1/catalog/model-providers": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /platform/api/v1/catalog/model-providers:200": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/model-providers:400": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/model-providers:401": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/catalog/model-providers:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/security/events": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/security/events:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/security/events:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/security/events:403": {
+          "defined": true
+        },
+        "parameter:GET /platform/api/v1/security/events:query:category": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /platform/api/v1/security/events:query:status": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /platform/api/v1/security/events:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /platform/api/v1/security/events": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/security/events:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events:403": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/security/events/{eventId}/acknowledge": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/security/events/{eventId}/acknowledge:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events/{eventId}/acknowledge:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events/{eventId}/acknowledge:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events/{eventId}/acknowledge:404": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/security/events/{eventId}/resolve": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/security/events/{eventId}/resolve:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events/{eventId}/resolve:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events/{eventId}/resolve:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/events/{eventId}/resolve:404": {
+          "defined": true
+        },
+        "operation:POST /platform/api/v1/security/secret-rotations": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/security/secret-rotations:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/secret-rotations:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/secret-rotations:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/security/secret-rotations:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/operations/overview": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/operations/overview:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/operations/overview:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/operations/overview:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/operations/runs": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/operations/runs:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/operations/runs:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/operations/runs:403": {
+          "defined": true
+        },
+        "parameter:GET /platform/api/v1/operations/runs:query:kind": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /platform/api/v1/operations/runs:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /platform/api/v1/operations/runs": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/operations/runs:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/operations/runs:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/operations/runs:401": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/operations/runs:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/operations/audit": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/operations/audit:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/operations/audit:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/operations/audit:403": {
+          "defined": true
+        },
+        "parameter:GET /platform/api/v1/operations/audit:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:GET /platform/api/v1/settings": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/settings:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/settings:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/settings:403": {
+          "defined": true
+        },
+        "operation:PUT /platform/api/v1/settings/{key}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /platform/api/v1/settings/{key}:200": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/settings/{key}:400": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/settings/{key}:401": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/settings/{key}:403": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/tenants": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/tenants:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/tenants:401": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/tenants:403": {
+          "defined": true
+        },
+        "parameter:GET /platform/api/v1/tenants:query:status": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /platform/api/v1/tenants:query:q": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /platform/api/v1/tenants:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
         "operation:POST /platform/api/v1/tenants": {
           "requestBodyRequired": true
         },
@@ -333,6 +771,9 @@
           "defined": true
         },
         "response:POST /platform/api/v1/tenants:422": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/tenants:429": {
           "defined": true
         },
         "operation:GET /platform/api/v1/tenants/{tenantId}": {
@@ -2433,6 +2874,664 @@
         "parameter:GET /api/v1/authorization/admin-actions:query:limit": {
           "required": false,
           "type": "integer"
+        },
+        "schema:PlatformLoginRequest.email": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformLoginRequest.password": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformLoginRequest.totpCode": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformLoginResponse.operator": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:PlatformLoginResponse.sessionExpiresAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformOperatorView.operatorId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformOperatorView.email": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformOperatorView.displayName": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOperatorView.roleCode": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "platform-auditor",
+            "platform-ops",
+            "platform-owner",
+            "platform-security"
+          ]
+        },
+        "schema:PlatformOperatorView.mfaSatisfied": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:PlatformOperatorView.permissions": {
+          "type": "array",
+          "required": true
+        },
+        "schema:PlatformMfaEnrollment.secret": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformMfaEnrollment.otpauthUri": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformMfaConfirmRequest.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformOverview.generatedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformOverview.tenantsByStatus": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PlatformOverview.tenantTotal": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:PlatformOverview.activeTenants30d": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.activeUsers30d": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.storageBytes": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.aiTokens30d": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.aiCostCents30d": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.apiRequests30d": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.errorRequests30d": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.httpErrorRate": {
+          "type": "number",
+          "required": false
+        },
+        "schema:PlatformOverview.outboxPending": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.outboxFailed": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.outboxDead": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.securityOpen": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:PlatformOverview.connectors": {
+          "type": "array",
+          "required": false
+        },
+        "schema:PlatformOverview.metricsCollectedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOverview.stale": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:PlatformConnectorHealth.connectorCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformConnectorHealth.name": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformConnectorHealth.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformTenantSummary.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformTenantSummary.slug": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformTenantSummary.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformTenantSummary.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformTenantSummary.planCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformTenantSummary.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformTenantSummary.updatedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAppVersion.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAppVersion.appCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAppVersion.appName": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAppVersion.version": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAppVersion.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAppVersion.releasedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAppVersion.notes": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAppInput.appCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAppInput.appName": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAppInput.version": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAppInput.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "draft",
+            "published",
+            "retired"
+          ]
+        },
+        "schema:PlatformAppInput.notes": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformConnector.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformConnector.connectorCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformConnector.name": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformConnector.authType": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformConnector.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformConnector.updatedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformConnectorInput.connectorCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformConnectorInput.name": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformConnectorInput.authType": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "api-key",
+            "basic",
+            "hmac",
+            "none",
+            "oauth2"
+          ]
+        },
+        "schema:PlatformConnectorInput.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "available",
+            "disabled"
+          ]
+        },
+        "schema:PlatformPluginSignature.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformPluginSignature.pluginCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformPluginSignature.version": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformPluginSignature.signer": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformPluginSignature.keyId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformPluginSignature.sha256": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformPluginSignature.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformPluginSignature.signedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformPluginSignatureInput.pluginCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformPluginSignatureInput.version": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformPluginSignatureInput.signer": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformPluginSignatureInput.keyId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformPluginSignatureInput.sha256": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformPluginSignatureInput.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "revoked",
+            "trusted"
+          ]
+        },
+        "schema:PlatformModelProvider.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformModelProvider.providerCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformModelProvider.name": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformModelProvider.gatewayRoute": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformModelProvider.status": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformModelProvider.updatedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformModelProviderInput.providerCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformModelProviderInput.name": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformModelProviderInput.gatewayRoute": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformModelProviderInput.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "disabled",
+            "enabled"
+          ]
+        },
+        "schema:PlatformSecurityEvent.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformSecurityEvent.tenantId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PlatformSecurityEvent.category": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformSecurityEvent.severity": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "critical",
+            "high",
+            "low",
+            "medium"
+          ]
+        },
+        "schema:PlatformSecurityEvent.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "acknowledged",
+            "open",
+            "resolved"
+          ]
+        },
+        "schema:PlatformSecurityEvent.summary": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSecurityEvent.detail": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSecurityEvent.occurredAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformSecurityEvent.acknowledgedBy": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSecurityEvent.acknowledgedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSecurityEvent.resolvedBy": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSecurityEvent.resolvedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSecurityEventRequest.tenantId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSecurityEventRequest.category": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "abnormal_login",
+            "cross_tenant_blocked",
+            "incident",
+            "secret_rotation",
+            "vulnerability"
+          ]
+        },
+        "schema:PlatformSecurityEventRequest.severity": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "critical",
+            "high",
+            "low",
+            "medium"
+          ]
+        },
+        "schema:PlatformSecurityEventRequest.summary": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformSecurityEventRequest.detail": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PlatformSecretRotationRequest.secretName": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformSecretRotationRequest.note": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformIdResponse.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformOperationRun.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformOperationRun.kind": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "backup",
+            "catalog_seed",
+            "migration",
+            "queue_requeue",
+            "restore_drill"
+          ]
+        },
+        "schema:PlatformOperationRun.tenantId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PlatformOperationRun.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "failed",
+            "running",
+            "succeeded"
+          ]
+        },
+        "schema:PlatformOperationRun.startedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformOperationRun.finishedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOperationRun.summary": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOperationRun.operatorId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOperationRun.correlationId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOperationRun.traceId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOperationRunRequest.kind": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "backup",
+            "catalog_seed",
+            "migration",
+            "queue_requeue",
+            "restore_drill"
+          ]
+        },
+        "schema:PlatformOperationRunRequest.tenantId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOperationRunRequest.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "failed",
+            "running",
+            "succeeded"
+          ]
+        },
+        "schema:PlatformOperationRunRequest.summary": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformOperationsOverview.latestMigration": {
+          "type": "$ref",
+          "required": false
+        },
+        "schema:PlatformOperationsOverview.outboxPending": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:PlatformOperationsOverview.outboxFailed": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:PlatformOperationsOverview.outboxDead": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:PlatformOperationsOverview.runsLast24h": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:PlatformOperationsOverview.generatedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAuditEvent.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAuditEvent.operatorId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAuditEvent.action": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAuditEvent.targetType": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformAuditEvent.targetId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAuditEvent.detail": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAuditEvent.correlationId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAuditEvent.traceId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformAuditEvent.occurredAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformSetting.key": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformSetting.category": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PlatformSetting.value": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PlatformSetting.secret": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:PlatformSetting.configured": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:PlatformSetting.updatedBy": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSetting.updatedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:PlatformSettingUpdate.value": {
+          "type": "object",
+          "required": true
         },
         "schema:SessionPrincipal.tenantId": {
           "type": "string",

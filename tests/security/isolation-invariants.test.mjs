@@ -97,6 +97,48 @@ test('运行账号与迁移账号分离且不得绕过 RLS', () => {
   assert.match(yml, /flyway:[\s\S]*user:/, '迁移账号必须与运行账号分开配置');
 });
 
+test('平台运营身份不得来自客户端请求头', () => {
+  for (const file of javaFiles(bootApiDir)) {
+    const source = readFileSync(file, 'utf8');
+    if (file.endsWith('Controller.java')) {
+      assert.doesNotMatch(source, /X-Platform-Operator-Id/,
+        `${file} 仍在读取已退役的运营身份头`);
+    }
+  }
+  const isolation = readFileSync(join(bootApiDir, 'PlatformDomainIsolationFilter.java'), 'utf8');
+  assert.match(isolation, /PLATFORM_OPERATOR_HEADER_RETIRED/,
+    '旧运营头必须被显式拒绝而不是继续作为身份');
+  const platformAuth = readFileSync(
+    join(bootApiDir, 'PlatformOperatorAuthenticationFilter.java'), 'utf8');
+  assert.match(platformAuth, /getCookieName\(\)/, '平台身份必须来自独立会话 Cookie');
+});
+
+test('平台会话与租户会话的 Cookie 名和 Path 必须物理分离', () => {
+  const yml = readFileSync(
+    join(repoRoot, 'backend', 'boot-api', 'src', 'main', 'resources', 'application.yml'), 'utf8');
+  assert.match(yml, /cookie-name:\s*\$\{PLATFORM_OPS_COOKIE:plt_ops_session\}/,
+    '平台运营 Cookie 名必须是 plt_ops_session');
+  assert.match(yml, /cookie-name:\s*\$\{PLATFORM_IDENTITY_COOKIE:plt_session\}/,
+    '租户会话 Cookie 名必须是 plt_session');
+  assert.match(yml, /cookie-path:\s*\/platform/, '平台 Cookie 必须只挂 Path=/platform');
+
+  const cookies = readFileSync(join(bootApiDir, 'PlatformOperatorCookies.java'), 'utf8');
+  assert.match(cookies, /SameSite=Strict/, '平台 Cookie 必须是 SameSite=Strict');
+  assert.match(cookies, /HttpOnly/, '平台会话 Cookie 必须是 HttpOnly');
+});
+
+test('平台运营数据面不得查询租户业务正文', () => {
+  const dirs = ['overview', 'directory', 'operations', 'catalog', 'settings', 'security'];
+  const forbidden = /organization_person|organization_employment|worklog_|identity_user_account|platform_file/;
+  for (const dir of dirs) {
+    for (const file of javaFiles(join(platformModuleDir, dir))) {
+      const source = readFileSync(file, 'utf8');
+      assert.doesNotMatch(source, forbidden,
+        `${file} 读取了租户业务表，平台运营端只能读元数据与聚合`);
+    }
+  }
+});
+
 test('隐私引擎仍强制排除社交软件', () => {
   const policy = readFileSync(
     join(repoRoot, 'desktop-agent', 'privacy-engine', 'WorkAssistant.PrivacyEngine', 'ForbiddenApplicationPolicy.cs'),

@@ -57,6 +57,11 @@ public class TenantLifecycleService {
     public TenantRecord create(CreateTenantCommand command, String actor) {
         String creator = requireActor(actor);
         validateCreate(command);
+        int maxTenants = tenantStore.maxTenants();
+        if (tenantStore.countDirectory() >= maxTenants) {
+            throw new ApiException(429, "TENANT_LIMIT_REACHED",
+                    "平台租户数已达到上限 " + maxTenants + "，请先在平台设置中调整 limits.max_tenants");
+        }
         UUID tenantId = command.tenantId() == null ? UUID.randomUUID() : command.tenantId();
         RequestContext context = context(tenantId, creator);
 

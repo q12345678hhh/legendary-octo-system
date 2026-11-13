@@ -131,8 +131,8 @@ class TenantHeaderMismatchTest {
                         .header("Authorization", BEARER)
                         .header("X-Tenant-Id", tenantA.toString())
                         .header("X-Platform-Operator-Id", "ops-a"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("PLATFORM_OPERATOR_NOT_ALLOWED"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("PLATFORM_OPERATOR_HEADER_RETIRED"));
     }
 
     private void stubSession(UUID tenantId) {

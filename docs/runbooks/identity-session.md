@@ -11,7 +11,7 @@
 | 项 | 现状 | 约束 |
 |---|---|---|
 | 认证主体来源 | `plt_session` Cookie 或 `Authorization: Bearer <token>` | `X-Subject-Id` 已废弃；携带也不会被采信 |
-| 平台域 | `/platform/**` 仍用 `X-Platform-Operator-Id` | 独立认证域属 WP02-07；不要把会话 Cookie 复用为平台运营身份 |
+| 平台域 | `/platform/**` 用独立的 `plt_ops_session` 运营会话 Cookie（Path=/platform） | 属 WP02-07 独立认证域；见 `platform-operations.md`。不要把 `plt_session` 复用为平台运营身份，反之亦然 |
 | OIDC / SAML / SCIM | 只有模型与配置接口，状态限 `draft`/`disabled` | 传 `active` 返回 `409 CONNECTOR_NOT_AVAILABLE`；P1 才接连接器 |
 | 邮件投递 | 无邮件服务 | 邀请与重置令牌由创建接口一次性返回，必须由管理员安全转交 |
 | Person 与账号 | 刻意分离 | 无账号员工只建 Person + Employment；账号只是可选绑定 |
@@ -264,5 +264,5 @@ P0 只做模型与配置落库，不发起任何外部连接。
 - 邮件发送、邀请链接落地页与密码找回邮件属 P1；当前令牌由接口返回、管理员转交。
 - OIDC/SAML/SCIM 实际登录、SCIM 同步属 P1；本包只落模型与配置。
 - 细粒度权限（谁能看哪个人、能否导出）属 WP02-04；当前 People 读接口只要求登录。
-- 平台域运营身份与跨租户目录属 WP02-07。
+- 平台域运营身份与跨租户目录已由 WP02-07 落地，见 `platform-operations.md`；运营账号是独立表 `platform_operator`，不复用租户成员。
 - 账号合并、跨租户身份联合不在本包范围。

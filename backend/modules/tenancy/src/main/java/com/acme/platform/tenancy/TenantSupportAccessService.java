@@ -37,7 +37,8 @@ public class TenantSupportAccessService {
     public TenantSupportAccess request(UUID tenantId, String operatorId, String ticketId,
                                        String reason, int minutes) {
         String operator = requireOperator(operatorId);
-        SupportAccessRules.validateRequest(ticketId, reason, minutes);
+        SupportAccessRules.validateRequest(ticketId, reason, minutes,
+                tenantStore.supportAccessMaxMinutes());
         String trimmedReason = reason.trim();
         return tenantTransactions.inTenant(context(tenantId, operator), ctx -> {
             TenantRecord tenant = requireTenant(tenantId);
