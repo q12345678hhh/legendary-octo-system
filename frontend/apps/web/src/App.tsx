@@ -1,20 +1,16 @@
 import type { ApiClient } from '@platform/api-client';
 import { tokens } from '@platform/design-system';
-import { Alert, Button, Layout, Space, Typography } from 'antd';
+import { Alert, Layout } from 'antd';
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
+import { AppShell } from './layout/AppShell';
 import {
   matchRoute,
   navigate,
   parseHash,
-  routeHref,
-  routePermission,
-  routeTitle,
-  routes,
   subscribeToRoute,
   type RouteName,
 } from './router';
 import { clearSession, readSession, type Session } from './session';
-import { shortId } from './utils/format';
 import { CollaborationView } from './views/CollaborationView';
 import { DepartmentWorkspaceView } from './views/DepartmentWorkspaceView';
 import { DepartmentsView } from './views/DepartmentsView';
@@ -23,17 +19,13 @@ import { HomeView } from './views/HomeView';
 import { InsightsView } from './views/InsightsView';
 import { JobsView } from './views/JobsView';
 import { LoginView } from './views/LoginView';
+import { ModulesView } from './views/ModulesView';
 import { WorkView } from './views/WorkView';
 import { WorkflowInboxView } from './views/WorkflowInboxView';
 import { WorkflowInstanceView } from './views/WorkflowInstanceView';
 import { WorklogView } from './views/WorklogView';
 
-const { Header, Content } = Layout;
-const { Title, Text } = Typography;
-
-const NAV_ROUTES = routes.filter(
-  (route) => route.requiresSession && !route.path.includes(':'),
-);
+const { Content } = Layout;
 
 interface ErrorBoundaryState {
   message: string | null;
@@ -132,110 +124,73 @@ export function App({ apiClient }: AppProps) {
   }
 
   function handleSignOut(): void {
+    // 清 Cookie 失败不阻塞本地退出；服务端会话按 TTL 自然过期。
+    void apiClient.signOut().catch(() => undefined);
     clearSession();
     setSession(null);
     navigate('login');
   }
 
-  return (
-    <Layout style={{ minHeight: '100vh', background: tokens.color.surfaceMuted }}>
-      <a
-        className="skip-link"
-        href="#main-content"
-        onClick={(event) => {
-          event.preventDefault();
-          mainRef.current?.focus();
-        }}
-      >
-        跳到主内容
-      </a>
-
-      <Header
-        style={{
-          background: tokens.color.surface,
-          borderBottom: `1px solid ${tokens.color.border}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: tokens.spacing.md,
-          paddingInline: tokens.spacing.lg,
-          height: 'auto',
-          minHeight: 64,
-          flexWrap: 'wrap',
-        }}
-      >
-        <Space size="large" align="center" wrap>
-          <Title level={4} style={{ margin: 0 }}>
-            企业应用管理平台
-          </Title>
-          {session && (
-            <nav aria-label="主导航">
-              <Space size="middle">
-                {NAV_ROUTES.filter((item) => {
-                  const permission = routePermission(item.name);
-                  return !permission || permissions === null || permissions.has(permission);
-                }).map((item) => (
-                  <a
-                    key={item.name}
-                    href={routeHref(item.name)}
-                    aria-current={route === item.name ? 'page' : undefined}
-                  >
-                    {item.title}
-                  </a>
-                ))}
-              </Space>
-            </nav>
-          )}
-        </Space>
-
-        {session && (
-          <Space size="middle" wrap>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              租户 {shortId(session.tenantId)} · 主体 {shortId(session.subjectId)}
-            </Text>
-            <Button size="small" onClick={handleSignOut}>
-              退出
-            </Button>
-          </Space>
-        )}
-      </Header>
-
-      <Content style={{ padding: tokens.spacing.xl }}>
-        <main
-          id="main-content"
-          ref={mainRef}
-          tabIndex={-1}
-          className="skip-target"
-          style={{ maxWidth: 1120, margin: '0 auto' }}
+  if (!session) {
+    return (
+      <Layout style={{ minHeight: '100vh', background: tokens.color.pageBg }}>
+        <a
+          className="skip-link"
+          href="#main-content"
+          onClick={(event) => {
+            event.preventDefault();
+            mainRef.current?.focus();
+          }}
         >
-          <Title level={2} style={{ fontSize: 24, marginBottom: tokens.spacing.lg }}>
-            {routeTitle(route)}
-          </Title>
-          <ContentErrorBoundary>
-            {route === 'login' && <LoginView onSignedIn={handleSignedIn} />}
-            {route === 'home' && session && <HomeView apiClient={apiClient} session={session} />}
-            {route === 'departments' && <DepartmentsView apiClient={apiClient} />}
-            {route === 'department' && params.orgUnitId && (
-              <DepartmentWorkspaceView apiClient={apiClient} orgUnitId={params.orgUnitId} />
-            )}
-            {route === 'work' && params.personId && (
-              <WorkView apiClient={apiClient} personId={params.personId} />
-            )}
-            {route === 'worklog' && <WorklogView apiClient={apiClient} />}
-            {route === 'insights' && <InsightsView apiClient={apiClient} />}
-            {route === 'collaboration' && <CollaborationView apiClient={apiClient} />}
-            {route === 'collaborationChannel' && params.channelId && (
-              <CollaborationView apiClient={apiClient} channelId={params.channelId} />
-            )}
-            {route === 'workflowInbox' && <WorkflowInboxView apiClient={apiClient} />}
-            {route === 'workflowInstance' && params.instanceId && (
-              <WorkflowInstanceView apiClient={apiClient} instanceId={params.instanceId} />
-            )}
-            {route === 'jobs' && <JobsView apiClient={apiClient} />}
-            {route === 'files' && <FilesView apiClient={apiClient} />}
-          </ContentErrorBoundary>
-        </main>
-      </Content>
-    </Layout>
+          跳到主内容
+        </a>
+        <Content style={{ padding: tokens.spacing.xl }}>
+          <main
+            id="main-content"
+            ref={mainRef}
+            tabIndex={-1}
+            className="skip-target"
+            style={{ maxWidth: 960, margin: '0 auto' }}
+          >
+            <LoginView apiClient={apiClient} onSignedIn={handleSignedIn} />
+          </main>
+        </Content>
+      </Layout>
+    );
+  }
+
+  return (
+    <AppShell
+      session={session}
+      route={route}
+      permissions={permissions}
+      onSignOut={handleSignOut}
+      mainRef={mainRef}
+    >
+      <ContentErrorBoundary>
+        {route === 'login' && <LoginView apiClient={apiClient} onSignedIn={handleSignedIn} />}
+        {route === 'home' && <HomeView apiClient={apiClient} session={session} />}
+        {route === 'departments' && <DepartmentsView apiClient={apiClient} />}
+        {route === 'department' && params.orgUnitId && (
+          <DepartmentWorkspaceView apiClient={apiClient} orgUnitId={params.orgUnitId} />
+        )}
+        {route === 'work' && params.personId && (
+          <WorkView apiClient={apiClient} personId={params.personId} />
+        )}
+        {route === 'worklog' && <WorklogView apiClient={apiClient} />}
+        {route === 'insights' && <InsightsView apiClient={apiClient} />}
+        {route === 'modules' && <ModulesView apiClient={apiClient} permissions={permissions} />}
+        {route === 'collaboration' && <CollaborationView apiClient={apiClient} />}
+        {route === 'collaborationChannel' && params.channelId && (
+          <CollaborationView apiClient={apiClient} channelId={params.channelId} />
+        )}
+        {route === 'workflowInbox' && <WorkflowInboxView apiClient={apiClient} />}
+        {route === 'workflowInstance' && params.instanceId && (
+          <WorkflowInstanceView apiClient={apiClient} instanceId={params.instanceId} />
+        )}
+        {route === 'jobs' && <JobsView apiClient={apiClient} />}
+        {route === 'files' && <FilesView apiClient={apiClient} />}
+      </ContentErrorBoundary>
+    </AppShell>
   );
 }

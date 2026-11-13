@@ -120,3 +120,70 @@ describe('identity and idempotency', () => {
     expect(keys).toEqual(['manual-key-01', 'manual-key-01']);
   });
 });
+
+describe('session cookies', () => {
+  it('posts credentials to the login endpoint with tenant header and cookies', async () => {
+    let capturedUrl = '';
+    let capturedInit: RequestInit | undefined;
+    const client = createApiClient({
+      baseUrl: 'https://api.test',
+      fetchImpl: async (input, init) => {
+        capturedUrl = String(input);
+        capturedInit = init;
+        return jsonResponse({
+          status: 'session',
+          principal: {
+            tenantId: 'tenant-a',
+            actorId: 'subject-a',
+            userId: 'user-a',
+            memberId: 'member-a',
+          },
+        });
+      },
+    });
+
+    const result = await client.signIn({
+      tenantId: 'tenant-a',
+      email: 'demo@example.test',
+      password: 'secret',
+    });
+
+    const headers = new Headers(capturedInit?.headers);
+    expect(capturedUrl).toBe('https://api.test/api/v1/auth/login');
+    expect(headers.get('x-tenant-id')).toBe('tenant-a');
+    expect(headers.get('idempotency-key')).toBeNull();
+    expect(capturedInit?.credentials).toBe('include');
+    expect(result.status).toBe('session');
+  });
+
+  it('double-submits the CSRF cookie on writes and ignores it on reads', async () => {
+    const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: { cookie: 'plt_session=hidden; plt_csrf=csrf-token-1' },
+    });
+    const captured: (string | null)[] = [];
+    const client = createApiClient({
+      baseUrl: 'https://api.test',
+      fetchImpl: async (_input, init) => {
+        captured.push(new Headers(init?.headers).get('x-csrf-token'));
+        return init?.method === 'GET'
+          ? jsonResponse({ status: 'UP', service: 'platform-api' })
+          : jsonResponse({ jobId: 'job-1', status: 'queued' });
+      },
+    });
+
+    try {
+      await client.getSystemHealth();
+      await client.createJob({ jobType: 'demo-work' });
+    } finally {
+      if (previousDocument) {
+        Object.defineProperty(globalThis, 'document', previousDocument);
+      } else {
+        Reflect.deleteProperty(globalThis, 'document');
+      }
+    }
+
+    expect(captured).toEqual([null, 'csrf-token-1']);
+  });
+});

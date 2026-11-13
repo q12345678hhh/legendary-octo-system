@@ -93,25 +93,30 @@ public final class SystemRoleCatalog {
                 "authorization.review.read", "authorization.review.decide",
                 "worklog.time.read", "worklog.time.review",
                 "worklog.report.read", "worklog.report.review",
-                "workflow.task.act", "workflow.instance.start")));
+                "workflow.task.act", "workflow.instance.start",
+                "appcatalog.module.read")));
         map.put(MANAGER_UNIT, new RoleTemplate(MANAGER_UNIT, "部门主管（部门范围）", Set.of(
                 "department.workspace.read", "insight.work.read",
                 "collaboration.channel.read", "collaboration.channel.manage",
-                "collaboration.page.manage")));
+                "collaboration.page.manage", "appcatalog.module.read")));
         map.put(DELEGATE_MANAGER, new RoleTemplate(DELEGATE_MANAGER, "代管人", Set.of(
                 "directory.person.read", "business.work.read",
                 "worklog.time.read", "worklog.report.read",
-                "department.workspace.read", "insight.work.read")));
+                "department.workspace.read", "insight.work.read",
+                "appcatalog.module.read")));
         map.put(EMPLOYEE, new RoleTemplate(EMPLOYEE, "普通员工（部门范围）", Set.of(
                 "directory.person.read", "file.read", "search.read",
                 "authorization.access.request", "department.workspace.read",
                 "collaboration.channel.read", "collaboration.post.write",
-                "collaboration.task.write", "appcatalog.suggestion.create")));
+                "collaboration.task.write", "appcatalog.module.read",
+                "appcatalog.suggestion.create")));
         map.put(EMPLOYEE_SELF, new RoleTemplate(EMPLOYEE_SELF, "普通员工（本人范围）", Set.of(
                 "directory.person.read", "file.read", "search.read",
                 "authorization.access.request", "business.work.read",
                 "worklog.time.read", "worklog.time.write",
-                "worklog.report.read", "worklog.report.submit")));
+                "worklog.report.read", "worklog.report.submit",
+                "workflow.task.act", "appcatalog.module.read",
+                "appcatalog.suggestion.create")));
         map.put(PAYROLL_PREPARER, new RoleTemplate(PAYROLL_PREPARER, "薪酬制单", Set.of(
                 "payroll.run.prepare")));
         map.put(PAYROLL_REVIEWER, new RoleTemplate(PAYROLL_REVIEWER, "薪酬复核", Set.of(

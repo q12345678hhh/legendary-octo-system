@@ -12,6 +12,7 @@ export type RouteName =
   | 'work'
   | 'worklog'
   | 'insights'
+  | 'modules'
   | 'collaboration'
   | 'collaborationChannel'
   | 'workflowInbox'
@@ -68,6 +69,12 @@ export const routes: readonly RouteDefinition[] = [
     title: '管理洞察',
     requiresSession: true,
     permission: 'insight.work.read',
+  },
+  {
+    name: 'modules',
+    path: '#/modules',
+    title: '模块中心',
+    requiresSession: true,
   },
   {
     name: 'collaboration',

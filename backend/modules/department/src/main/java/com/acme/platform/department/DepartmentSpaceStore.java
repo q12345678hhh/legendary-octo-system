@@ -71,10 +71,10 @@ public class DepartmentSpaceStore {
                        AND r.effective_from <= ?
                        AND (r.effective_to IS NULL OR r.effective_to > ?)
                     UNION ALL
-                    SELECT a.employment_id, a.depth + 1
+                    SELECT r.manager_employment_id, a.depth + 1
                       FROM ancestry a
                       JOIN organization_reporting_line r
-                        ON r.subordinate_employment_id = a.manager_employment_id
+                        ON r.subordinate_employment_id = a.employment_id
                        AND r.line_type = 'solid'
                        AND r.effective_from <= ?
                        AND (r.effective_to IS NULL OR r.effective_to > ?)
