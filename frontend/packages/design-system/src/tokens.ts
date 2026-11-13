@@ -5,6 +5,15 @@ export const tokens = {
   color: {
     brand: '#1b5cff',
     brandHover: '#0f4ae0',
+    brandPressed: '#0b3fc4',
+    topbar: '#1b5cff',
+    topbarHover: '#1650d8',
+    sidebar: '#f7f9fc',
+    sidebarActive: '#e8efff',
+    sidebarHover: '#eef2f8',
+    sidebarText: '#425466',
+    sidebarMuted: '#7b8794',
+    pageBg: '#f3f5f9',
     surface: '#ffffff',
     surfaceMuted: '#f5f7fb',
     border: '#d9e2ec',
@@ -14,6 +23,9 @@ export const tokens = {
     warning: '#b25e09',
     info: '#0b6bcb',
     success: '#1f7a44',
+  },
+  shadow: {
+    card: '0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04)',
   },
   /** 键盘焦点环，仅用于 :focus-visible 样式。 */
   focusRing: '0 0 0 3px rgba(27, 92, 255, 0.45)',

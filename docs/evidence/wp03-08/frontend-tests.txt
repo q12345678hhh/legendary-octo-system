@@ -1,0 +1,133 @@
+﻿=== api-client test ===
+pnpm.exe : $ vitest run
+所在位置 C:\Users\Administrator\AppData\Roaming\npm\pnpm.ps1:14 字符: 3
++   & "$basedir/node_modules/pnpm/pnpm.exe"   $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ($ vitest run:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mD:/Projects/temp_20261109_01/frontend/packages/api-client[39m
+
+ [32m✓[39m src/client.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m8 passed[39m[22m[90m (8)[39m
+[2m   Start at [22m 18:04:06
+[2m   Duration [22m 403ms[2m (transform 100ms, setup 0ms, import 168ms, tests 36ms, environment 0ms)[22m
+
+=== web test ===
+pnpm.exe : $ vitest run
+所在位置 C:\Users\Administrator\AppData\Roaming\npm\pnpm.ps1:14 字符: 3
++   & "$basedir/node_modules/pnpm/pnpm.exe"   $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ($ vitest run:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mD:/Projects/temp_20261109_01/frontend/apps/web[39m
+
+ [32m✓[39m src/router.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/components/AsyncState.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 502[2mms[22m[39m
+Error: Not implemented: window.getComputedStyle(elt, pseudoElt)
+    at module.exports (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\jsdom@25.0.1\node_modules\jsdom\lib\jsd
+om\browser\not-implemented.js:9:17)
+    at window.getComputedStyle (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\jsdom@25.0.1\node_modules\jsdo
+m\lib\jsdom\browser\Window.js:895:7)
+    at measureScrollbarSize (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1_r
+eact@18.3.1__react@18.3.1\node_modules\rc-util\lib\getScrollBarSize.js:35:32)
+    at getTargetScrollBarSize (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1
+_react@18.3.1__react@18.3.1\node_modules\rc-util\lib\getScrollBarSize.js:83:10)
+    at D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-table@7.54.0_react-dom@18.3.1_react@18.3.1__react@18
+.3.1\node_modules\rc-table\lib\Table.js:427:71
+    at D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1_react@18.3.1__react@18.
+3.1\node_modules\rc-util\lib\hooks\useLayoutEffect.js:18:12
+    at commitHookEffectListMount (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react@18.3.
+1\node_modules\react-dom\cjs\react-dom.development.js:23189:26)
+    at commitPassiveMountOnFiber (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react@18.3.
+1\node_modules\react-dom\cjs\react-dom.development.js:24970:11)
+    at commitPassiveMountEffects_complete (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_re
+act@18.3.1\node_modules\react-dom\cjs\react-dom.development.js:24930:9)
+    at commitPassiveMountEffects_begin (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react
+@18.3.1\node_modules\react-dom\cjs\react-dom.development.js:24917:7) undefined
+ [32m✓[39m src/views/WorkflowInboxView.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1312[2mms[22m[39m
+     [33m[2m✓[22m[39m 列出本人待办并显示业务类型 [33m 1245[2mms[22m[39m
+Error: Not implemented: window.getComputedStyle(elt, pseudoElt)
+    at module.exports (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\jsdom@25.0.1\node_modules\jsdom\lib\jsd
+om\browser\not-implemented.js:9:17)
+    at window.getComputedStyle (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\jsdom@25.0.1\node_modules\jsdo
+m\lib\jsdom\browser\Window.js:895:7)
+    at measureScrollbarSize (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1_r
+eact@18.3.1__react@18.3.1\node_modules\rc-util\lib\getScrollBarSize.js:35:32)
+    at getTargetScrollBarSize (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1
+_react@18.3.1__react@18.3.1\node_modules\rc-util\lib\getScrollBarSize.js:83:10)
+    at D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-table@7.54.0_react-dom@18.3.1_react@18.3.1__react@18
+.3.1\node_modules\rc-table\lib\Table.js:427:71
+    at D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1_react@18.3.1__react@18.
+3.1\node_modules\rc-util\lib\hooks\useLayoutEffect.js:18:12
+    at commitHookEffectListMount (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react@18.3.
+1\node_modules\react-dom\cjs\react-dom.development.js:23189:26)
+    at commitPassiveMountOnFiber (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react@18.3.
+1\node_modules\react-dom\cjs\react-dom.development.js:24970:11)
+    at commitPassiveMountEffects_complete (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_re
+act@18.3.1\node_modules\react-dom\cjs\react-dom.development.js:24930:9)
+    at commitPassiveMountEffects_begin (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react
+@18.3.1\node_modules\react-dom\cjs\react-dom.development.js:24917:7) undefined
+Error: Not implemented: window.getComputedStyle(elt, pseudoElt)
+    at module.exports (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\jsdom@25.0.1\node_modules\jsdom\lib\jsd
+om\browser\not-implemented.js:9:17)
+    at window.getComputedStyle (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\jsdom@25.0.1\node_modules\jsdo
+m\lib\jsdom\browser\Window.js:895:7)
+    at measureScrollbarSize (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1_r
+eact@18.3.1__react@18.3.1\node_modules\rc-util\lib\getScrollBarSize.js:35:32)
+    at getTargetScrollBarSize (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1
+_react@18.3.1__react@18.3.1\node_modules\rc-util\lib\getScrollBarSize.js:83:10)
+    at D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-table@7.54.0_react-dom@18.3.1_react@18.3.1__react@18
+.3.1\node_modules\rc-table\lib\Table.js:427:71
+    at D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1_react@18.3.1__react@18.
+3.1\node_modules\rc-util\lib\hooks\useLayoutEffect.js:18:12
+    at commitHookEffectListMount (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react@18.3.
+1\node_modules\react-dom\cjs\react-dom.development.js:23189:26)
+    at commitPassiveMountOnFiber (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react@18.3.
+1\node_modules\react-dom\cjs\react-dom.development.js:24970:11)
+    at commitPassiveMountEffects_complete (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_re
+act@18.3.1\node_modules\react-dom\cjs\react-dom.development.js:24930:9)
+    at commitPassiveMountEffects_begin (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react
+@18.3.1\node_modules\react-dom\cjs\react-dom.development.js:24917:7) undefined
+ [32m✓[39m src/App.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 2873[2mms[22m[39m
+     [33m[2m✓[22m[39m signs in with credentials and lands on the home view [33m 1274[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects malformed tenant IDs without leaving the login view [33m 789[2mms[22m[39m
+     [33m[2m✓[22m[39m clears the session on sign out [33m 450[2mms[22m[39m
+Error: Not implemented: window.getComputedStyle(elt, pseudoElt)
+    at module.exports (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\jsdom@25.0.1\node_modules\jsdom\lib\jsd
+om\browser\not-implemented.js:9:17)
+    at window.getComputedStyle (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\jsdom@25.0.1\node_modules\jsdo
+m\lib\jsdom\browser\Window.js:895:7)
+    at measureScrollbarSize (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1_r
+eact@18.3.1__react@18.3.1\node_modules\rc-util\lib\getScrollBarSize.js:35:32)
+    at getTargetScrollBarSize (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1
+_react@18.3.1__react@18.3.1\node_modules\rc-util\lib\getScrollBarSize.js:83:10)
+    at D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-table@7.54.0_react-dom@18.3.1_react@18.3.1__react@18
+.3.1\node_modules\rc-table\lib\Table.js:427:71
+    at D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\rc-util@5.44.4_react-dom@18.3.1_react@18.3.1__react@18.
+3.1\node_modules\rc-util\lib\hooks\useLayoutEffect.js:18:12
+    at commitHookEffectListMount (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react@18.3.
+1\node_modules\react-dom\cjs\react-dom.development.js:23189:26)
+    at commitPassiveMountOnFiber (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react@18.3.
+1\node_modules\react-dom\cjs\react-dom.development.js:24970:11)
+    at commitPassiveMountEffects_complete (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_re
+act@18.3.1\node_modules\react-dom\cjs\react-dom.development.js:24930:9)
+    at commitPassiveMountEffects_begin (D:\Projects\temp_20261109_01\frontend\node_modules\.pnpm\react-dom@18.3.1_react
+@18.3.1\node_modules\react-dom\cjs\react-dom.development.js:24917:7) undefined
+ [32m✓[39m src/views/ModulesView.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 3877[2mms[22m[39m
+     [33m[2m✓[22m[39m lists modules and switches to suggestions [33m 3166[2mms[22m[39m
+     [33m[2m✓[22m[39m defaults to suggestions when catalog read is missing [33m 708[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m20 passed[39m[22m[90m (20)[39m
+[2m   Start at [22m 18:04:07
+[2m   Duration [22m 10.25s[2m (transform 1.09s, setup 302ms, import 20.18s, tests 8.58s, environment 5.40s)[22m
+
+=== web typecheck ===
+exit=0
+（tsc -p tsconfig.json 无输出、无错误）

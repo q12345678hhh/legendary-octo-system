@@ -33,3 +33,92 @@ button:focus-visible {
   outline: 2px solid var(--platform-color-brand);
   outline-offset: 2px;
 }
+
+/* ---------------------------------------------------------------- 全站骨架 */
+.app-shell {
+  min-height: 100vh;
+  background: var(--platform-color-page-bg);
+}
+
+.app-shell-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--platform-spacing-md);
+  height: 56px;
+  line-height: 56px;
+  padding-inline: var(--platform-spacing-lg);
+  background: var(--platform-color-topbar);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.18);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.app-shell-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--platform-spacing-sm);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.app-shell-brand::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: #fff;
+  opacity: 0.9;
+}
+
+.app-shell-user {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+  white-space: nowrap;
+}
+
+.app-shell-sider {
+  background: var(--platform-color-sidebar);
+  border-right: 1px solid var(--platform-color-border);
+  padding: var(--platform-spacing-sm) 0;
+}
+
+.app-shell-sider .ant-menu {
+  background: transparent;
+  border-inline-end: none;
+}
+
+.app-shell-sider .ant-menu-item-group-title {
+  padding-inline: 20px;
+  letter-spacing: 0.4px;
+}
+
+.app-shell-main {
+  padding: 20px var(--platform-spacing-lg) var(--platform-spacing-xl);
+  min-width: 0;
+}
+
+.app-shell-breadcrumb {
+  margin-bottom: var(--platform-spacing-sm);
+}
+
+.app-shell-title {
+  margin: 0 0 20px;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--platform-color-text-primary);
+}
+
+.ant-card {
+  box-shadow: var(--platform-shadow-card);
+}
+
+.app-shell-main .ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+  background: transparent;
+}
+

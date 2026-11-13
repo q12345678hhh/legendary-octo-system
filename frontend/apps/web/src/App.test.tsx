@@ -10,6 +10,8 @@ const SUBJECT_ID = '22222222-2222-4222-8222-222222222222';
 function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
   const base = {
     request: vi.fn(),
+    signIn: vi.fn(),
+    signOut: vi.fn(async () => undefined),
     getSystemHealth: vi.fn(async () => ({ status: 'UP', service: 'platform-api' })),
     listJobs: vi.fn(async () => [] as Job[]),
     createJob: vi.fn(),
@@ -116,39 +118,60 @@ afterEach(() => {
 });
 
 describe('App shell', () => {
-  it('requires a placeholder identity before exposing the workspace', () => {
+  it('requires a real sign-in before exposing the workspace', () => {
     globalThis.location.hash = '#/home';
 
     render(<App apiClient={fakeClient()} />);
 
-    expect(screen.getByText('使用占位身份进入')).toBeTruthy();
+    expect(screen.getByText('登录平台')).toBeTruthy();
     expect(screen.queryByRole('navigation')).toBeNull();
   });
 
-  it('signs in with UUIDs and lands on the home view', async () => {
+  it('signs in with credentials and lands on the home view', async () => {
     globalThis.location.hash = '#/login';
-    const client = fakeClient();
+    const signIn = vi.fn(async () => ({
+      status: 'session' as const,
+      principal: {
+        tenantId: TENANT_ID,
+        actorId: SUBJECT_ID,
+        userId: '33333333-3333-4333-8333-333333333333',
+        memberId: '44444444-4444-4444-8444-444444444444',
+        email: 'demo.manager@example.test',
+        displayName: '张主管',
+      },
+    }));
+    const client = fakeClient({ signIn });
 
     render(<App apiClient={client} />);
 
     fireEvent.change(screen.getByLabelText(/租户 ID/), { target: { value: TENANT_ID } });
-    fireEvent.change(screen.getByLabelText(/主体 ID/), { target: { value: SUBJECT_ID } });
-    fireEvent.submit(screen.getByRole('form', { name: '占位登录表单' }));
+    fireEvent.change(screen.getByLabelText(/邮箱/), {
+      target: { value: 'demo.manager@example.test' },
+    });
+    fireEvent.change(screen.getByLabelText(/密码/), { target: { value: 'Demo#Passw0rd2026' } });
+    fireEvent.submit(screen.getByRole('form', { name: '登录表单' }));
 
     expect(await screen.findByText('platform-api')).toBeTruthy();
-    expect(screen.getByRole('navigation')).toBeTruthy();
+    expect(signIn).toHaveBeenCalledWith({
+      tenantId: TENANT_ID,
+      email: 'demo.manager@example.test',
+      password: 'Demo#Passw0rd2026',
+    });
+    expect(screen.getByRole('navigation', { name: '主导航' })).toBeTruthy();
     expect(globalThis.location.hash).toBe('#/home');
     expect(globalThis.sessionStorage.getItem('platform.session.v1')).toContain(TENANT_ID);
+    expect(globalThis.sessionStorage.getItem('platform.session.v1')).toContain(SUBJECT_ID);
   });
 
-  it('rejects malformed identities without leaving the login view', () => {
+  it('rejects malformed tenant IDs without leaving the login view', () => {
     globalThis.location.hash = '#/login';
 
     render(<App apiClient={fakeClient()} />);
 
     fireEvent.change(screen.getByLabelText(/租户 ID/), { target: { value: 'not-a-uuid' } });
-    fireEvent.change(screen.getByLabelText(/主体 ID/), { target: { value: SUBJECT_ID } });
-    fireEvent.submit(screen.getByRole('form', { name: '占位登录表单' }));
+    fireEvent.change(screen.getByLabelText(/邮箱/), { target: { value: 'user@example.test' } });
+    fireEvent.change(screen.getByLabelText(/密码/), { target: { value: 'secret' } });
+    fireEvent.submit(screen.getByRole('form', { name: '登录表单' }));
 
     expect(screen.getByRole('alert')).toBeTruthy();
     expect(screen.getByText(/租户 ID 必须是标准 UUID/)).toBeTruthy();
@@ -174,13 +197,15 @@ describe('App shell', () => {
   it('clears the session on sign out', async () => {
     saveSession({ tenantId: TENANT_ID, subjectId: SUBJECT_ID });
     globalThis.location.hash = '#/home';
+    const signOut = vi.fn(async () => undefined);
 
-    render(<App apiClient={fakeClient()} />);
+    render(<App apiClient={fakeClient({ signOut })} />);
     await screen.findByText('platform-api');
 
     fireEvent.click(screen.getByRole('button', { name: /退\s*出/ }));
 
-    expect(await screen.findByText('使用占位身份进入')).toBeTruthy();
+    expect(await screen.findByText('登录平台')).toBeTruthy();
+    expect(signOut).toHaveBeenCalled();
     expect(globalThis.sessionStorage.getItem('platform.session.v1')).toBeNull();
   });
 });
