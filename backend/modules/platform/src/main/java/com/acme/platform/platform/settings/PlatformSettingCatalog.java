@@ -35,6 +35,10 @@ public final class PlatformSettingCatalog {
         define(new Definition("model.gateway_key", "model", Kind.TEXT, true, 1, 512));
         define(new Definition("limits.max_tenants", "limits", Kind.INT, false, 1, 10000));
         define(new Definition("limits.support_access_max_minutes", "limits", Kind.INT, false, 1, 60));
+        // 保留策略：min 即合规下限，低于下限在写入口返回 422 RETENTION_BELOW_MINIMUM。
+        define(new Definition("retention.audit_days", "retention", Kind.INT, false, 2555, 36500));
+        define(new Definition("retention.business_log_days", "retention", Kind.INT, false, 90, 3650));
+        define(new Definition("retention.recycle_bin_days", "retention", Kind.INT, false, 7, 90));
     }
 
     private static void define(Definition definition) {

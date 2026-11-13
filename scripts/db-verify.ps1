@@ -207,7 +207,9 @@ $script:pg = Resolve-PgClient
 # WSL 为 NAT 模式时宿主机的 localhost 不会转发到发行版内部，JDBC 必须用发行版 IP；
 # psql 仍然在容器内执行，走容器自己的 127.0.0.1，两者互不影响。
 if ($script:pg.Mode -eq 'docker' -and $DbHost -eq 'localhost') {
-    $wslIp = (& wsl -d $script:pg.Distro -u root -- hostname -I) -split '\s+' | Where-Object { $_ } | Select-Object -First 1
+    # 经 cmd 调用并丢弃 stderr：wsl.exe 的 localhost 代理告警在 Stop 偏好下会被当成异常
+    $rawIp = cmd /c "wsl -d $($script:pg.Distro) -u root -- hostname -I 2>nul"
+    $wslIp = ($rawIp -split '\s+' | Where-Object { $_ } | Select-Object -First 1)
     if ($wslIp) { $DbHost = $wslIp.Trim() }
 }
 Write-Host ("psql 客户端：{0}" -f $(if ($script:pg.Mode -eq 'native') { '原生 psql' } else { "WSL($($script:pg.Distro)) 容器 $($script:pg.Container)" }))
@@ -224,7 +226,7 @@ try {
     $emptyChecksums = Get-Checksums $emptyDb
     Write-Host '  校验和（空库）：'
     $emptyChecksums | ForEach-Object { Write-Host "    $_" }
-    Assert-True ($emptyChecksums.Count -eq 11) "空库应安装 11 个版本，实际 $($emptyChecksums.Count)"
+    Assert-True ($emptyChecksums.Count -eq 12) "空库应安装 12 个版本，实际 $($emptyChecksums.Count)"
 
     # ---------------------------------------------------------------- 2 RLS
     Write-Step '2 RLS 正向与负例（platform_app 身份）'
@@ -338,7 +340,7 @@ COMMIT;
         Assert-True ($emptyChecksums -contains $line) "上一版本校验和与空库不一致（历史文件被改？）：$line"
         Assert-True ($afterChecksums -contains $line) "升级后校验和变化：$line"
     }
-    Assert-True ($afterChecksums.Count -eq 11) "升级后应有 11 个版本，实际 $($afterChecksums.Count)"
+    Assert-True ($afterChecksums.Count -eq 12) "升级后应有 12 个版本，实际 $($afterChecksums.Count)"
     # V6 在授权之后创建新表，重新授权确保平台应用账号可读写租户生命周期表
     Grant-AppRole $upgradeDb
 
@@ -579,6 +581,44 @@ COMMIT;
     Write-Host "  $platformOpsSummary"
     Write-Host '  目录同步、审计不可改删、设置白名单、指标幂等、事件状态机与平台表无 RLS 全部通过'
 
+    # ---------------------------------------------------------------- 5i 删除、保留与数据主体请求
+    Write-Step '5i 删除与保留：回收站 RLS、留置、受保护类、不可变留痕与保留策略'
+    $retentionSql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '94-retention.sql'
+    Write-Host $retentionSql.Output
+    Assert-True ($retentionSql.Output -match 'WP02-08 删除、保留与数据主体请求数据库断言通过') '删除与保留 SQL 断言未通过'
+
+    $retentionArgs = @(
+        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'),
+        '-pl', 'boot-api', '-am', 'test',
+        '-Dtest=RetentionDbTest,DeletionAnonymizeDbTest',
+        '-Dsurefire.failIfNoSpecifiedTests=false',
+        '-DfailIfNoTests=false',
+        '-Djacoco.skip=true',
+        "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
+        "-Dplatform.db.user=$AppUser",
+        "-Dplatform.db.password=$AppPassword"
+    )
+    if ($env:PLATFORM_MAVEN_REPO) { $retentionArgs += "-Dmaven.repo.local=$($env:PLATFORM_MAVEN_REPO)" }
+    $ErrorActionPreference = 'Continue'
+    $retentionOut = & mvn @retentionArgs 2>&1
+    $retentionCode = $LASTEXITCODE
+    if ($retentionCode -ne 0) {
+        throw "删除与保留用例失败（exit=$retentionCode）：`n$((($retentionOut | ForEach-Object { "$_" }) -join "`n"))"
+    }
+    $retentionReport = Join-Path $repoRoot 'backend\modules\tenancy\target\surefire-reports\com.acme.platform.tenancy.retention.RetentionDbTest.txt'
+    Assert-True (Test-Path $retentionReport) "找不到删除与保留用例报告：$retentionReport"
+    $retentionSummary = (Get-Content -Encoding UTF8 $retentionReport | Where-Object { $_ -match '^Tests run:' } | Select-Object -First 1)
+    Assert-True ($retentionSummary -match 'Tests run: 3, Failures: 0, Errors: 0, Skipped: 0') "删除与保留用例未执行：$retentionSummary"
+    Write-Host "  $retentionSummary"
+    Write-Host '  回收站 30 天默认、跨租户隔离、留置与受保护类拒绝、留痕与墓碑不可改删、案件状态机与非法迁移全部通过'
+
+    $anonymizeReport = Join-Path $repoRoot 'backend\boot-api\target\surefire-reports\com.acme.platform.DeletionAnonymizeDbTest.txt'
+    Assert-True (Test-Path $anonymizeReport) "找不到匿名化用例报告：$anonymizeReport"
+    $anonymizeSummary = (Get-Content -Encoding UTF8 $anonymizeReport | Where-Object { $_ -match '^Tests run:' } | Select-Object -First 1)
+    Assert-True ($anonymizeSummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "匿名化用例未执行：$anonymizeSummary"
+    Write-Host "  $anonymizeSummary"
+    Write-Host '  在职拒绝、匿名化替换显示名与邮箱、密码置空、墓碑写入与统计事实保留全部通过'
+
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'
     Invoke-Psql -Database $upgradeDb -User $OwnerUser -Password $OwnerPassword -Sql `
@@ -617,7 +657,7 @@ COMMIT;
     Write-Host '  事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户'
 
     Write-Host ''
-    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、统一授权、职责分离与访问复核、跨租户攻击套件、平台运营端、并发、索引、锁等待评估、连接池隔离。'
+    Write-Host '全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、统一授权、职责分离与访问复核、跨租户攻击套件、平台运营端、删除与保留、并发、索引、锁等待评估、连接池隔离。'
 } finally {
     if (-not $KeepDatabases -and $script:pg) {
         foreach ($db in @($emptyDb, $upgradeDb)) {

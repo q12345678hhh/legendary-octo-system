@@ -220,9 +220,9 @@ BEGIN
       JOIN pg_class c ON c.relname = p.tablename
       JOIN pg_namespace ns ON ns.oid = c.relnamespace AND ns.nspname = 'public'
      WHERE p.schemaname = 'public' AND c.relforcerowsecurity;
-    -- 58 = V4–V10 的 57 张（40-integrity.sql 口径）+ tenancy_tenant 自身
-    IF tables <> 58 THEN
-        RAISE EXCEPTION '受 FORCE RLS 保护的租户表应为 58 张，实际 %', tables;
+    -- 61 = V4–V12 的 60 张（40-integrity.sql 口径）+ tenancy_tenant 自身
+    IF tables <> 61 THEN
+        RAISE EXCEPTION '受 FORCE RLS 保护的租户表应为 61 张，实际 %', tables;
     END IF;
 
     FOR t IN

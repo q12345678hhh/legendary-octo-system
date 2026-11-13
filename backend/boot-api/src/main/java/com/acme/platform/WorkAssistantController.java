@@ -2,6 +2,7 @@ package com.acme.platform;
 
 import com.acme.platform.platform.ApiException;
 import com.acme.platform.platform.RequestContextHolder;
+import com.acme.platform.tenancy.retention.RetentionService;
 import com.acme.platform.worklog.device.DeviceService;
 import com.acme.platform.worklog.device.SegmentService;
 import com.acme.platform.worklog.policy.PolicyService;
@@ -12,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,16 +43,19 @@ public class WorkAssistantController {
     private final SegmentService segmentService;
     private final PolicyService policyService;
     private final UpdateManifestService updateManifestService;
+    private final RetentionService retentionService;
     private final ObjectMapper objectMapper;
 
     public WorkAssistantController(DeviceService deviceService, SegmentService segmentService,
                                    PolicyService policyService,
                                    UpdateManifestService updateManifestService,
+                                   RetentionService retentionService,
                                    ObjectMapper objectMapper) {
         this.deviceService = deviceService;
         this.segmentService = segmentService;
         this.policyService = policyService;
         this.updateManifestService = updateManifestService;
+        this.retentionService = retentionService;
         this.objectMapper = objectMapper;
     }
 
@@ -107,6 +112,13 @@ public class WorkAssistantController {
         }
         return segmentService.upload(request.getMethod(), request.getRequestURI(),
                 timestamp, signature, body, upload);
+    }
+
+    /** 片段进回收站：普通删除，默认保留 30 天，到期由 Worker 清理。 */
+    @DeleteMapping("/segments/{segmentId}")
+    public RetentionController.BinItemView deleteSegment(@PathVariable UUID segmentId) {
+        return RetentionController.BinItemView.from(
+                retentionService.recycle("work_assistant_segment", segmentId));
     }
 
     @GetMapping("/update-manifest")

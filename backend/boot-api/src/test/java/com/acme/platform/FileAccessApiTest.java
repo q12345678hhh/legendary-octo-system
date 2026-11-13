@@ -19,6 +19,7 @@ import com.acme.platform.platform.PlatformMetrics;
 import com.acme.platform.platform.file.FileRecord;
 import com.acme.platform.platform.file.FileService;
 import com.acme.platform.platform.idempotency.IdempotencyService;
+import com.acme.platform.tenancy.retention.RetentionService;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -58,6 +59,9 @@ class FileAccessApiTest {
 
     @MockitoBean
     private IdempotencyService idempotencyService;
+
+    @MockitoBean
+    private RetentionService retentionService;
 
     @Autowired
     private MockMvc mockMvc;
