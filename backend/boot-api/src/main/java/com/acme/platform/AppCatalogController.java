@@ -123,10 +123,10 @@ class AppCatalogController {
     @GetMapping("/suggestions/{suggestionId}")
     AppCatalogViews.SuggestionDetail suggestion(@PathVariable UUID suggestionId) {
         UUID personId = viewerPersonId().orElse(null);
-        boolean reviewer = reviewerDecision(suggestionId).allowed();
+        boolean reviewer = reviewerDecision(null).allowed();
         boolean creator = personId != null
                 && authorization.decide("appcatalog.suggestion.create", "appcatalog.suggestion",
-                suggestionId, Map.of("personId", personId)).allowed();
+                null, Map.of("personId", personId)).allowed();
         if (!reviewer && !creator) {
             throw ApiException.forbidden("APP_SUGGESTION_FORBIDDEN", "无权查看该模块建议");
         }

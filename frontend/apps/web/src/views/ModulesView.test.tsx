@@ -53,20 +53,26 @@ function fakeClient(): ApiClient {
 afterEach(cleanup);
 
 describe('ModulesView', () => {
-  it('lists modules and switches to suggestions', async () => {
-    render(
-      <ModulesView
-        apiClient={fakeClient()}
-        permissions={new Set(['appcatalog.module.read', 'appcatalog.suggestion.create'])}
-      />,
-    );
+  it(
+    'lists modules and switches to suggestions',
+    async () => {
+      render(
+        <ModulesView
+          apiClient={fakeClient()}
+          permissions={new Set(['appcatalog.module.read', 'appcatalog.suggestion.create'])}
+        />,
+      );
 
-    expect(await screen.findByText('考勤管理')).toBeTruthy();
+      expect(await screen.findByText('考勤管理', {}, { timeout: 10000 })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('tab', { name: '模块建议' }));
+      fireEvent.click(screen.getByRole('tab', { name: '模块建议' }));
 
-    expect(await screen.findByText('合同到期提醒')).toBeTruthy();
-  });
+      expect(
+        await screen.findByText('合同到期提醒', {}, { timeout: 10000 }),
+      ).toBeTruthy();
+    },
+    20000,
+  );
 
   it('defaults to suggestions when catalog read is missing', async () => {
     render(

@@ -13,7 +13,7 @@ interface NavGroup {
 }
 
 const NAV_GROUPS: readonly NavGroup[] = [
-  { label: '工作台', items: ['home', 'departments', 'worklog', 'collaboration', 'workflowInbox'] },
+  { label: '工作台', items: ['myWork', 'home', 'departments', 'worklog', 'collaboration', 'workflowInbox'] },
   { label: '管理', items: ['insights', 'modules', 'jobs', 'files'] },
 ];
 

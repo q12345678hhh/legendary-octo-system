@@ -9,6 +9,7 @@ export type RouteName =
   | 'files'
   | 'departments'
   | 'department'
+  | 'myWork'
   | 'work'
   | 'worklog'
   | 'insights'
@@ -48,6 +49,12 @@ export const routes: readonly RouteDefinition[] = [
     title: '部门工作区',
     requiresSession: true,
     permission: 'department.workspace.read',
+  },
+  {
+    name: 'myWork',
+    path: '#/my-work',
+    title: '我的工作',
+    requiresSession: true,
   },
   {
     name: 'work',

@@ -14,5 +14,10 @@
   "files.eol": "\n",
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
-  "terminal.integrated.defaultProfile.windows": "PowerShell"
+  "terminal.integrated.defaultProfile.windows": "PowerShell",
+  "java.compile.nullAnalysis.mode": "automatic",
+  // JDT 语言服务器会用 ECJ 自动构建并覆盖 target/，其类路径缺失跨模块测试依赖时会写出
+  // “Unresolved compilation problems” 桩类，导致 surefire 报 ClassNotFoundException。
+  // 本仓库以 Maven 为准，关闭自动构建。
+  "java.autobuild.enabled": false
 }
