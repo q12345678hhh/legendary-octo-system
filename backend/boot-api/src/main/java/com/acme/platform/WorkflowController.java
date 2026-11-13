@@ -209,13 +209,16 @@ class WorkflowController {
 
     /** 返回是否租户级管理员；普通处理人凭 workflow.task.act 通过。 */
     private boolean requireTaskAccess(UUID taskId) {
+        // 审批箱动作的数据范围按「本人」判定；具体任务是否归本人由任务服务再校验一次。
+        UUID personId = viewerPersonId().orElse(null);
+        Map<String, Object> attributes = personId == null ? Map.of() : Map.of("personId", personId);
         AccessDecision task = authorization.decide("workflow.task.act", "workflow.task",
-                taskId, Map.of());
+                taskId, attributes);
         if (task.allowed()) {
             return task.scope().tenantWide();
         }
         AccessDecision admin = authorization.decide("workflow.instance.admin", "workflow.task",
-                taskId, Map.of());
+                taskId, attributes);
         if (admin.allowed()) {
             return true;
         }

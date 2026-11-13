@@ -1,0 +1,668 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] Enterprise Application Platform                                    [pom]
+[INFO] Database migrations                                                [jar]
+[INFO] Module: platform                                                   [jar]
+[INFO] Module: tenancy                                                    [jar]
+[INFO] Module: organization                                               [jar]
+[INFO] Module: identity                                                   [jar]
+[INFO] Module: authorization                                              [jar]
+[INFO] Module: department                                                 [jar]
+[INFO] Module: appcatalog                                                 [jar]
+[INFO] Module: lowcode                                                    [jar]
+[INFO] Module: workflow                                                   [jar]
+[INFO] Module: hr                                                         [jar]
+[INFO] Module: worklog                                                    [jar]
+[INFO] Module: collaboration                                              [jar]
+[INFO] Module: integration                                                [jar]
+[INFO] Module: plugin                                                     [jar]
+[INFO] Module: ai                                                         [jar]
+[INFO] Bootstrap: API                                                     [jar]
+[INFO] 
+[INFO] -----------------< com.acme.platform:platform-parent >------------------
+[INFO] Building Enterprise Application Platform 0.1.0-SNAPSHOT           [1/18]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ platform-parent ---
+[INFO] Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion passed
+[INFO] Rule 1: org.apache.maven.enforcer.rules.version.RequireMavenVersion passed
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ platform-parent ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ platform-parent ---
+[INFO] CycloneDX: Resolving Aggregated Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 128 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\target\classes\META-INF\sbom\application.cdx.json
+[WARNING] Unknown keyword meta:enum - you should define your own Meta Schema. If the keyword is irrelevant for validation, just use a NonValidationKeyword or if it should generate annotations AnnotationKeyword
+[WARNING] Unknown keyword deprecated - you should define your own Meta Schema. If the keyword is irrelevant for validation, just use a NonValidationKeyword or if it should generate annotations AnnotationKeyword
+[INFO]            attaching as platform-parent-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] ------------------------< com.acme.platform:db >------------------------
+[INFO] Building Database migrations 0.1.0-SNAPSHOT                       [2/18]
+[INFO]   from db\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ db ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ db ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\db\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ db ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 0 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\db\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as db-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ db ---
+[INFO] Copying 19 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ db ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ db ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\db\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ db ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ db ---
+[INFO] 
+[INFO] ---------------------< com.acme.platform:platform >---------------------
+[INFO] Building Module: platform 0.1.0-SNAPSHOT                          [3/18]
+[INFO]   from modules\platform\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ platform ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ platform ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\platform\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ platform ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 32 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\platform\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as platform-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ platform ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\platform\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\platform\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ platform ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ platform ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\platform\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ platform ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ platform ---
+[INFO] 
+[INFO] ---------------------< com.acme.platform:tenancy >----------------------
+[INFO] Building Module: tenancy 0.1.0-SNAPSHOT                           [4/18]
+[INFO]   from modules\tenancy\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ tenancy ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ tenancy ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\tenancy\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ tenancy ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 33 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\tenancy\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as tenancy-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ tenancy ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\tenancy\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\tenancy\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ tenancy ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ tenancy ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\tenancy\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ tenancy ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ tenancy ---
+[INFO] 
+[INFO] -------------------< com.acme.platform:organization >-------------------
+[INFO] Building Module: organization 0.1.0-SNAPSHOT                      [5/18]
+[INFO]   from modules\organization\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ organization ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ organization ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\organization\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ organization ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 34 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\organization\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as organization-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ organization ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\organization\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\organization\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ organization ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ organization ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\organization\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ organization ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ organization ---
+[INFO] 
+[INFO] ---------------------< com.acme.platform:identity >---------------------
+[INFO] Building Module: identity 0.1.0-SNAPSHOT                          [6/18]
+[INFO]   from modules\identity\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ identity ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ identity ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\identity\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ identity ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 36 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\identity\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as identity-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ identity ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\identity\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\identity\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ identity ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ identity ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\identity\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ identity ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ identity ---
+[INFO] 
+[INFO] ------------------< com.acme.platform:authorization >-------------------
+[INFO] Building Module: authorization 0.1.0-SNAPSHOT                     [7/18]
+[INFO]   from modules\authorization\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ authorization ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ authorization ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\authorization\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ authorization ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 37 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\authorization\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as authorization-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ authorization ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\authorization\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\authorization\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ authorization ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 32 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ authorization ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\authorization\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ authorization ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 6 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ authorization ---
+[INFO] 
+[INFO] --------------------< com.acme.platform:department >--------------------
+[INFO] Building Module: department 0.1.0-SNAPSHOT                        [8/18]
+[INFO]   from modules\department\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ department ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ department ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\department\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ department ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 33 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\department\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as department-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ department ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\department\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\department\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ department ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ department ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\department\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ department ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ department ---
+[INFO] 
+[INFO] --------------------< com.acme.platform:appcatalog >--------------------
+[INFO] Building Module: appcatalog 0.1.0-SNAPSHOT                        [9/18]
+[INFO]   from modules\appcatalog\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ appcatalog ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ appcatalog ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\appcatalog\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ appcatalog ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 33 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\appcatalog\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as appcatalog-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ appcatalog ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\appcatalog\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\appcatalog\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ appcatalog ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ appcatalog ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\appcatalog\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ appcatalog ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ appcatalog ---
+[INFO] 
+[INFO] ---------------------< com.acme.platform:lowcode >----------------------
+[INFO] Building Module: lowcode 0.1.0-SNAPSHOT                          [10/18]
+[INFO]   from modules\lowcode\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ lowcode ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ lowcode ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\lowcode\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ lowcode ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 24 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\lowcode\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as lowcode-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ lowcode ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\lowcode\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\lowcode\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ lowcode ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ lowcode ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\lowcode\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ lowcode ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ lowcode ---
+[INFO] 
+[INFO] ---------------------< com.acme.platform:workflow >---------------------
+[INFO] Building Module: workflow 0.1.0-SNAPSHOT                         [11/18]
+[INFO]   from modules\workflow\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ workflow ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ workflow ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\workflow\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ workflow ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 38 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\workflow\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as workflow-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ workflow ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\workflow\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\workflow\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ workflow ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 18 source files with javac [debug parameters release 21] to target\classes
+[INFO] /D:/Projects/temp_20261109_01/backend/modules/workflow/src/main/java/com/acme/platform/workflow/WorkflowConditionEvaluator.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /D:/Projects/temp_20261109_01/backend/modules/workflow/src/main/java/com/acme/platform/workflow/WorkflowConditionEvaluator.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ workflow ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\workflow\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ workflow ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 4 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] /D:/Projects/temp_20261109_01/backend/modules/workflow/src/test/java/com/acme/platform/workflow/WorkflowEngineTest.java: D:\Projects\temp_20261109_01\backend\modules\workflow\src\test\java\com\acme\platform\workflow\WorkflowEngineTest.java使用了未经检查或不安全的操作。
+[INFO] /D:/Projects/temp_20261109_01/backend/modules/workflow/src/test/java/com/acme/platform/workflow/WorkflowEngineTest.java: 有关详细信息, 请使用 -Xlint:unchecked 重新编译。
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ workflow ---
+[INFO] 
+[INFO] ------------------------< com.acme.platform:hr >------------------------
+[INFO] Building Module: hr 0.1.0-SNAPSHOT                               [12/18]
+[INFO]   from modules\hr\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ hr ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ hr ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\hr\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ hr ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 24 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\hr\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as hr-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ hr ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\hr\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\hr\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ hr ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ hr ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\hr\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ hr ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ hr ---
+[INFO] 
+[INFO] ---------------------< com.acme.platform:worklog >----------------------
+[INFO] Building Module: worklog 0.1.0-SNAPSHOT                          [13/18]
+[INFO]   from modules\worklog\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ worklog ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ worklog ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\worklog\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ worklog ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 33 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\worklog\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as worklog-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ worklog ---
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ worklog ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ worklog ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\worklog\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ worklog ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ worklog ---
+[INFO] 
+[INFO] ------------------< com.acme.platform:collaboration >-------------------
+[INFO] Building Module: collaboration 0.1.0-SNAPSHOT                    [14/18]
+[INFO]   from modules\collaboration\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ collaboration ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ collaboration ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\collaboration\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ collaboration ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 33 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\collaboration\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as collaboration-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ collaboration ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\collaboration\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\collaboration\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ collaboration ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ collaboration ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\collaboration\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ collaboration ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ collaboration ---
+[INFO] 
+[INFO] -------------------< com.acme.platform:integration >--------------------
+[INFO] Building Module: integration 0.1.0-SNAPSHOT                      [15/18]
+[INFO]   from modules\integration\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ integration ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ integration ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\integration\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ integration ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 24 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\integration\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as integration-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ integration ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\integration\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\integration\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ integration ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ integration ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\integration\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ integration ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ integration ---
+[INFO] 
+[INFO] ----------------------< com.acme.platform:plugin >----------------------
+[INFO] Building Module: plugin 0.1.0-SNAPSHOT                           [16/18]
+[INFO]   from modules\plugin\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ plugin ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ plugin ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\plugin\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ plugin ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 24 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\plugin\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as plugin-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ plugin ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\plugin\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\plugin\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ plugin ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ plugin ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\plugin\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ plugin ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ plugin ---
+[INFO] 
+[INFO] ------------------------< com.acme.platform:ai >------------------------
+[INFO] Building Module: ai 0.1.0-SNAPSHOT                               [17/18]
+[INFO]   from modules\ai\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ ai ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ ai ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\modules\\ai\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ ai ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 24 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\modules\ai\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as ai-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ ai ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\ai\src\main\resources
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\ai\src\main\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ ai ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ ai ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\modules\ai\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ ai ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ ai ---
+[INFO] 
+[INFO] ---------------------< com.acme.platform:boot-api >---------------------
+[INFO] Building Bootstrap: API 0.1.0-SNAPSHOT                           [18/18]
+[INFO]   from boot-api\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:3.7.0:enforce (enforce-build-baseline) @ boot-api ---
+[INFO] Rule 2: org.apache.maven.enforcer.rules.BanDuplicatePomDependencyVersions passed
+[INFO] 
+[INFO] --- jacoco-maven-plugin:0.8.16:prepare-agent (prepare-agent) @ boot-api ---
+[INFO] argLine set to -javaagent:D:\\DevCache\\maven-repo\\org\\jacoco\\org.jacoco.agent\\0.8.16\\org.jacoco.agent-0.8.16-runtime.jar=destfile=D:\\Projects\\temp_20261109_01\\backend\\boot-api\\target\\jacoco.exec -Dfile.encoding=UTF-8
+[INFO] 
+[INFO] --- cyclonedx-maven-plugin:2.9.3:makeAggregateBom (default) @ boot-api ---
+[INFO] CycloneDX: Resolving Dependencies
+[INFO] CycloneDX: Creating BOM version 1.6 with 127 component(s)
+[INFO] CycloneDX: Writing and validating BOM (JSON): D:\Projects\temp_20261109_01\backend\boot-api\target\classes\META-INF\sbom\application.cdx.json
+[INFO]            attaching as boot-api-0.1.0-SNAPSHOT-cyclonedx.json
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:resources (default-resources) @ boot-api ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:compile (default-compile) @ boot-api ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 65 source files with javac [debug parameters release 21] to target\classes
+[INFO] 由于在类路径中发现了一个或多个处理程序，因此启用了
+  批注处理。未来发行版的 javac 可能会禁用批注处理，
+  除非至少按名称指定了一个处理程序 (-processor)，
+  或指定了搜索路径 (--processor-path, --processor-module-path)，
+  或显式启用了批注处理 (-proc:only, -proc:full)。
+  可使用 -Xlint:-options 隐藏此消息。
+  可使用 -proc:none 禁用批注处理。
+[INFO] Extracting Javadoc into D:\Projects\temp_20261109_01\backend\.\target\generated-spring-modulith\javadoc.json.
+[INFO] 
+[INFO] --- maven-resources-plugin:3.3.1:testResources (default-testResources) @ boot-api ---
+[INFO] skip non existing resourceDirectory D:\Projects\temp_20261109_01\backend\boot-api\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.14.1:testCompile (default-testCompile) @ boot-api ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 24 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] 由于在类路径中发现了一个或多个处理程序，因此启用了
+  批注处理。未来发行版的 javac 可能会禁用批注处理，
+  除非至少按名称指定了一个处理程序 (-processor)，
+  或指定了搜索路径 (--processor-path, --processor-module-path)，
+  或显式启用了批注处理 (-proc:only, -proc:full)。
+  可使用 -Xlint:-options 隐藏此消息。
+  可使用 -proc:none 禁用批注处理。
+[INFO] /D:/Projects/temp_20261109_01/backend/boot-api/src/test/java/com/acme/platform/ModuleStructureTest.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /D:/Projects/temp_20261109_01/backend/boot-api/src/test/java/com/acme/platform/ModuleStructureTest.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] 
+[INFO] --- maven-surefire-plugin:3.5.6:test (default-test) @ boot-api ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.acme.platform.AppCatalogAuthzTest
+17:47:10.578 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.acme.platform.AppCatalogAuthzTest]: AppCatalogAuthzTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+17:47:11.284 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.acme.platform.PlatformApiApplication for test class com.acme.platform.AppCatalogAuthzTest
+17:47:11.291 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.acme.platform.AppCatalogAuthzTest]: AppCatalogAuthzTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+17:47:11.322 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.acme.platform.PlatformApiApplication for test class com.acme.platform.AppCatalogAuthzTest
+{"@timestamp":"2026-11-13T09:47:12.771180100Z","log":{"level":"INFO","logger":"com.acme.platform.AppCatalogAuthzTest"},"process":{"pid":52648,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Starting AppCatalogAuthzTest using Java 21.0.12.1 with PID 52648 (started by Administrator in D:\\Projects\\temp_20261109_01\\backend\\boot-api)","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T09:47:12.790270800Z","log":{"level":"INFO","logger":"com.acme.platform.AppCatalogAuthzTest"},"process":{"pid":52648,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"No active profile set, falling back to 1 default profile: \"default\"","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+WARNING: A Java agent has been loaded dynamically (D:\DevCache\maven-repo\net\bytebuddy\byte-buddy-agent\1.17.8\byte-buddy-agent-1.17.8.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+{"@timestamp":"2026-11-13T09:47:22.502444600Z","log":{"level":"INFO","logger":"org.springframework.boot.test.mock.web.SpringBootMockServletContext"},"process":{"pid":52648,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Initializing Spring TestDispatcherServlet ''","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T09:47:22.506487Z","log":{"level":"INFO","logger":"org.springframework.test.web.servlet.TestDispatcherServlet"},"process":{"pid":52648,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Initializing Servlet ''","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T09:47:22.521242700Z","log":{"level":"INFO","logger":"org.springframework.test.web.servlet.TestDispatcherServlet"},"process":{"pid":52648,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Completed initialization in 8 ms","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T09:47:22.635979400Z","log":{"level":"INFO","logger":"com.acme.platform.AppCatalogAuthzTest"},"process":{"pid":52648,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Started AppCatalogAuthzTest in 11.068 seconds (process running for 14.862)","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.25 s -- in com.acme.platform.AppCatalogAuthzTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for Enterprise Application Platform 0.1.0-SNAPSHOT:
+[INFO] 
+[INFO] Enterprise Application Platform .................... SUCCESS [  7.995 s]
+[INFO] Database migrations ................................ SUCCESS [  1.113 s]
+[INFO] Module: platform ................................... SUCCESS [  1.697 s]
+[INFO] Module: tenancy .................................... SUCCESS [  1.289 s]
+[INFO] Module: organization ............................... SUCCESS [  1.301 s]
+[INFO] Module: identity ................................... SUCCESS [  1.249 s]
+[INFO] Module: authorization .............................. SUCCESS [  7.569 s]
+[INFO] Module: department ................................. SUCCESS [  0.765 s]
+[INFO] Module: appcatalog ................................. SUCCESS [  1.173 s]
+[INFO] Module: lowcode .................................... SUCCESS [  0.515 s]
+[INFO] Module: workflow ................................... SUCCESS [  3.107 s]
+[INFO] Module: hr ......................................... SUCCESS [  0.537 s]
+[INFO] Module: worklog .................................... SUCCESS [  1.255 s]
+[INFO] Module: collaboration .............................. SUCCESS [  0.670 s]
+[INFO] Module: integration ................................ SUCCESS [  0.503 s]
+[INFO] Module: plugin ..................................... SUCCESS [  0.557 s]
+[INFO] Module: ai ......................................... SUCCESS [  0.573 s]
+[INFO] Bootstrap: API ..................................... SUCCESS [ 24.828 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  57.449 s
+[INFO] Finished at: 2026-11-13T17:47:24+08:00
+[INFO] ------------------------------------------------------------------------

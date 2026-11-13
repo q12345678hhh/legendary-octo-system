@@ -11,6 +11,341 @@
     }
   ],
   "paths": {
+    "/api/v1/app-catalog/modules": {
+      "get": {
+        "operationId": "listAppModules",
+        "summary": "模块目录列表",
+        "description": "按关键词、分类与健康状态检索当前租户的模块目录；安装状态仅为占位。",
+        "parameters": [
+          { "name": "q", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "health",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["healthy", "degraded", "offline", "unknown"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "模块列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "string", "format": "uuid" },
+                      "code": { "type": "string" },
+                      "name": { "type": "string" },
+                      "category": { "type": "string" },
+                      "description": { "type": "string" },
+                      "templateKey": { "type": ["string", "null"] },
+                      "ownerPersonId": { "type": ["string", "null"], "format": "uuid" },
+                      "version": { "type": "string" },
+                      "dependencies": { "type": "string" },
+                      "applicableScope": {
+                        "type": "string",
+                        "enum": ["tenant", "department", "project", "person"]
+                      },
+                      "healthStatus": {
+                        "type": "string",
+                        "enum": ["healthy", "degraded", "offline", "unknown"]
+                      },
+                      "installStatus": {
+                        "type": "string",
+                        "enum": ["not_installed", "installed", "disabled"]
+                      },
+                      "createdAt": { "type": "string", "format": "date-time" },
+                      "updatedAt": { "type": "string", "format": "date-time" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "createAppModule",
+        "summary": "登记模块",
+        "description": "需要 appcatalog.module.manage；模块编码在租户内唯一。",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["code", "name"],
+                "properties": {
+                  "code": { "type": "string" },
+                  "name": { "type": "string" },
+                  "category": { "type": "string" },
+                  "description": { "type": "string" },
+                  "templateKey": { "type": ["string", "null"] },
+                  "ownerPersonId": { "type": ["string", "null"], "format": "uuid" },
+                  "version": { "type": "string" },
+                  "dependencies": { "type": "string", "description": "JSON 数组字符串" },
+                  "applicableScope": {
+                    "type": "string",
+                    "enum": ["tenant", "department", "project", "person"]
+                  },
+                  "healthStatus": {
+                    "type": "string",
+                    "enum": ["healthy", "degraded", "offline", "unknown"]
+                  },
+                  "installStatus": {
+                    "type": "string",
+                    "enum": ["not_installed", "installed", "disabled"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "已登记的模块" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/app-catalog/modules/{moduleId}": {
+      "get": {
+        "operationId": "getAppModule",
+        "summary": "模块详情",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "模块详情" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "put": {
+        "operationId": "updateAppModule",
+        "summary": "更新模块",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": { "schema": { "type": "object" } }
+          }
+        },
+        "responses": {
+          "200": { "description": "更新后的模块" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/app-catalog/suggestions": {
+      "get": {
+        "operationId": "listModuleSuggestions",
+        "summary": "模块建议列表",
+        "description": "scope=mine 只看本人发起；scope=all 需要租户级 appcatalog.suggestion.review。",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "enum": ["mine", "all"], "default": "mine" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "建议列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "string", "format": "uuid" },
+                      "title": { "type": "string" },
+                      "requesterPersonId": { "type": "string", "format": "uuid" },
+                      "businessProblem": { "type": "string" },
+                      "goal": { "type": "string" },
+                      "scope": { "type": "string" },
+                      "dataScope": { "type": "string" },
+                      "permissionsNeeded": { "type": "string" },
+                      "costEstimate": { "type": "string" },
+                      "benefitEstimate": { "type": "string" },
+                      "suggestedOwnerPersonId": {
+                        "type": ["string", "null"],
+                        "format": "uuid"
+                      },
+                      "configOwnerPersonId": { "type": ["string", "null"], "format": "uuid" },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "draft",
+                          "communicating",
+                          "submitted",
+                          "configuring",
+                          "testing",
+                          "rectifying",
+                          "test_failed",
+                          "pending_final_approval",
+                          "rejected",
+                          "withdrawn",
+                          "enabled",
+                          "special_pending_review",
+                          "paused",
+                          "closed",
+                          "deprecated"
+                        ]
+                      },
+                      "createdAt": { "type": "string", "format": "date-time" },
+                      "updatedAt": { "type": "string", "format": "date-time" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "createModuleSuggestion",
+        "summary": "发起模块建议",
+        "description": "全员可发起；发起人一律从会话解析，忽略请求体中的主体标识。",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "businessProblem"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "businessProblem": { "type": "string" },
+                  "goal": { "type": "string" },
+                  "scope": { "type": "string" },
+                  "dataScope": { "type": "string" },
+                  "permissionsNeeded": { "type": "string" },
+                  "costEstimate": { "type": "string" },
+                  "benefitEstimate": { "type": "string" },
+                  "suggestedOwnerPersonId": { "type": ["string", "null"], "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "已创建的建议" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/app-catalog/suggestions/{suggestionId}": {
+      "get": {
+        "operationId": "getModuleSuggestion",
+        "summary": "模块建议详情",
+        "description": "返回建议与事件时间线；非发起人需要租户级复核权限。",
+        "parameters": [
+          {
+            "name": "suggestionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "建议与事件时间线" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/app-catalog/suggestions/{suggestionId}/actions": {
+      "post": {
+        "operationId": "actOnModuleSuggestion",
+        "summary": "模块建议状态流转",
+        "description": "submit/withdraw 仅发起人；受理、驳回、要求补充、启用等决定需要租户级复核人，非法流转返回 409。",
+        "parameters": [
+          {
+            "name": "suggestionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action"],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "submit",
+                      "submit-review",
+                      "accept",
+                      "reject",
+                      "request-more",
+                      "withdraw",
+                      "comment",
+                      "start-test",
+                      "test-pass",
+                      "test-fail",
+                      "rectify",
+                      "approve",
+                      "special-review",
+                      "review-pass",
+                      "pause",
+                      "resume",
+                      "deprecate",
+                      "close"
+                    ]
+                  },
+                  "comment": { "type": "string" },
+                  "configOwnerPersonId": { "type": ["string", "null"], "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "流转后的建议与事件时间线" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
     "/api/v1/retention/bin": {
       "get": {
         "operationId": "listRetentionBin",
