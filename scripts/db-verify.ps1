@@ -17,7 +17,8 @@
     7. 迁移期间的锁等待评估：V3 执行时持续做短事务写入，统计最慢语句。
     8. 连接池：HikariCP 借用同一条物理连接时，租户上下文不得跨事务残留。
 
-    本地模式自动回退到 WSL 内的 Docker 与容器内 psql；CI 里直接用原生 psql。
+    本地优先复用 Docker Desktop 容器 platform-pg-dev 内的 psql（自动跟随容器映射端口），
+    其次回退到 WSL 内的 Docker 容器；CI 里直接用原生 psql。
     失败即抛出非零退出，不做「警告后继续」。
 
 .EXAMPLE
@@ -77,15 +78,38 @@ function Resolve-PgClient {
     if ($native) {
         return [pscustomobject]@{ Mode = 'native'; Distro = $null; Container = $null }
     }
+    # Windows 侧 Docker Desktop：直接复用已运行容器里的 psql，避免依赖 WSL pglab
+    $desktopContainer = if ($env:PLATFORM_DOCKER_CONTAINER) { $env:PLATFORM_DOCKER_CONTAINER } else { 'platform-pg-dev' }
+    $ErrorActionPreference = 'Continue'
+    if (Get-Command docker -ErrorAction SilentlyContinue) {
+        $state = & docker inspect -f '{{.State.Running}}' $desktopContainer 2>$null
+        if ($LASTEXITCODE -eq 0 -and ($state -join '') -match 'true') {
+            $mapping = & docker port $desktopContainer 5432/tcp 2>$null
+            $hostPort = $null
+            if ($LASTEXITCODE -eq 0 -and $mapping) {
+                $hostPort = (($mapping -join ' ').Split(':') | Select-Object -Last 1).Trim()
+            }
+            return [pscustomobject]@{
+                Mode = 'desktop'; Distro = $null; Container = $desktopContainer; HostPort = $hostPort
+            }
+        }
+    }
     $distro = if ($env:PLATFORM_WSL_DISTRO) { $env:PLATFORM_WSL_DISTRO } else { 'pglab' }
     $container = if ($env:PLATFORM_PG_CONTAINER) { $env:PLATFORM_PG_CONTAINER } else { 'platform-pg-dev' }
     # 原生命令的 stderr（含 WSL 代理告警）不应中断脚本，交给退出码判定
-    $ErrorActionPreference = 'Continue'
     $state = & wsl -d $distro -u root -- docker inspect -f '{{.State.Running}}' $container 2>$null
     if ($LASTEXITCODE -ne 0 -or ($state -join '') -notmatch 'true') {
-        throw "找不到 psql，且 WSL($distro) 内容器 $container 未运行。先跑 scripts\dev-up.ps1"
+        throw "找不到 psql：Docker Desktop 容器 $desktopContainer 未运行，且 WSL($distro) 内容器 $container 未运行。先跑 scripts\dev-up.ps1 或启动 Docker Desktop"
     }
-    return [pscustomobject]@{ Mode = 'docker'; Distro = $distro; Container = $container }
+    # pglab 内 5432 可能被 Docker Desktop 的容器占用，postgres 会被映射到其它宿主端口
+    $mapping = & wsl -d $distro -u root -- docker port $container 5432/tcp 2>$null
+    $hostPort = $null
+    if ($LASTEXITCODE -eq 0 -and $mapping) {
+        $hostPort = (($mapping -join ' ').Split(':') | Select-Object -Last 1).Trim()
+    }
+    return [pscustomobject]@{
+        Mode = 'docker'; Distro = $distro; Container = $container; HostPort = $hostPort
+    }
 }
 
 function Invoke-Psql {
@@ -100,6 +124,10 @@ function Invoke-Psql {
     if ($script:pg.Mode -eq 'native') {
         $env:PGPASSWORD = $Password
         $out = $Sql | & psql -h $DbHost -p $Port -U $User -d $Database -v ON_ERROR_STOP=1 -t -A 2>&1
+    } elseif ($script:pg.Mode -eq 'desktop') {
+        $out = $Sql | & docker exec -i `
+                -e "PGPASSWORD=$Password" -e 'PGCLIENTENCODING=UTF8' $script:pg.Container `
+                psql -h 127.0.0.1 -p 5432 -U $User -d $Database -v ON_ERROR_STOP=1 -t -A 2>&1
     } else {
         # 容器内用 127.0.0.1:5432：宿主机映射端口与容器内端口不是一回事
         $out = $Sql | & wsl -d $script:pg.Distro -u root -- docker exec -i `
@@ -204,6 +232,10 @@ if (-not $OwnerPassword -or -not $AppPassword) {
 }
 
 $script:pg = Resolve-PgClient
+# 容器可能因 5432 被占用而映射到其它宿主端口，未显式传 -Port 时跟随实际映射
+if ($script:pg.HostPort -and -not $PSBoundParameters.ContainsKey('Port')) {
+    $Port = [int]$script:pg.HostPort
+}
 # WSL 为 NAT 模式时宿主机的 localhost 不会转发到发行版内部，JDBC 必须用发行版 IP；
 # psql 仍然在容器内执行，走容器自己的 127.0.0.1，两者互不影响。
 if ($script:pg.Mode -eq 'docker' -and $DbHost -eq 'localhost') {
@@ -212,7 +244,11 @@ if ($script:pg.Mode -eq 'docker' -and $DbHost -eq 'localhost') {
     $wslIp = ($rawIp -split '\s+' | Where-Object { $_ } | Select-Object -First 1)
     if ($wslIp) { $DbHost = $wslIp.Trim() }
 }
-Write-Host ("psql 客户端：{0}" -f $(if ($script:pg.Mode -eq 'native') { '原生 psql' } else { "WSL($($script:pg.Distro)) 容器 $($script:pg.Container)" }))
+Write-Host ("psql 客户端：{0}" -f $(switch ($script:pg.Mode) {
+    'native' { '原生 psql' }
+    'desktop' { "Docker Desktop 容器 $($script:pg.Container)" }
+    default { "WSL($($script:pg.Distro)) 容器 $($script:pg.Container)" }
+}))
 Write-Host ("目标：{0}:{1}  owner={2}  app={3}" -f $DbHost, $Port, $OwnerUser, $AppUser)
 
 try {
@@ -226,7 +262,7 @@ try {
     $emptyChecksums = Get-Checksums $emptyDb
     Write-Host '  校验和（空库）：'
     $emptyChecksums | ForEach-Object { Write-Host "    $_" }
-    Assert-True ($emptyChecksums.Count -eq 12) "空库应安装 12 个版本，实际 $($emptyChecksums.Count)"
+    Assert-True ($emptyChecksums.Count -eq 17) "空库应安装 17 个版本，实际 $($emptyChecksums.Count)"
 
     # ---------------------------------------------------------------- 2 RLS
     Write-Step '2 RLS 正向与负例（platform_app 身份）'
@@ -257,6 +293,9 @@ COMMIT;
         if ($ctx.Mode -eq 'native') {
             $env:PGPASSWORD = $ctx.Password
             $sql | & psql -h $ctx.Host -p $ctx.Port -U $ctx.User -d $ctx.Database -v ON_ERROR_STOP=1 -t -A 2>&1
+        } elseif ($ctx.Mode -eq 'desktop') {
+            $sql | & docker exec -i -e "PGPASSWORD=$($ctx.Password)" $ctx.Container `
+                    psql -h 127.0.0.1 -p 5432 -U $ctx.User -d $ctx.Database -v ON_ERROR_STOP=1 -t -A 2>&1
         } else {
             $sql | & wsl -d $ctx.Distro -u root -- docker exec -i -e "PGPASSWORD=$($ctx.Password)" $ctx.Container `
                     psql -h 127.0.0.1 -p 5432 -U $ctx.User -d $ctx.Database -v ON_ERROR_STOP=1 -t -A 2>&1
@@ -303,6 +342,9 @@ COMMIT;
         if ($ctx.Mode -eq 'native') {
             $env:PGPASSWORD = $ctx.Password
             $sql | & psql -h $ctx.Host -p $ctx.Port -U $ctx.User -d $ctx.Database -v ON_ERROR_STOP=1 -t -A 2>&1
+        } elseif ($ctx.Mode -eq 'desktop') {
+            $sql | & docker exec -i -e "PGPASSWORD=$($ctx.Password)" $ctx.Container `
+                    psql -h 127.0.0.1 -p 5432 -U $ctx.User -d $ctx.Database -v ON_ERROR_STOP=1 -t -A 2>&1
         } else {
             $sql | & wsl -d $ctx.Distro -u root -- docker exec -i -e "PGPASSWORD=$($ctx.Password)" $ctx.Container `
                     psql -h 127.0.0.1 -p 5432 -U $ctx.User -d $ctx.Database -v ON_ERROR_STOP=1 -t -A 2>&1
@@ -340,7 +382,7 @@ COMMIT;
         Assert-True ($emptyChecksums -contains $line) "上一版本校验和与空库不一致（历史文件被改？）：$line"
         Assert-True ($afterChecksums -contains $line) "升级后校验和变化：$line"
     }
-    Assert-True ($afterChecksums.Count -eq 12) "升级后应有 12 个版本，实际 $($afterChecksums.Count)"
+    Assert-True ($afterChecksums.Count -eq 17) "升级后应有 17 个版本，实际 $($afterChecksums.Count)"
     # V6 在授权之后创建新表，重新授权确保平台应用账号可读写租户生命周期表
     Grant-AppRole $upgradeDb
 
@@ -618,6 +660,54 @@ COMMIT;
     Assert-True ($anonymizeSummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "匿名化用例未执行：$anonymizeSummary"
     Write-Host "  $anonymizeSummary"
     Write-Host '  在职拒绝、匿名化替换显示名与邮箱、密码置空、墓碑写入与统计事实保留全部通过'
+
+    # ---------------------------------------------------------------- 5j 部门工作区
+    Write-Step '5j 部门工作区：自动建空间、归档同步、设置约束与跨租户隔离'
+    $departmentSql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '95-department.sql'
+    Write-Host $departmentSql.Output
+    Assert-True ($departmentSql.Output -match 'WP03-01 部门工作区数据库断言通过') '部门工作区 SQL 断言未通过'
+
+    # ---------------------------------------------------------------- 5k 手工工时与周报
+    Write-Step '5k 工时与周报：时长约束、快照不可变、周报冻结、阈值与跨租户隔离'
+    $worklogSql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '96-worklog.sql'
+    Write-Host $worklogSql.Output
+    Assert-True ($worklogSql.Output -match 'WP03-05 工时与周报数据库断言通过') '工时与周报 SQL 断言未通过'
+
+    # ---------------------------------------------------------------- 5l 部门协作
+    Write-Step '5l 部门协作：频道成员、帖子任务会议知识页、文件引用与跨租户隔离'
+    $collabSql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '97-collaboration.sql'
+    Write-Host $collabSql.Output
+    Assert-True ($collabSql.Output -match 'WP03-03 部门协作数据库断言通过') '部门协作 SQL 断言未通过'
+
+    # ---------------------------------------------------------------- 5m 通用工作流与审批
+    Write-Step '5m 通用工作流：一 key 一 published、发布不可变、日志只追加与跨租户隔离'
+    $workflowSql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '98-workflow.sql'
+    Write-Host $workflowSql.Output
+    Assert-True ($workflowSql.Output -match 'WP03-06 工作流数据库断言通过') '工作流 SQL 断言未通过'
+
+    # WorkflowDbTest 在真实库上跑引擎闭环（版本钉住、幂等、无审批人、SLA 不自动批）
+    if (Test-Path $pinnedJavaHome) { $env:JAVA_HOME = $pinnedJavaHome }
+    $workflowArgs = @(
+        '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'), 'test',
+        '-pl', 'modules/workflow',
+        '-Dtest=WorkflowDbTest', '-DfailIfNoTests=true',
+        '-Djacoco.skip=true',
+        "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
+        "-Dplatform.db.user=$AppUser",
+        "-Dplatform.db.password=$AppPassword"
+    )
+    if ($env:PLATFORM_MAVEN_REPO) { $workflowArgs += "-Dmaven.repo.local=$($env:PLATFORM_MAVEN_REPO)" }
+    $ErrorActionPreference = 'Continue'
+    $workflowOut = & mvn @workflowArgs 2>&1
+    $workflowCode = $LASTEXITCODE
+    if ($workflowCode -ne 0) {
+        throw "工作流用例失败（exit=$workflowCode）：`n$((($workflowOut | ForEach-Object { "$_" }) -join "`n"))"
+    }
+    $workflowReport = Join-Path $repoRoot 'backend\modules\workflow\target\surefire-reports\com.acme.platform.workflow.WorkflowDbTest.txt'
+    Assert-True (Test-Path $workflowReport) "找不到工作流用例报告：$workflowReport"
+    $workflowSummary = (Get-Content -Encoding UTF8 $workflowReport | Where-Object { $_ -match '^Tests run:' } | Select-Object -First 1)
+    Assert-True ($workflowSummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "工作流用例未全部执行：$workflowSummary"
+    Write-Host "  $workflowSummary"
 
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'

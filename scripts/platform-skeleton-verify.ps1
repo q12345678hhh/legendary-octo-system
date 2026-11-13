@@ -46,6 +46,10 @@ $tenantA = 'aaaaaaaa-0000-0000-0000-000000000001'
 $tenantB = 'bbbbbbbb-0000-0000-0000-000000000002'
 $subject1 = '11111111-1111-4111-8111-111111111111'
 $subject2 = '22222222-2222-4222-8222-222222222222'
+# 鉴权收紧后接口必须携带会话：脚本在库里引导验证账号并签发会话，请求带 Cookie + CSRF
+$sessionCookieName = if ($env:PLATFORM_IDENTITY_COOKIE) { $env:PLATFORM_IDENTITY_COOKIE } else { 'plt_session' }
+$csrfCookieName = if ($env:PLATFORM_IDENTITY_CSRF_COOKIE) { $env:PLATFORM_IDENTITY_CSRF_COOKIE } else { 'plt_csrf' }
+$script:authSessions = @{}
 $secretMarker = 'PAYLOAD_MARK_' + [guid]::NewGuid().ToString('N').Substring(0, 12)
 $apiProcess = $null
 $workerProcess = $null
@@ -124,6 +128,59 @@ function Invoke-Psql {
     return $text
 }
 
+function Initialize-VerifySession {
+    param(
+        [string]$Tenant = $tenantA,
+        [string]$Subject = $subject1,
+        [string]$UserId,
+        [string]$ActorId,
+        [string]$MemberId
+    )
+    $raw = 'plt_sess_' + [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $hash = -join ($sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($raw)) |
+                ForEach-Object { $_.ToString('x2') })
+    } finally {
+        $sha.Dispose()
+    }
+    # 鉴权收紧后接口只认会话或 API 令牌：在库里引导验证账号、主体、成员、owner 授权与会话行
+    $sql = @"
+SELECT set_config('app.tenant_id', '$Tenant', false);
+INSERT INTO identity_user_account
+    (id, tenant_id, email, email_normalized, display_name, status, activated_at)
+VALUES ('$UserId', '$Tenant', 'verify-skeleton-$Subject@example.test',
+        'verify-skeleton-$Subject@example.test', '骨架验证账号', 'active', now())
+ON CONFLICT (id) DO UPDATE SET status = 'active',
+    activated_at = COALESCE(identity_user_account.activated_at, now()), updated_at = now();
+INSERT INTO identity_actor (id, tenant_id, actor_type, display_name, status, user_id)
+VALUES ('$ActorId', '$Tenant', 'user', '骨架验证账号', 'active', '$UserId')
+ON CONFLICT (id) DO UPDATE SET status = 'active', updated_at = now();
+INSERT INTO identity_tenant_member (id, tenant_id, user_id, status, is_owner)
+VALUES ('$MemberId', '$Tenant', '$UserId', 'active', true)
+ON CONFLICT (id) DO UPDATE SET status = 'active', updated_at = now();
+INSERT INTO authorization_assignment
+    (id, tenant_id, actor_id, member_id, role_code, scope_type, reason, granted_by)
+SELECT gen_random_uuid(), '$Tenant', '$ActorId', '$MemberId', 'tenant-owner', 'tenant',
+       'verify-skeleton 取证', 'verify'
+WHERE NOT EXISTS (
+    SELECT 1 FROM authorization_assignment
+     WHERE tenant_id = '$Tenant' AND actor_id = '$ActorId'
+       AND role_code = 'tenant-owner' AND revoked_at IS NULL
+);
+INSERT INTO identity_session
+    (id, tenant_id, user_id, actor_id, token_hash, auth_version, mfa_satisfied,
+     idle_expires_at, expires_at)
+VALUES (gen_random_uuid(), '$Tenant', '$UserId', '$ActorId', '$hash', 1, true,
+        now() + interval '30 minutes', now() + interval '8 hours');
+"@
+    Invoke-Psql $sql | Out-Null
+    $script:authSessions["$Tenant|$Subject"] = @{
+        Cookie = "$sessionCookieName=$raw; $csrfCookieName=$raw"
+        Csrf   = $raw
+    }
+}
+
 function Get-LastHttpHeader {
     param([string]$HeadersText, [string]$Name)
     $matches = [regex]::Matches($HeadersText, "(?im)^$([regex]::Escape($Name)):\s*(.+?)\s*$")
@@ -174,9 +231,12 @@ function Invoke-Api {
 
 function New-ApiHeaders {
     param([string]$Tenant = $tenantA, [string]$Subject = $subject1, [string]$Key)
+    $session = $script:authSessions["$Tenant|$Subject"]
+    if (-not $session) { throw "缺少 $Tenant/$Subject 的验证会话，先调用 Initialize-VerifySession" }
     $headers = @{
         'X-Tenant-Id' = $Tenant
-        'X-Subject-Id' = $Subject
+        'Cookie' = $session.Cookie
+        'X-CSRF-Token' = $session.Csrf
         'Accept' = 'application/json, application/problem+json'
         'X-Correlation-Id' = 'cor-' + [guid]::NewGuid().ToString('N')
     }
@@ -230,7 +290,12 @@ try {
     Invoke-Wsl @('docker', 'inspect', '-f', '{{.State.Running}}', $pgContainer) | Out-Null
     $dbHost = (Invoke-Wsl @('hostname', '-I')) -split '\s+' | Where-Object { $_ } | Select-Object -First 1
     Assert-True ($null -ne $dbHost) '无法确定 WSL IP'
-    Write-Host "数据库/对象存储地址：$dbHost"
+    # pglab 内 5432 可能被 Docker Desktop 的容器占用，postgres 会被映射到其它宿主端口
+    $dbPort = ((Invoke-Wsl @('docker', 'port', $pgContainer, '5432/tcp')) -split "`n" |
+            ForEach-Object { if ($_ -match ':(\d+)\s*$') { [int]$Matches[1] } } |
+            Select-Object -First 1)
+    Assert-True ($null -ne $dbPort) "无法确定 $pgContainer 的宿主映射端口"
+    Write-Host "数据库/对象存储地址：$dbHost（PostgreSQL 端口 $dbPort）"
 
     $apiJar = Join-Path $repoRoot 'backend\boot-api\target\boot-api-0.1.0-SNAPSHOT.jar'
     $workerJar = Join-Path $repoRoot 'backend\boot-worker\target\boot-worker-0.1.0-SNAPSHOT.jar'
@@ -244,7 +309,7 @@ try {
     Assert-True ($migrationsBefore -match '3') '数据库未应用 V3 基线'
 
     Write-Step '启动 API 与 Worker（本机进程，连接 WSL 内依赖）'
-    $env:PLATFORM_DB_URL = "jdbc:postgresql://${dbHost}:5432/platform"
+    $env:PLATFORM_DB_URL = "jdbc:postgresql://${dbHost}:${dbPort}/platform"
     $env:PLATFORM_DB_USER = 'platform_app'
     $env:PLATFORM_DB_PASSWORD = $envMap['POSTGRES_APP_PASSWORD']
     $env:PLATFORM_DB_MIGRATION_USER = 'platform_owner'
@@ -267,6 +332,19 @@ try {
         } catch { return $false }
     } | Out-Null
     Write-Host "API 已启动 pid=$($apiProcess.Id)"
+
+    Initialize-VerifySession -Tenant $tenantA -Subject $subject1 `
+        -UserId 'e0000000-0000-4000-8000-0000000000a1' `
+        -ActorId 'e0000000-0000-4000-8000-0000000000a2' `
+        -MemberId 'e0000000-0000-4000-8000-0000000000a3'
+    Initialize-VerifySession -Tenant $tenantA -Subject $subject2 `
+        -UserId 'e0000000-0000-4000-8000-0000000000b1' `
+        -ActorId 'e0000000-0000-4000-8000-0000000000b2' `
+        -MemberId 'e0000000-0000-4000-8000-0000000000b3'
+    Initialize-VerifySession -Tenant $tenantB -Subject $subject2 `
+        -UserId 'e0000000-0000-4000-8000-0000000000c1' `
+        -ActorId 'e0000000-0000-4000-8000-0000000000c2' `
+        -MemberId 'e0000000-0000-4000-8000-0000000000c3'
 
     $worker = Start-PlatformProcess -Jar $workerJar -LogName 'worker' -Arguments @(
         '--platform.outbox.poll-interval=1s',

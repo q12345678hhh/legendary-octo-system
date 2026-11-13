@@ -46,13 +46,28 @@ if docker info >/dev/null 2>&1; then
     while pgrep -x dockerd >/dev/null 2>&1 && [ $i -lt 15 ]; do i=$((i + 1)); sleep 1; done
 fi
 
-proxy_ok=no
-if [ -n "$GW" ] && curl -s -o /dev/null --max-time 5 -x "$PROXY" https://registry-1.docker.io/v2/; then
-    proxy_ok=yes
+# 先探 TCP，再带重试验证代理能否到达 registry（启动初期 DNS/代理就绪较慢，单次探测易误报）
+proxy_tcp=no
+if [ -n "$GW" ] && bash -c "exec 3<>/dev/tcp/$GW/$PROXY_PORT" 2>/dev/null; then
+    proxy_tcp=yes
 fi
-echo "docker: gateway=$GW proxy_reachable=$proxy_ok"
-if [ "$proxy_ok" = no ]; then
-    echo "docker: warning: host proxy unreachable, pulls will likely fail" >&2
+
+proxy_ok=no
+if [ "$proxy_tcp" = yes ]; then
+    i=0
+    while [ $i -lt 5 ]; do
+        if curl -s -o /dev/null --max-time 5 -x "$PROXY" https://registry-1.docker.io/v2/; then
+            proxy_ok=yes
+            break
+        fi
+        i=$((i + 1)); sleep 2
+    done
+fi
+echo "docker: gateway=$GW proxy_tcp=$proxy_tcp proxy_reachable=$proxy_ok"
+if [ "$proxy_tcp" = no ]; then
+    echo "docker: warning: cannot connect to host proxy $GW:$PROXY_PORT, pulls will fail" >&2
+elif [ "$proxy_ok" = no ]; then
+    echo "docker: warning: host proxy reachable but registry not, pulls will likely fail" >&2
 fi
 
 nohup dockerd >>"$LOG" 2>&1 &

@@ -44,6 +44,14 @@ $distro = if ($env:PLATFORM_WSL_DISTRO) { $env:PLATFORM_WSL_DISTRO } else { 'pgl
 $pgContainer = if ($env:PLATFORM_PG_CONTAINER) { $env:PLATFORM_PG_CONTAINER } else { 'platform-pg-dev' }
 $tenantA = 'aaaaaaaa-0000-0000-0000-000000000001'
 $subject1 = '11111111-1111-4111-8111-111111111111'
+# 会话鉴权后，设备行记录的是会话主体（actor）而不是旧的请求头主体
+$verifyUserId = 'f0000000-0000-4000-8000-0000000000a1'
+$verifyActorId = 'f0000000-0000-4000-8000-0000000000a2'
+$verifyMemberId = 'f0000000-0000-4000-8000-0000000000a3'
+# 鉴权收紧后接口必须携带会话：脚本在库里引导验证账号并签发会话，请求带 Cookie + CSRF
+$sessionCookieName = if ($env:PLATFORM_IDENTITY_COOKIE) { $env:PLATFORM_IDENTITY_COOKIE } else { 'plt_session' }
+$csrfCookieName = if ($env:PLATFORM_IDENTITY_CSRF_COOKIE) { $env:PLATFORM_IDENTITY_CSRF_COOKIE } else { 'plt_csrf' }
+$script:authSessions = @{}
 $desktop = Join-Path $repoRoot 'desktop-agent'
 $checksExe = Join-Path $desktop 'device\WorkAssistant.Device.Checks\bin\Release\net8.0-windows\WorkAssistant.Device.Checks.exe'
 $appExe = Join-Path $desktop 'windows-app\WorkAssistant.WindowsApp\bin\Release\net8.0-windows\WorkAssistant.WindowsApp.exe'
@@ -175,11 +183,68 @@ function Invoke-Api {
     }
 }
 
+function Initialize-VerifySession {
+    param(
+        [string]$Tenant = $tenantA,
+        [string]$Subject = $subject1,
+        [string]$UserId,
+        [string]$ActorId,
+        [string]$MemberId
+    )
+    $raw = 'plt_sess_' + [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $hash = -join ($sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($raw)) |
+                ForEach-Object { $_.ToString('x2') })
+    } finally {
+        $sha.Dispose()
+    }
+    # 鉴权收紧后接口只认会话或 API 令牌：在库里引导验证账号、主体、成员、owner 授权与会话行
+    $sql = @"
+SELECT set_config('app.tenant_id', '$Tenant', false);
+INSERT INTO identity_user_account
+    (id, tenant_id, email, email_normalized, display_name, status, activated_at)
+VALUES ('$UserId', '$Tenant', 'verify-workassistant-$Subject@example.test',
+        'verify-workassistant-$Subject@example.test', '工时助手验证账号', 'active', now())
+ON CONFLICT (id) DO UPDATE SET status = 'active',
+    activated_at = COALESCE(identity_user_account.activated_at, now()), updated_at = now();
+INSERT INTO identity_actor (id, tenant_id, actor_type, display_name, status, user_id)
+VALUES ('$ActorId', '$Tenant', 'user', '工时助手验证账号', 'active', '$UserId')
+ON CONFLICT (id) DO UPDATE SET status = 'active', updated_at = now();
+INSERT INTO identity_tenant_member (id, tenant_id, user_id, status, is_owner)
+VALUES ('$MemberId', '$Tenant', '$UserId', 'active', true)
+ON CONFLICT (id) DO UPDATE SET status = 'active', updated_at = now();
+INSERT INTO authorization_assignment
+    (id, tenant_id, actor_id, member_id, role_code, scope_type, reason, granted_by)
+SELECT gen_random_uuid(), '$Tenant', '$ActorId', '$MemberId', 'tenant-owner', 'tenant',
+       'verify-workassistant 取证', 'verify'
+WHERE NOT EXISTS (
+    SELECT 1 FROM authorization_assignment
+     WHERE tenant_id = '$Tenant' AND actor_id = '$ActorId'
+       AND role_code = 'tenant-owner' AND revoked_at IS NULL
+);
+INSERT INTO identity_session
+    (id, tenant_id, user_id, actor_id, token_hash, auth_version, mfa_satisfied,
+     idle_expires_at, expires_at)
+VALUES (gen_random_uuid(), '$Tenant', '$UserId', '$ActorId', '$hash', 1, true,
+        now() + interval '30 minutes', now() + interval '8 hours');
+"@
+    Invoke-Psql $sql | Out-Null
+    $script:authSessions["$Tenant|$Subject"] = @{
+        Raw    = $raw
+        Cookie = "$sessionCookieName=$raw; $csrfCookieName=$raw"
+        Csrf   = $raw
+    }
+}
+
 function New-ApiHeaders {
     param([string]$Tenant = $tenantA, [string]$Subject = $subject1)
+    $session = $script:authSessions["$Tenant|$Subject"]
+    if (-not $session) { throw "缺少 $Tenant/$Subject 的验证会话，先调用 Initialize-VerifySession" }
     return @{
         'X-Tenant-Id' = $Tenant
-        'X-Subject-Id' = $Subject
+        'Cookie' = $session.Cookie
+        'X-CSRF-Token' = $session.Csrf
         'Accept' = 'application/json, application/problem+json'
         'X-Correlation-Id' = 'cor-' + [guid]::NewGuid().ToString('N')
     }
@@ -235,7 +300,12 @@ try {
     Invoke-Wsl @('docker', 'inspect', '-f', '{{.State.Running}}', $pgContainer) | Out-Null
     $dbHost = ((Invoke-Wsl @('hostname', '-I')) -split '\s+' | Where-Object { $_ } | Select-Object -First 1)
     Assert-True ($null -ne $dbHost) '无法确定 WSL IP'
-    Write-Host "数据库地址：$dbHost"
+    # pglab 内 5432 可能被 Docker Desktop 的容器占用，postgres 会被映射到其它宿主端口
+    $dbPort = ((Invoke-Wsl @('docker', 'port', $pgContainer, '5432/tcp')) -split "`n" |
+            ForEach-Object { if ($_ -match ':(\d+)\s*$') { [int]$Matches[1] } } |
+            Select-Object -First 1)
+    Assert-True ($null -ne $dbPort) "无法确定 $pgContainer 的宿主映射端口"
+    Write-Host "数据库地址：$dbHost（PostgreSQL 端口 $dbPort）"
 
     Write-Step '桌面端：Release 构建、离线自检与托盘壳自检'
     if (-not $SkipDesktopBuild) {
@@ -303,7 +373,7 @@ try {
     Assert-True (Test-Path $apiJar) "缺少构建产物：$apiJar"
 
     Write-Step '启动 API（本机进程，连接 WSL 内依赖）'
-    $env:PLATFORM_DB_URL = "jdbc:postgresql://${dbHost}:5432/platform"
+    $env:PLATFORM_DB_URL = "jdbc:postgresql://${dbHost}:${dbPort}/platform"
     $env:PLATFORM_DB_USER = 'platform_app'
     $env:PLATFORM_DB_PASSWORD = $envMap['POSTGRES_APP_PASSWORD']
     $env:PLATFORM_DB_MIGRATION_USER = 'platform_owner'
@@ -335,6 +405,11 @@ try {
         } catch { return $false }
     } | Out-Null
     Write-Host "API 已启动 pid=$($apiProcess.Id)"
+
+    Initialize-VerifySession -Tenant $tenantA -Subject $subject1 `
+        -UserId $verifyUserId -ActorId $verifyActorId -MemberId $verifyMemberId
+    # 设备侧 .NET 客户端从环境变量读取同一会话，避免再走旧的 X-Subject-Id 占位头
+    $env:PLATFORM_API_SESSION = $script:authSessions["$tenantA|$subject1"].Raw
 
     Write-Step '数据库：V5 迁移、RLS 与租户种子'
     $migrations = Invoke-Psql 'select version from flyway_schema_history order by installed_rank'
@@ -417,7 +492,7 @@ order by c.relname;
         Where-Object { $_ -match '^\d+$' } | Select-Object -Last 1
     Assert-True ([int]$segmentCount -eq 3) "撤销后应只有 3 条已确认片段（崩溃重传不得重复），实际 $segmentCount"
     $deviceRow = Select-PsqlValue (Invoke-Psql "SET app.tenant_id = '$tenantA'; SELECT status || '|' || (revoked_at IS NOT NULL) || '|' || coalesce(revoked_by,'') FROM work_assistant_device WHERE tenant_id = '$tenantA';")
-    Assert-True ($deviceRow -eq "revoked|true|$subject1") "设备状态应为 revoked|true|$subject1，实际 $deviceRow"
+    Assert-True ($deviceRow -eq "revoked|true|$verifyActorId") "设备状态应为 revoked|true|$verifyActorId，实际 $deviceRow"
     $policyRow = Select-PsqlValue (Invoke-Psql "SET app.tenant_id = '$tenantA'; SELECT version FROM work_assistant_policy WHERE tenant_id = '$tenantA';")
     Assert-True ($policyRow -eq '2') "租户策略版本应为 2，实际 $policyRow"
     Add-Evidence 'device-revocation.txt' (@(
