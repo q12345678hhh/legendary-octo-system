@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://contracts.platform.local/events/workflow.task.created.v1.json",
+  "title": "工作流审批任务创建事件 v1",
+  "x-event-name": "workflow.task.created.v1",
+  "x-event-version": 1,
+  "allOf": [
+    {
+      "$ref": "./envelope.v1.json"
+    },
+    {
+      "type": "object",
+      "required": ["data"],
+      "properties": {
+        "data": {
+          "type": "object",
+          "required": ["task_id", "business_type", "title"],
+          "properties": {
+            "task_id": { "type": "string", "format": "uuid" },
+            "instance_id": { "type": "string", "format": "uuid" },
+            "business_type": { "type": "string", "minLength": 1 },
+            "business_id": { "type": "string", "format": "uuid" },
+            "title": { "type": "string", "minLength": 1, "maxLength": 300 },
+            "assignee_person_id": { "type": "string", "format": "uuid" },
+            "due_at": { "type": "string", "format": "date-time" }
+          }
+        }
+      }
+    }
+  ]
+}

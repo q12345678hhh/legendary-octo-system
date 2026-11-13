@@ -3,9 +3,11 @@ import { tokens } from '@platform/design-system';
 import { Alert, Button, Layout, Space, Typography } from 'antd';
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
+  matchRoute,
   navigate,
   parseHash,
   routeHref,
+  routePermission,
   routeTitle,
   routes,
   subscribeToRoute,
@@ -13,15 +15,25 @@ import {
 } from './router';
 import { clearSession, readSession, type Session } from './session';
 import { shortId } from './utils/format';
+import { CollaborationView } from './views/CollaborationView';
+import { DepartmentWorkspaceView } from './views/DepartmentWorkspaceView';
+import { DepartmentsView } from './views/DepartmentsView';
 import { FilesView } from './views/FilesView';
 import { HomeView } from './views/HomeView';
+import { InsightsView } from './views/InsightsView';
 import { JobsView } from './views/JobsView';
 import { LoginView } from './views/LoginView';
+import { WorkView } from './views/WorkView';
+import { WorkflowInboxView } from './views/WorkflowInboxView';
+import { WorkflowInstanceView } from './views/WorkflowInstanceView';
+import { WorklogView } from './views/WorklogView';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 
-const NAV_ROUTES = routes.filter((route) => route.requiresSession);
+const NAV_ROUTES = routes.filter(
+  (route) => route.requiresSession && !route.path.includes(':'),
+);
 
 interface ErrorBoundaryState {
   message: string | null;
@@ -68,12 +80,38 @@ function resolveRoute(current: RouteName | null, session: Session | null): Route
 
 export function App({ apiClient }: AppProps) {
   const [session, setSession] = useState<Session | null>(() => readSession());
+  const [permissions, setPermissions] = useState<Set<string> | null>(null);
   const [route, setRoute] = useState<RouteName>(() =>
     resolveRoute(parseHash(globalThis.location.hash), readSession()),
   );
   const mainRef = useRef<HTMLElement>(null);
+  const params = matchRoute(globalThis.location.hash)?.params ?? {};
 
   useEffect(() => subscribeToRoute(setRoute), []);
+
+  useEffect(() => {
+    if (!session) {
+      setPermissions(null);
+      return undefined;
+    }
+    let active = true;
+    apiClient
+      .getCapabilities?.()
+      .then((capabilities) => {
+        if (active) {
+          setPermissions(new Set(capabilities.permissions));
+        }
+      })
+      .catch(() => {
+        // 能力清单失败时保留全部导航；直接访问仍由后端逐请求鉴权。
+        if (active) {
+          setPermissions(null);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [apiClient, session]);
 
   useEffect(() => {
     const target = resolveRoute(route, session);
@@ -133,7 +171,10 @@ export function App({ apiClient }: AppProps) {
           {session && (
             <nav aria-label="主导航">
               <Space size="middle">
-                {NAV_ROUTES.map((item) => (
+                {NAV_ROUTES.filter((item) => {
+                  const permission = routePermission(item.name);
+                  return !permission || permissions === null || permissions.has(permission);
+                }).map((item) => (
                   <a
                     key={item.name}
                     href={routeHref(item.name)}
@@ -173,6 +214,23 @@ export function App({ apiClient }: AppProps) {
           <ContentErrorBoundary>
             {route === 'login' && <LoginView onSignedIn={handleSignedIn} />}
             {route === 'home' && session && <HomeView apiClient={apiClient} session={session} />}
+            {route === 'departments' && <DepartmentsView apiClient={apiClient} />}
+            {route === 'department' && params.orgUnitId && (
+              <DepartmentWorkspaceView apiClient={apiClient} orgUnitId={params.orgUnitId} />
+            )}
+            {route === 'work' && params.personId && (
+              <WorkView apiClient={apiClient} personId={params.personId} />
+            )}
+            {route === 'worklog' && <WorklogView apiClient={apiClient} />}
+            {route === 'insights' && <InsightsView apiClient={apiClient} />}
+            {route === 'collaboration' && <CollaborationView apiClient={apiClient} />}
+            {route === 'collaborationChannel' && params.channelId && (
+              <CollaborationView apiClient={apiClient} channelId={params.channelId} />
+            )}
+            {route === 'workflowInbox' && <WorkflowInboxView apiClient={apiClient} />}
+            {route === 'workflowInstance' && params.instanceId && (
+              <WorkflowInstanceView apiClient={apiClient} instanceId={params.instanceId} />
+            )}
             {route === 'jobs' && <JobsView apiClient={apiClient} />}
             {route === 'files' && <FilesView apiClient={apiClient} />}
           </ContentErrorBoundary>

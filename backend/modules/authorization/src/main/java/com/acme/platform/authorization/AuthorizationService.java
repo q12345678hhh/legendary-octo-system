@@ -140,6 +140,44 @@ public class AuthorizationService {
         return tenantTransactions.inTenant(context -> store.decisionLogs(limit));
     }
 
+    /**
+     * 当前主体的全部权限码，供导航隐藏与能力提示使用。
+     *
+     * <p>只返回权限码，不返回范围、资源或业务数据；任何业务动作仍必须走
+     * {@link #check} / {@link #require} 由完整决策链重新判定。
+     */
+    public Set<String> heldPermissions() {
+        return tenantTransactions.inTenant(context -> {
+            ActorContext actor = ActorContextHolder.current().orElse(null);
+            if (actor == null) {
+                return Set.of();
+            }
+            TenantMember member = actor.memberId() == null ? null
+                    : memberStore.findById(actor.memberId()).orElse(null);
+            EmploymentScope employment = member != null && member.personId() != null
+                    ? organizationScopes.scopeOfPerson(member.personId(), LocalDate.now(clock))
+                    .orElse(null)
+                    : null;
+            List<RoleGrant> grants = new ArrayList<>();
+            for (AuthorizationStore.AssignmentRow assignment
+                    : store.activeAssignments(actor.actorId(), OffsetDateTime.now(clock))) {
+                grants.add(new RoleGrant(assignment.roleCode(), assignment.scopeType(),
+                        assignment.scopeId(), "ASSIGNMENT", assignment.id()));
+            }
+            grants.addAll(derivedGrants.resolve(member, employment));
+            Set<String> roles = new LinkedHashSet<>();
+            for (RoleGrant grant : grants) {
+                roles.add(grant.roleCode());
+            }
+            Map<String, Set<String>> custom = store.customRolePermissions(roles);
+            Set<String> held = new LinkedHashSet<>();
+            for (RoleGrant grant : grants) {
+                held.addAll(permissionsOf(grant.roleCode(), custom));
+            }
+            return Set.copyOf(held);
+        });
+    }
+
     private AccessDecision decide(AccessRequest request, RequestContext context, boolean explain) {
         if (request.tenantId() == null || !request.tenantId().equals(context.tenantId())) {
             return deny(DecisionReason.TENANT_MISSING, 0L, now(), "TENANT_MISMATCH");

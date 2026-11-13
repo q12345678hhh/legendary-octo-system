@@ -61,6 +61,30 @@ public final class PermissionCatalog {
         register(map, "ai.tool.enable", "ai.tool", "enable", true);
         register(map, "module.activation.configure", "module.activation", "configure", true);
         register(map, "module.activation.approve", "module.activation", "approve", true);
+        register(map, "department.workspace.read", "department.workspace", "read", false);
+        register(map, "department.workspace.manage", "department.workspace", "manage", true);
+        register(map, "worklog.time.read", "worklog.time", "read", true);
+        register(map, "worklog.time.write", "worklog.time", "write", false);
+        register(map, "worklog.time.review", "worklog.time", "review", true);
+        register(map, "worklog.time.export", "worklog.time", "export", true);
+        register(map, "worklog.report.read", "worklog.report", "read", true);
+        register(map, "worklog.report.submit", "worklog.report", "submit", false);
+        register(map, "worklog.report.review", "worklog.report", "review", true);
+        register(map, "insight.work.read", "insight.work", "read", true);
+        register(map, "insight.work.export", "insight.work", "export", true);
+        register(map, "collaboration.channel.read", "collaboration.channel", "read", false);
+        register(map, "collaboration.channel.manage", "collaboration.channel", "manage", true);
+        register(map, "collaboration.post.write", "collaboration.post", "write", false);
+        register(map, "collaboration.task.write", "collaboration.task", "write", false);
+        register(map, "collaboration.page.manage", "collaboration.page", "manage", true);
+        register(map, "workflow.definition.manage", "workflow.definition", "manage", true);
+        register(map, "workflow.instance.start", "workflow.instance", "start", false);
+        register(map, "workflow.task.act", "workflow.task", "act", false);
+        register(map, "workflow.instance.admin", "workflow.instance", "admin", true);
+        register(map, "appcatalog.module.read", "appcatalog.module", "read", false);
+        register(map, "appcatalog.suggestion.create", "appcatalog.suggestion", "create", false);
+        register(map, "appcatalog.suggestion.review", "appcatalog.suggestion", "review", true);
+        register(map, "appcatalog.module.manage", "appcatalog.module", "manage", true);
         PERMISSIONS = Collections.unmodifiableMap(map);
     }
 

@@ -45,6 +45,17 @@ BEGIN
                              'platform_outbox_replay',
                              'work_assistant_device', 'work_assistant_policy',
                              'work_assistant_segment',
+                             'department_space', 'department_space_setting',
+                             'worklog_access_log', 'worklog_entry', 'worklog_submission',
+                             'worklog_day', 'worklog_weekly_report', 'worklog_report_source',
+                             'worklog_setting',
+                             'collab_channel', 'collab_channel_member', 'collab_post',
+                             'collab_comment', 'collab_mention', 'collab_receipt',
+                             'collab_project', 'collab_project_member', 'collab_file_link',
+                             'collab_file_version', 'collab_file_tag', 'collab_task',
+                             'collab_milestone', 'collab_meeting', 'collab_action_item',
+                             'collab_decision', 'collab_page', 'collab_notification',
+                             'collab_share_link',
                              'tenancy_domain', 'tenancy_quota',
                              'tenancy_business_number_sequence', 'tenancy_business_number',
                              'tenancy_lifecycle_audit', 'tenancy_support_access',
@@ -89,6 +100,20 @@ BEGIN
                          'platform_outbox_replay',
                          'work_assistant_device', 'work_assistant_policy',
                          'work_assistant_segment',
+                         'department_space', 'department_space_setting',
+                         'worklog_access_log', 'worklog_entry', 'worklog_submission',
+                         'worklog_day', 'worklog_weekly_report', 'worklog_report_source',
+                         'worklog_setting',
+                         'collab_channel', 'collab_channel_member', 'collab_post',
+                         'collab_comment', 'collab_mention', 'collab_receipt',
+                         'collab_project', 'collab_project_member', 'collab_file_link',
+                         'collab_file_version', 'collab_file_tag', 'collab_task',
+                         'collab_milestone', 'collab_meeting', 'collab_action_item',
+                         'collab_decision', 'collab_page', 'collab_notification',
+                         'collab_share_link',
+                         'workflow_definition', 'workflow_instance', 'workflow_token',
+                         'workflow_task', 'workflow_transition_log', 'workflow_timer',
+                         'workflow_service_task', 'workflow_exception',
                          'tenancy_domain', 'tenancy_quota',
                          'tenancy_business_number_sequence', 'tenancy_business_number',
                          'tenancy_lifecycle_audit', 'tenancy_support_access',
@@ -115,8 +140,8 @@ BEGIN
                          'authorization_access_request', 'authorization_access_review',
                          'authorization_access_review_item', 'authorization_admin_action',
                          'retention_bin_item', 'retention_legal_hold', 'retention_event');
-    IF policy_count <> 60 THEN
-        RAISE EXCEPTION 'V4–V12 未完整生效：应有 60 张租户表，实际 %', policy_count;
+    IF policy_count <> 96 THEN
+        RAISE EXCEPTION 'V4–V17 未完整生效：应有 96 张租户表，实际 %', policy_count;
     END IF;
 
     -- WP02-07：平台目录投影是设计内例外，必须不启用 RLS，且同步触发器存在

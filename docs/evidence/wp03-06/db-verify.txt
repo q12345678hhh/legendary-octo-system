@@ -1,0 +1,19 @@
+WP03-06 数据库门禁摘录（scripts/db-verify.ps1）
+================================================
+
+== 1 空库升级：DROP/CREATE 演练库 → migrate → validate
+  校验和（空库）共 17 个版本（V1–V17）
+
+== 4 上一受支持版本升级
+  升级后的校验和：17 个版本，含 17|665848730
+
+== 5m 通用工作流
+WP03-06 工作流数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+  -- in com.acme.platform.workflow.WorkflowDbTest
+
+== 6 校验和门禁
+  flyway:validate 按预期失败（exit=1）
+  篡改被拦截，还原后 validate 通过
+
+全部检查通过。

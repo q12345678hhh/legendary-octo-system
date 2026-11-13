@@ -21,6 +21,8 @@ const platformModuleDir = join(repoRoot, 'backend', 'modules', 'platform', 'src'
   'com', 'acme', 'platform', 'platform');
 const worklogModuleDir = join(repoRoot, 'backend', 'modules', 'worklog', 'src', 'main', 'java',
   'com', 'acme', 'platform', 'worklog');
+const workflowModuleDir = join(repoRoot, 'backend', 'modules', 'workflow', 'src', 'main', 'java',
+  'com', 'acme', 'platform', 'workflow');
 
 function javaFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -196,6 +198,28 @@ test('恢复回收站条目不得重建授权或身份', () => {
   const fileTarget = readFileSync(targets[0], 'utf8');
   assert.match(fileTarget, /UPDATE platform_file SET status = 'available'/,
     '文件恢复只允许还原状态位');
+});
+
+test('工作流状态日志只追加、发布不可变且不直读他模块表', () => {
+  const sql = readFileSync(join(migrationDir, 'V17__workflow_approval.sql'), 'utf8');
+  assert.match(sql,
+    /CREATE TRIGGER workflow_transition_log_immutable_trigger\s+BEFORE UPDATE OR DELETE ON workflow_transition_log/,
+    '状态流转日志必须只追加');
+  assert.match(sql,
+    /CREATE TRIGGER workflow_definition_published_immutable\s+BEFORE UPDATE ON workflow_definition/,
+    '发布后的工作流定义必须冻结');
+  assert.match(sql,
+    /CREATE UNIQUE INDEX workflow_definition_one_published[\s\S]*?WHERE status = 'published'/,
+    '同一 key 只允许一个 published 版本');
+  assert.match(sql, /ALTER TABLE workflow_task FORCE ROW LEVEL SECURITY/,
+    '审批任务必须强制 RLS');
+
+  const forbidden = /\b(?:worklog_|collab_|organization_|identity_|authorization_assignment)\w*/;
+  for (const file of javaFiles(workflowModuleDir)) {
+    const source = readFileSync(file, 'utf8');
+    assert.doesNotMatch(source, forbidden,
+      `${file} 直接读取了其他模块的表，必须走公开只读查询`);
+  }
 });
 
 test('隐私引擎仍强制排除社交软件', () => {

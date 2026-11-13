@@ -9,5 +9,5 @@
 @org.springframework.modulith.ApplicationModule(
         displayName = "worklog",
         allowedDependencies = { "tenancy", "tenancy :: retention", "authorization", "department",
-                "platform", "platform :: retention" })
+                "platform", "platform :: retention", "platform :: work" })
 package com.acme.platform.worklog;

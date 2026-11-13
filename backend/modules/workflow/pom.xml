@@ -22,5 +22,32 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+    <!-- 租户事务、RLS 上下文、outbox 事件与统一异常 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>platform</artifactId>
+    </dependency>
+    <!-- 审批人解析：只调用组织模块的公开只读查询，不直接读组织表 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>organization</artifactId>
+    </dependency>
+    <!-- 角色型审批人：只调用授权模块的公开只读查询 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>authorization</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- WorkflowDbTest 在真实 PostgreSQL 上运行 -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

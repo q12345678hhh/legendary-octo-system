@@ -5,5 +5,5 @@
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "collaboration",
-        allowedDependencies = { "tenancy", "authorization", "identity" })
+        allowedDependencies = { "tenancy", "authorization", "identity", "platform" })
 package com.acme.platform.collaboration;
