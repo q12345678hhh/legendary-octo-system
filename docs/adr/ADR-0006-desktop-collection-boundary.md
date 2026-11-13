@@ -2,10 +2,10 @@
 
 | 项目 | 内容 |
 |---|---|
-| 状态 | 已接受（尖峰 F 验证后） |
-| 日期 | 2026-11-09 |
-| 依据 | `docs/spikes/spike-F-windows-agent.md` |
-| 影响 | WP08 Windows 工作助手、WP06 工时与周报、G4/G6 门禁 |
+| 状态 | **已废弃（Superseded）**：2026-11-13 需求变更，系统不再监控员工电脑，取消设备侧采集与 Windows 工作助手 |
+| 日期 | 2026-11-09（2026-11-13 标注废弃） |
+| 依据 | `docs/spikes/spike-F-windows-agent.md`；`IMPLEMENTATION_PLAN.md` Phase 4 需求变更说明 |
+| 影响 | 原 WP08 Windows 工作助手、WP06 工时与周报、G4/G6 门禁；现由「语音/文字工时 + AI 周报 + 单据预审」取代 |
 
 ## 1. 决策
 
