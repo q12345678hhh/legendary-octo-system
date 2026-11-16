@@ -1,0 +1,34 @@
+# 契约门禁输出
+
+命令：`node contracts/tools/contract-check.mjs`
+
+```text
+PASS openapi/platform-api.v1.json
+PASS events/employee.hired.v1.json
+PASS events/platform.file.scanned.v1.json
+PASS events/platform.file.uploaded.v1.json
+PASS events/platform.job.requested.v1.json
+PASS events/workflow.task.created.v1.json
+PASS plugins/plugin-manifest.v1.json
+PASS events/event-catalog.json
+
+契约门禁通过：8 份契约，3 类覆盖完整
+```
+
+## 本次新增（兼容变更，版本 1.10.0 → 1.11.0）
+
+路径：
+
+- `GET/POST /api/v1/expense/documents`
+- `GET /api/v1/expense/documents/{documentId}`
+- `GET /api/v1/expense/documents/{documentId}/audit`
+- `POST /api/v1/expense/documents/{documentId}/review`
+- `POST /api/v1/expense/documents/{documentId}/post`
+- `POST /api/v1/expense/documents/{documentId}/void`
+- `GET/PUT /api/v1/expense/policy`
+
+Schema：`ExpenseDocumentView`、`ExpenseDocument`、`ExpenseFinding`、`ExpenseExtractionSummary`、
+`ExpenseAuditEvent`、`ExpensePolicy`、`ExpensePolicyRequest`、`CreateExpenseDocumentRequest`、
+`ExpenseManualFields`、`ExpenseLineItem`、`ExpenseReviewRequest`、`ExpenseReviewOverride`、`ExpenseVoidRequest`。
+
+`api-client` 同步新增同名类型与 9 个方法；`index.ts` 已导出。
