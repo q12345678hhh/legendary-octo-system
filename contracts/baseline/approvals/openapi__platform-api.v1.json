@@ -1,0 +1,4 @@
+{
+  "changeRequest": "WP04-01：移除设备采集端点（/api/v1/work-assistant/*）并新增语音工时录入接口",
+  "expiresOn": "2026-12-31T23:59:59Z"
+}

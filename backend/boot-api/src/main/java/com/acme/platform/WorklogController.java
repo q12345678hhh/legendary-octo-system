@@ -12,6 +12,8 @@ import com.acme.platform.worklog.report.WorklogReportService;
 import com.acme.platform.worklog.time.WorklogEntry;
 import com.acme.platform.worklog.time.WorklogEntryService;
 import com.acme.platform.worklog.time.WorklogSubmissionService;
+import com.acme.platform.worklog.voice.VoiceCapture;
+import com.acme.platform.worklog.voice.VoiceCaptureService;
 import com.acme.platform.workflow.WorkflowInstanceService;
 import com.acme.platform.workflow.WorkflowTaskService;
 import java.time.LocalDate;
@@ -42,6 +44,7 @@ class WorklogController {
     private final WorklogEntryService entries;
     private final WorklogSubmissionService submissions;
     private final WorklogReportService reports;
+    private final VoiceCaptureService voice;
     private final AuthorizationGuard authorization;
     private final MemberStore memberStore;
     private final OrganizationScopeQueries organizationScopes;
@@ -51,6 +54,7 @@ class WorklogController {
     WorklogController(WorklogEntryService entries,
                       WorklogSubmissionService submissions,
                       WorklogReportService reports,
+                      VoiceCaptureService voice,
                       AuthorizationGuard authorization,
                       MemberStore memberStore,
                       OrganizationScopeQueries organizationScopes,
@@ -59,6 +63,7 @@ class WorklogController {
         this.entries = entries;
         this.submissions = submissions;
         this.reports = reports;
+        this.voice = voice;
         this.authorization = authorization;
         this.memberStore = memberStore;
         this.organizationScopes = organizationScopes;
@@ -88,12 +93,30 @@ class WorklogController {
     record NotesRequest(String issues, String nextWeekPlan) {
     }
 
+    record VoiceCaptureRequest(LocalDate workDate, String contentType, long sizeBytes,
+                               Integer durationSeconds, String clientRequestId) {
+    }
+
+    record VoiceConfirmRequest(String text, Integer durationMinutes, OffsetDateTime startsAt,
+                               OffsetDateTime endsAt, UUID projectId, UUID taskId,
+                               String description, String clientEntryId) {
+    }
+
+    record VoiceCaptureView(UUID id, String status, String uploadUrl,
+                            java.time.Instant expiresAt, String transcript, String editedText,
+                            String provider, String model, Double confidence,
+                            OffsetDateTime transcribedAt, UUID worklogEntryId, String errorCode) {
+    }
+
+    record VoiceConfirmView(EntryView entry, boolean audioDeleted) {
+    }
+
     record ReportEnvelope(WorklogReportService.ReportView report) {
     }
 
     record EntryView(UUID id, OffsetDateTime startsAt, OffsetDateTime endsAt, int minutes,
                      UUID projectId, UUID taskId, String description, String clientEntryId,
-                     int draftVersion) {
+                     int draftVersion, String sourceType) {
     }
 
     record DayView(LocalDate workDate, String state,
@@ -142,6 +165,40 @@ class WorklogController {
         return entries.split(personId, entryId, request.minutes()).stream()
                 .map(WorklogController::toView)
                 .toList();
+    }
+
+    @PostMapping("/voice/captures")
+    VoiceCaptureView createVoiceCapture(@RequestBody VoiceCaptureRequest request) {
+        UUID personId = requireSelf("worklog.time.write");
+        VoiceCaptureService.UploadTicket ticket = voice.createUpload(personId,
+                employmentId(personId),
+                new VoiceCaptureService.CreateUploadInput(request.workDate(),
+                        request.contentType(), request.sizeBytes(), request.durationSeconds(),
+                        request.clientRequestId()));
+        return toVoiceView(ticket.capture(), ticket.uploadUrl(), ticket.expiresAt());
+    }
+
+    @PostMapping("/voice/captures/{captureId}/transcription")
+    VoiceCaptureView transcribeVoiceCapture(@PathVariable UUID captureId) {
+        UUID personId = requireSelf("worklog.time.write");
+        return toVoiceView(voice.transcribe(personId, captureId), null, null);
+    }
+
+    @PostMapping("/voice/captures/{captureId}/confirm")
+    VoiceConfirmView confirmVoiceCapture(@PathVariable UUID captureId,
+                                         @RequestBody VoiceConfirmRequest request) {
+        UUID personId = requireSelf("worklog.time.write");
+        VoiceCaptureService.ConfirmResult result = voice.confirm(personId, captureId,
+                new VoiceCaptureService.ConfirmInput(request.text(), request.durationMinutes(),
+                        request.startsAt(), request.endsAt(), request.projectId(),
+                        request.taskId(), request.description(), request.clientEntryId()));
+        return new VoiceConfirmView(toView(result.entry()), result.audioDeleted());
+    }
+
+    @DeleteMapping("/voice/captures/{captureId}")
+    void discardVoiceCapture(@PathVariable UUID captureId) {
+        UUID personId = requireSelf("worklog.time.write");
+        voice.discard(personId, captureId);
     }
 
     @PostMapping("/days/{date}/submit")
@@ -315,6 +372,15 @@ class WorklogController {
     private static EntryView toView(WorklogEntry entry) {
         return new EntryView(entry.id(), entry.startsAt(), entry.endsAt(),
                 entry.durationMinutes(), entry.projectId(), entry.taskId(),
-                entry.description(), entry.clientEntryId(), entry.draftVersion());
+                entry.description(), entry.clientEntryId(), entry.draftVersion(),
+                entry.sourceType());
+    }
+
+    private static VoiceCaptureView toVoiceView(VoiceCapture capture, String uploadUrl,
+                                                java.time.Instant expiresAt) {
+        return new VoiceCaptureView(capture.id(), capture.status(), uploadUrl, expiresAt,
+                capture.transcriptText(), capture.editedText(), capture.provider(),
+                capture.model(), capture.confidence(), capture.transcribedAt(),
+                capture.worklogEntryId(), capture.errorCode());
     }
 }

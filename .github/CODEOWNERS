@@ -16,5 +16,4 @@
 /backend/coverage-scope.yaml        @q12345678hhh
 
 # 隐私与安全边界
-/desktop-agent/                     @q12345678hhh
 /plugin-runner/                     @q12345678hhh

@@ -59,16 +59,24 @@ public class WorklogStore {
                             OffsetDateTime startsAt, OffsetDateTime endsAt, int minutes,
                             UUID projectId, UUID taskId, String description, String clientEntryId,
                             int draftVersion) {
+        return insertEntry(personId, employmentId, workDate, startsAt, endsAt, minutes, projectId,
+                taskId, description, clientEntryId, draftVersion, "manual");
+    }
+
+    public UUID insertEntry(UUID personId, UUID employmentId, LocalDate workDate,
+                            OffsetDateTime startsAt, OffsetDateTime endsAt, int minutes,
+                            UUID projectId, UUID taskId, String description, String clientEntryId,
+                            int draftVersion, String sourceType) {
         return jdbcTemplate.queryForObject("""
                 INSERT INTO worklog_entry
                     (tenant_id, person_id, employment_id, work_date, starts_at, ends_at,
                      duration_minutes, project_id, task_id, description, source_type,
                      client_entry_id, draft_version)
                 VALUES (nullif(current_setting('app.tenant_id', true), '')::uuid,
-                        ?, ?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)
+                        ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 RETURNING id
                 """, UUID.class, personId, employmentId, workDate, startsAt, endsAt, minutes,
-                projectId, taskId, description, clientEntryId, draftVersion);
+                projectId, taskId, description, sourceType, clientEntryId, draftVersion);
     }
 
     public void updateEntry(UUID id, OffsetDateTime startsAt, OffsetDateTime endsAt, int minutes,
@@ -93,7 +101,7 @@ public class WorklogStore {
                 SELECT coalesce(sum(duration_minutes), 0)
                   FROM worklog_entry
                  WHERE person_id = ? AND work_date = ? AND deleted_at IS NULL
-                   AND (? IS NULL OR id <> ?)
+                   AND (CAST(? AS uuid) IS NULL OR id <> CAST(? AS uuid))
                 """, Integer.class, personId, date, excludingId, excludingId);
         return total == null ? 0 : total;
     }
@@ -106,7 +114,7 @@ public class WorklogStore {
                        client_entry_id, draft_version
                   FROM worklog_entry
                  WHERE person_id = ? AND work_date = ? AND deleted_at IS NULL
-                   AND (? IS NULL OR id <> ?)
+                   AND (CAST(? AS uuid) IS NULL OR id <> CAST(? AS uuid))
                    AND starts_at IS NOT NULL AND ends_at IS NOT NULL
                    AND starts_at < ? AND ends_at > ?
                 """, WorklogStore::mapEntry, personId, date, excludingId, excludingId, end, start);
