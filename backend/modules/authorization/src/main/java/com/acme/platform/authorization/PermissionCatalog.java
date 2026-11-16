@@ -70,6 +70,12 @@ public final class PermissionCatalog {
         register(map, "worklog.report.read", "worklog.report", "read", true);
         register(map, "worklog.report.submit", "worklog.report", "submit", false);
         register(map, "worklog.report.review", "worklog.report", "review", true);
+        register(map, "expense.document.read", "expense.document", "read", true);
+        register(map, "expense.document.submit", "expense.document", "submit", false);
+        register(map, "expense.document.review", "expense.document", "review", true);
+        register(map, "expense.document.post", "expense.document", "post", true);
+        register(map, "expense.document.void", "expense.document", "void", true);
+        register(map, "expense.policy.manage", "expense.policy", "manage", true);
         register(map, "insight.work.read", "insight.work", "read", true);
         register(map, "insight.work.export", "insight.work", "export", true);
         register(map, "collaboration.channel.read", "collaboration.channel", "read", false);

@@ -1,0 +1,62 @@
+# 只追加审计与不可变抽取/复核
+
+## 数据库触发器
+
+V21 为三张表安装 `BEFORE UPDATE OR DELETE` 触发器：
+
+| 表 | 触发器函数 | 异常文案 |
+|---|---|---|
+| `expense_document_extraction` | `expense_document_extraction_immutable()` | 扩展抽取记录只允许插入，不允许修改或删除 |
+| `expense_document_review` | `expense_document_review_immutable()` | 复核记录只允许插入，不允许修改或删除 |
+| `expense_audit_event` | `expense_audit_event_immutable()` | expense_audit_event 只允许插入，不允许修改或删除 |
+
+应用层只暴露 `insertAudit` / `insertExtraction` / `insertReview`，没有更新或删除入口。
+
+## 落库内容
+
+- `expense_audit_event.action`：
+  `submitted`、`pre_review.completed`、`review.decided`、`auto_posted`、`posted`、`rejected`、`voided`、`policy.updated`。
+- `pre_review.completed.detail`：`extractionId`、`extractionStatus`、`provider`、`model`、
+  `promptVersion`、`ruleVersion`、`policyVersion`、`autoPost`。
+- OCR 原文只存 `expense_document_extraction.ocr_text`（不可变），审计只引用 `extractionId`，
+  避免敏感文本双写。
+- 操作者一律 `actor_person_id` + `actor_kind`（employee/reviewer/poster/ai/system）。
+
+## db-verify 5n 实际输出
+
+```text
+== 5n 单据预审：RLS、只追加审计/抽取/复核、发票号占用与策略默认值
+DO
+aaaaaaaa-0000-4000-8000-0000000000e1
+BEGIN
+INSERT 0 1      -- platform_file
+DELETE 0 ...
+INSERT 0 1      -- expense_document
+INSERT 0 1      -- expense_document_extraction
+COMMIT
+-- 跨租户：甲租户单据与策略对乙租户不可见；乙租户写入被 RLS 拒绝
+BEGIN
+bbbbbbbb-0000-4000-8000-0000000000e1
+DO
+COMMIT
+BEGIN
+aaaaaaaa-0000-4000-8000-0000000000e1
+INSERT 0 1      -- extraction
+INSERT 0 1      -- review
+INSERT 0 1      -- audit
+COMMIT
+-- 抽取/复核/审计的 UPDATE、DELETE 全部命中触发器并抛错（DO 块内捕获）
+DO
+INSERT 0 1      -- 首次发票号占用
+DO              -- 重复占用唯一冲突、释放后重新占用
+INSERT 0 1      -- policy 默认值
+DO              -- posted 缺字段、未知状态、金额=0、撤销空原因均被 CHECK 拒绝
+DO              -- 6 个权限码齐全
+WP04-03 单据预审数据库断言通过
+```
+
+## 策略变更审计
+
+`PUT /api/v1/expense/policy` 需要 `expense.policy.manage`；`ExpenseService.updatePolicy`
+在租户事务内先读旧值，再 upsert（`version = version + 1`），最后写
+`policy.updated` 审计，`detail = { before, after }`，`actor_kind=system`、`actor_person_id=操作者`。

@@ -1,0 +1,33 @@
+WP04-04 职责分离（Separation of Duties）证据
+=============================================
+
+一、复核：提交人不能复核自己的单据
+  ExpenseService.review -> document.uploaderPersonId == reviewerPersonId
+  => 403 EXPENSE_SOD_VIOLATION「不能复核自己提交的单据」
+  用例：ExpenseServiceTest.reviewerCannotReviewOwnDocument
+
+二、入账：提交人不能入账
+  ExpenseService.post -> document.uploaderPersonId == posterPersonId
+  => 403 EXPENSE_SOD_VIOLATION「入账人不能是提交人」
+  用例：ExpenseServiceTest.posterCannotBeUploader（并断言未调用 markPosted）
+
+三、入账：最后复核人不能入账
+  ExpenseService.post -> store.lastReviewer(documentId) == posterPersonId
+  => 403 EXPENSE_SOD_VIOLATION「入账人不能是复核人」
+  用例：ExpenseServiceTest.posterCannotBeLastReviewer（并断言未调用 markPosted）
+
+四、三方分离全链路
+  UPLOADER 提交 -> REVIEWER 复核通过 -> POSTER 入账 -> POSTER 撤销
+  ExpenseServiceTest.approveThenPostAndVoidKeepsTrail
+    verify markPosted(documentId, POSTER, "employee")
+    verify insertAudit(..., "voided", POSTER, "poster", ...)
+
+五、AI 自动通过不豁免职责分离
+  submit 事务内 markPosted(documentId, null, "ai")：
+  AI 不是自然人入账执行人，post_actor_kind=ai；
+  任何人工 post 都必须经过二、三两条校验，不存在「AI 通过后同一个人
+  可以复核+入账」的路径。
+  用例：ExpenseServiceTest.autoPostsWhenAllRulesPass、
+        ExpenseRuleEngineTest.autoPostsWhenEveryRulePasses
+
+结论：四条 SOD 路径均为 403 EXPENSE_SOD_VIOLATION，且失败时单据状态不变。

@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-16T02:39:26.221Z",
+  "frozenAt": "2026-11-16T10:32:52.238Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "5a570aadd59b5778b3431a0309fb5ff9ca9ab16b03ba311be2c0bdce74a48efb",
+      "sha256": "a95b32e45d73c84fca2ad2c3c6ef2b83e8d42b76f7ab614ab3ae9006d04c9870",
       "tokens": {
         "operation:GET /api/v1/app-catalog/modules": {
           "requestBodyRequired": false
@@ -3647,6 +3647,180 @@
         },
         "response:GET /api/v1/worklog/reports/reviews:403": {
           "defined": true
+        },
+        "operation:GET /api/v1/expense/documents": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/expense/documents:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/expense/documents:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/expense/documents:query:status": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/expense/documents:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /api/v1/expense/documents": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/expense/documents:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/expense/documents/{documentId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/expense/documents/{documentId}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/expense/documents/{documentId}:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/expense/documents/{documentId}:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/expense/documents/{documentId}:path:documentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/expense/documents/{documentId}/audit": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/expense/documents/{documentId}/audit:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/expense/documents/{documentId}/audit:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/expense/documents/{documentId}/audit:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/expense/documents/{documentId}/audit:path:documentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/expense/documents/{documentId}/review": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/review:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/review:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/review:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/review:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/expense/documents/{documentId}/review:path:documentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/expense/documents/{documentId}/post": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/post:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/post:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/post:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/expense/documents/{documentId}/post:path:documentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/expense/documents/{documentId}/void": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/void:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/void:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/void:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/documents/{documentId}/void:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/expense/documents/{documentId}/void:path:documentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/expense/policy": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/expense/policy:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/expense/policy:403": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/expense/policy": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/expense/policy:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/expense/policy:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/expense/policy:422": {
+          "defined": true
+        },
+        "operation:GET /api/v1/expense/holds": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/expense/holds:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/expense/holds:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/expense/holds:query:status": {
+          "required": false,
+          "type": "string"
+        },
+        "operation:POST /api/v1/expense/holds/{holdId}/release": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/expense/holds/{holdId}/release:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/holds/{holdId}/release:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/holds/{holdId}/release:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/expense/holds/{holdId}/release:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/expense/holds/{holdId}/release:path:holdId": {
+          "required": true,
+          "type": "string"
         },
         "schema:PlatformLoginRequest.email": {
           "type": "string",
@@ -7698,6 +7872,474 @@
         "schema:WeeklyReportReviewRequest.comment": {
           "type": "object",
           "required": false
+        },
+        "schema:ExpenseDocumentView.document": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:ExpenseDocumentView.extraction": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseDocument.uploaderPersonId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseDocument.fileId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseDocument.docType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "bill",
+            "invoice",
+            "receipt"
+          ]
+        },
+        "schema:ExpenseDocument.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "approved",
+            "manual_review",
+            "posted",
+            "rejected",
+            "voided"
+          ]
+        },
+        "schema:ExpenseDocument.currency": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.amount": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.invoiceCode": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.invoiceNo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.vendorName": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.vendorTaxNo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.occurredOn": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.category": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.findings": {
+          "type": "array",
+          "required": true
+        },
+        "schema:ExpenseDocument.confidence": {
+          "type": "object",
+          "required": true
+        },
+        "schema:ExpenseDocument.ruleVersion": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseDocument.policyVersion": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ExpenseDocument.extractionId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.postedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.postedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.postActorKind": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "ai",
+            "employee",
+            "null"
+          ]
+        },
+        "schema:ExpenseDocument.voidedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.voidedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.voidReason": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseDocument.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseFinding.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseFinding.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "blocked",
+            "fail",
+            "pass",
+            "skipped"
+          ]
+        },
+        "schema:ExpenseFinding.message": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseFinding.actual": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseFinding.expected": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseFinding.confidence": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseExtractionSummary.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseExtractionSummary.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "INVALID",
+            "MANUAL",
+            "OK",
+            "PDF_UNSUPPORTED",
+            "TIMEOUT",
+            "UNAVAILABLE"
+          ]
+        },
+        "schema:ExpenseExtractionSummary.provider": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseExtractionSummary.model": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseExtractionSummary.errorCode": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseExtractionSummary.ocrText": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseExtractionSummary.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseAuditEvent.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseAuditEvent.documentId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseAuditEvent.action": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseAuditEvent.actorPersonId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseAuditEvent.actorKind": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "ai",
+            "employee",
+            "poster",
+            "reviewer",
+            "system"
+          ]
+        },
+        "schema:ExpenseAuditEvent.detail": {
+          "type": "object",
+          "required": true
+        },
+        "schema:ExpenseAuditEvent.occurredAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpensePolicy.autoPostEnabled": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:ExpensePolicy.autoPostLimit": {
+          "type": "number",
+          "required": true
+        },
+        "schema:ExpensePolicy.windowDays": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ExpensePolicy.legalTitle": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpensePolicy.taxId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpensePolicy.vendorAllowlist": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ExpensePolicy.manualCategories": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ExpensePolicy.allowedCategories": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ExpensePolicy.minConfidence": {
+          "type": "number",
+          "required": true
+        },
+        "schema:ExpensePolicy.verifyRequired": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:ExpensePolicy.version": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ExpensePolicyRequest.autoPostEnabled": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:ExpensePolicyRequest.autoPostLimit": {
+          "type": "number",
+          "required": true
+        },
+        "schema:ExpensePolicyRequest.windowDays": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ExpensePolicyRequest.legalTitle": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ExpensePolicyRequest.taxId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ExpensePolicyRequest.vendorAllowlist": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ExpensePolicyRequest.manualCategories": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ExpensePolicyRequest.allowedCategories": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ExpensePolicyRequest.minConfidence": {
+          "type": "number",
+          "required": true
+        },
+        "schema:ExpensePolicyRequest.verifyRequired": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:CreateExpenseDocumentRequest.fileId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:CreateExpenseDocumentRequest.docType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "bill",
+            "invoice",
+            "receipt"
+          ]
+        },
+        "schema:CreateExpenseDocumentRequest.fields": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.amount": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.currency": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.invoiceCode": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.invoiceNo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.vendorName": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.vendorTaxNo": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.occurredOn": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.category": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.title": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseManualFields.lines": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ExpenseLineItem.description": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseLineItem.amount": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseReviewRequest.decision": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "approve",
+            "reject"
+          ]
+        },
+        "schema:ExpenseReviewRequest.comment": {
+          "type": "string",
+          "required": false
+        },
+        "schema:ExpenseReviewRequest.overrides": {
+          "type": "array",
+          "required": false
+        },
+        "schema:ExpenseReviewOverride.ruleCode": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseReviewOverride.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseVoidRequest.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseBatchHold.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseBatchHold.scopeType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "amount",
+            "uploader",
+            "vendor"
+          ]
+        },
+        "schema:ExpenseBatchHold.scopeKey": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseBatchHold.reason": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseBatchHold.windowHours": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ExpenseBatchHold.documentCount": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:ExpenseBatchHold.amountTotal": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseBatchHold.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "active",
+            "released"
+          ]
+        },
+        "schema:ExpenseBatchHold.createdBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseBatchHold.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:ExpenseBatchHold.releasedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseBatchHold.releasedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseBatchHold.releaseNote": {
+          "type": "object",
+          "required": false
+        },
+        "schema:ExpenseBatchHoldReleaseRequest.note": {
+          "type": "string",
+          "required": true
         }
       }
     },

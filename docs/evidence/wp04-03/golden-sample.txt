@@ -1,0 +1,65 @@
+# 自动入账金样本（可重复的自动化证据）
+
+来源：`ExpenseRuleEngineTest` 与 `ExpenseServiceTest`（本地假 HTTP / Mockito，不依赖外部 OCR 供应商）。
+命令：
+
+```powershell
+mvn -B -ntp -f backend/pom.xml -pl modules/expense -am test `
+  "-Dtest=ExpenseRuleEngineTest,ExpenseServiceTest" "-Dsurefire.failIfNoSpecifiedTests=false"
+```
+
+## 输入（全规则通过的发票）
+
+| 字段 | 值 |
+|---|---|
+| 金额 | CNY 128.50 |
+| 发票号 | 88000011 |
+| 供应商 / 税号 | 云图科技 / 91310000XYZ |
+| 发生日期 | 2026-11-10（2026-11-16 之前 6 天） |
+| 科目 | 差旅 |
+| 字段置信度 | amount 0.98、currency 0.99、invoiceNo 0.96、occurredOn 0.95、vendorName 0.93 |
+| 租户策略 | auto_post_enabled=true，auto_post_limit=5000，window_days=90，verify_required=false，min_confidence=0.70 |
+| 发票号占用 | 未占用 |
+| 同哈希文件 | 未提交过 |
+
+## 规则逐条结论（R001-R013）
+
+| 规则 | 结论 | 说明 |
+|---|---|---|
+| R000 抽取可用性 | pass | OCR 状态 OK |
+| R001 必填 | pass | 金额/币种/日期/发票号/供应商齐全 |
+| R002 明细合计 | skipped | 未提供明细行 |
+| R003 抬头 | skipped | 未配置法定抬头 |
+| R004 税号 | skipped | 未配置租户税号 |
+| R005 报销窗口 | pass | 2026-11-10 在 90 天内且不在未来 |
+| R006 发票号去重 | pass | claim 插入成功，未占用 |
+| R007 文件重复 | pass | 同哈希无有效单据 |
+| R008 供应商白名单 | skipped | 未配置白名单 |
+| R009 自动入账阈值 | pass | 128.50 ≤ 5000 |
+| R010 置信度门槛 | pass | 最低 0.93 ≥ 0.70 |
+| R011 人工科目 | skipped | 未配置强制人工科目 |
+| R012 发票验真 | pass | 租户显式关闭强制验真 |
+| R013 允许科目 | skipped | 未配置允许科目 |
+
+结论：`autoPost=true`，单据直接进入 `posted`。
+
+## 落库与审计
+
+- `expense_document.status = posted`，`post_actor_kind = ai`，`posted_at` 非空。
+- `expense_audit_event` 依次写入：
+  `submitted`（employee）→ `pre_review.completed`（ai，含 extractionId/ruleVersion/policyVersion）→
+  `auto_posted`（ai，含金额/币种/科目）。
+- OCR 原文只写 `expense_document_extraction.ocr_text`（不可变表），审计不重复保存原文。
+
+## 测试输出
+
+```text
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.134 s -- in com.acme.platform.expense.ExpenseRuleEngineTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.294 s -- in com.acme.platform.expense.app.ExpenseServiceTest
+```
+
+对应断言：
+
+- `ExpenseRuleEngineTest.autoPostsWhenEveryRulePasses`：无 blocking，`ruleVersion=expense-rules-2026.11`。
+- `ExpenseServiceTest.autoPostsWhenAllRulesPass`：`markPosted(id, null, "ai")` 且写入 `auto_posted` 审计。
+- `ExpenseServiceTest.manualFieldsSkipOcrAndStillRunRules`：手工字段不调用 OCR，仍走全部规则并自动入账。

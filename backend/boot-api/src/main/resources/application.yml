@@ -95,6 +95,14 @@ platform:
       timeout: ${PLATFORM_REPORT_AI_TIMEOUT:20s}
       max-input-chars: ${PLATFORM_REPORT_AI_MAX_INPUT_CHARS:8000}
       prompt-version: ${PLATFORM_REPORT_AI_PROMPT_VERSION:wp04-02.v1}
+  ocr:
+    # 未配置时单据不做外部 OCR，直接转人工；任何失败都不会被当成自动通过
+    base-url: ${PLATFORM_OCR_BASE_URL:}
+    api-key: ${PLATFORM_OCR_API_KEY:}
+    model: ${PLATFORM_OCR_MODEL:gpt-4o-mini}
+    timeout: ${PLATFORM_OCR_TIMEOUT:10s}
+    max-bytes: ${PLATFORM_OCR_MAX_BYTES:8388608}
+    prompt-version: ${PLATFORM_OCR_PROMPT_VERSION:wp04-03.v1}
   smoke:
     # 冒烟端点只在本地验证「请求 → outbox → Worker」链路时打开
     enabled: ${PLATFORM_SMOKE_ENABLED:false}

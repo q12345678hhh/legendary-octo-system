@@ -1,0 +1,43 @@
+WP04-04 全量门禁结果
+=====================
+
+[1] mvn -B -ntp -f backend/pom.xml -pl boot-api -am test
+    BUILD SUCCESS
+    boot-api: Tests run: 100, Failures: 0, Errors: 0, Skipped: 4
+    expense:  Tests run: 31,  Failures: 0, Errors: 0, Skipped: 0
+              （ExpenseRuleEngineTest 12、ExpenseServiceTest 13、
+                OpenAiCompatibleOcrExtractorTest 6）
+    新增/调整用例：
+      ExpenseRuleEngineTest +3（active hold / batch hit / no signal）
+      ExpenseServiceTest +5（poster=uploader、poster=reviewer、
+                             batch hold 阻断、既有 hold 阻断、解除暂停）
+      ExpenseApiTest +2（holds 列表、release 端点），
+      并断言越权 403 触发 security.record(incident)
+
+[2] pnpm --dir frontend run typecheck
+    apps/web、packages/api-client、packages/design-system、
+    packages/lowcode-runtime 全部 Done（exit 0）
+
+[3] pnpm --dir frontend run test
+    apps/web: 7 个测试文件、34 个用例全部通过
+    packages/api-client 8、design-system 3、lowcode-runtime 3 全过
+
+[4] node contracts/tools/contract-check.mjs
+    PASS openapi/platform-api.v1.json（version 1.12.0）
+    PASS events/*.v1.json ×5、plugins/plugin-manifest.v1.json、
+         events/event-catalog.json
+    契约门禁通过：8 份契约，3 类覆盖完整
+    baseline 已用 --update 刷新
+
+[5] node --test "tests/**/*.test.mjs"
+    fail 0；共 33 个用例，32 通过、1 跳过
+
+[6] powershell -NoProfile -ExecutionPolicy Bypass -File scripts/db-verify.ps1
+    空库安装 22 个版本（校验和数量断言 22）
+    上一版本（V2）升级到最新 22 个版本
+    RLS 用例 9/9
+    跨租户攻击套件：FORCE RLS 表 105 张（V22 新增 expense_batch_hold）
+    tests/db/99-expense.sql：WP04-03 断言 + 第 7 节 hold RLS/唯一/CHECK/DELETE
+    全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、
+    身份与会话、组织结构、统一授权、职责分离与访问复核、跨租户攻击、
+    平台运营端、删除与保留、并发、索引、锁等待评估、连接池隔离
