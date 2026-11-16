@@ -262,8 +262,71 @@ export interface WeeklyReport {
   weekEnd: string;
   version: number;
   status: 'draft' | 'submitted' | 'approved' | 'returned';
-  content: Record<string, unknown>;
+  content: WeeklyReportContent;
   submittedAt?: string | null;
+}
+
+export interface WeeklyReportSummaryPoint {
+  text: string;
+  entryIds: string[];
+}
+
+export interface WeeklyReportAnomaly {
+  code: string;
+  message: string;
+  date?: string | null;
+  entryId?: string | null;
+}
+
+export interface WeeklyReportGeneration {
+  mode: 'ai' | 'fallback';
+  provider: string;
+  model: string;
+  promptVersion: string;
+  generatedAt: string;
+  fallbackReason?: string | null;
+  droppedClaims: number;
+  truncated: boolean;
+}
+
+export interface WeeklyReportDay {
+  date: string;
+  minutes: number;
+  submissionId: string;
+  entryIds?: string[];
+}
+
+export interface WeeklyReportEntry {
+  entryId: string;
+  date: string;
+  minutes: number;
+  projectId?: string | null;
+  taskId?: string | null;
+  description?: string;
+}
+
+export interface WeeklyReportItem {
+  key: string;
+  minutes: number;
+  entryIds?: string[];
+}
+
+export interface WeeklyReportContent {
+  schemaVersion?: number;
+  weekStart?: string;
+  weekEnd?: string;
+  days?: WeeklyReportDay[];
+  entries?: WeeklyReportEntry[];
+  items?: WeeklyReportItem[];
+  summary?: string;
+  summaryPoints?: WeeklyReportSummaryPoint[];
+  summarySource?: 'ai' | 'fallback' | 'employee';
+  highlights?: WeeklyReportSummaryPoint[];
+  anomalies?: WeeklyReportAnomaly[];
+  nextWeekPlan?: string;
+  nextWeekPlanSource?: 'ai-suggested' | 'employee' | 'empty';
+  issues?: string;
+  generation?: WeeklyReportGeneration;
 }
 
 export interface VoiceCapture {
@@ -775,10 +838,11 @@ export interface ApiClient {
   generateWeeklyReport(weekStart: string, options?: RequestOptions): Promise<WeeklyReport>;
   updateWeeklyReportNotes(
     weekStart: string,
-    input: { issues: string; nextWeekPlan: string },
+    input: { summary?: string; issues?: string; nextWeekPlan?: string },
     options?: RequestOptions,
   ): Promise<WeeklyReport>;
   submitWeeklyReport(weekStart: string, options?: RequestOptions): Promise<WeeklyReport>;
+  listWeeklyReportVersions(weekStart: string): Promise<WeeklyReport[]>;
   listPendingReportReviews(): Promise<WeeklyReport[]>;
   reviewWeeklyReport(
     reportId: string,
@@ -1224,6 +1288,9 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     submitWeeklyReport: (weekStart, requestOptions) =>
       postJson<WeeklyReport>(
         `/api/v1/worklog/reports/${encodeURIComponent(weekStart)}/submit`, {}, requestOptions),
+    listWeeklyReportVersions: (weekStart) =>
+      request<WeeklyReport[]>(
+        `/api/v1/worklog/reports/${encodeURIComponent(weekStart)}/versions`),
     listPendingReportReviews: () =>
       request<WeeklyReport[]>('/api/v1/worklog/reports/reviews'),
     reviewWeeklyReport: (reportId, action, comment, requestOptions) =>

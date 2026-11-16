@@ -141,27 +141,51 @@ COMMIT;
 
 DO $$
 DECLARE
-    report_id uuid;
+    target_report uuid;
+    submission_id uuid;
 BEGIN
-    SELECT id INTO report_id FROM worklog_weekly_report
+    SELECT id INTO target_report FROM worklog_weekly_report
      WHERE tenant_id = 'dddddddd-0000-4000-8000-000000000008';
+    SELECT id INTO submission_id FROM worklog_submission
+     WHERE tenant_id = 'dddddddd-0000-4000-8000-000000000008' AND version = 1;
 
     UPDATE worklog_weekly_report SET content = jsonb_set(content, '{issues}', '"草稿问题"')
-     WHERE id = report_id;
+     WHERE id = target_report;
+
+    -- 草稿阶段允许写来源映射，提交后必须冻结
+    INSERT INTO worklog_report_source (tenant_id, report_id, submission_id, item_key, minutes)
+    VALUES ('dddddddd-0000-4000-8000-000000000008', target_report, submission_id, 'total', 210),
+           ('dddddddd-0000-4000-8000-000000000008', target_report, submission_id, 'entry:seed-1', 120);
 
     UPDATE worklog_weekly_report SET status = 'submitted', submitted_at = now()
-     WHERE id = report_id;
+     WHERE id = target_report;
 
     BEGIN
         UPDATE worklog_weekly_report SET content = jsonb_set(content, '{issues}', '"提交后修改"')
-         WHERE id = report_id;
+         WHERE id = target_report;
         RAISE EXCEPTION '已提交周报内容不应允许修改';
     EXCEPTION WHEN raise_exception THEN
         IF SQLERRM NOT LIKE '%不可修改%' THEN RAISE; END IF;
     END;
 
     BEGIN
-        DELETE FROM worklog_weekly_report WHERE id = report_id;
+        INSERT INTO worklog_report_source (tenant_id, report_id, submission_id, item_key, minutes)
+        VALUES ('dddddddd-0000-4000-8000-000000000008', target_report, submission_id, 'total', 999);
+        RAISE EXCEPTION '已提交周报的来源映射不应允许写入';
+    EXCEPTION WHEN raise_exception THEN
+        IF SQLERRM NOT LIKE '%不可修改%' THEN RAISE; END IF;
+    END;
+
+    BEGIN
+        DELETE FROM worklog_report_source
+         WHERE worklog_report_source.report_id = target_report;
+        RAISE EXCEPTION '已提交周报的来源映射不应允许删除';
+    EXCEPTION WHEN raise_exception THEN
+        IF SQLERRM NOT LIKE '%不可修改%' THEN RAISE; END IF;
+    END;
+
+    BEGIN
+        DELETE FROM worklog_weekly_report WHERE id = target_report;
         RAISE EXCEPTION '已提交周报不应允许删除';
     EXCEPTION WHEN raise_exception THEN
         IF SQLERRM NOT LIKE '%不允许删除%' THEN RAISE; END IF;
