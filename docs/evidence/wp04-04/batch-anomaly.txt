@@ -1,0 +1,49 @@
+WP04-04 批量异常告警与批次暂停证据
+===================================
+
+一、阈值（代码常量，24 小时窗口，排除 voided 与当前单据）
+  同供应商（供应商名 trim + 小写）：>= 5 张
+  同上传人（personId）：            >= 10 张
+  金额相近（±5%）：                 >= 5 张
+  当前单据计入统计（count + 1）。
+
+二、规则 R014
+  ExpenseRuleEngine.BatchSignals(vendorHit, uploaderHit, amountHit, activeHoldReason)
+  - activeHoldReason 非空 -> blocked「该批次已暂停自动入账：<reason>」
+  - 任一 hit              -> blocked「检测到批量异常（…），转人工复核」
+  - 否则                  -> pass「未发现批量异常」
+  用例：
+    ExpenseRuleEngineTest.activeBatchHoldBlocksAutoPostEvenWhenAllRulesPass
+    ExpenseRuleEngineTest.batchHitBlocksAutoPost
+    ExpenseRuleEngineTest.noBatchSignalKeepsRulePassing
+
+三、落库与审计（提交事务内）
+  命中 -> INSERT expense_batch_hold ... ON CONFLICT DO NOTHING
+       -> 新插入时 insertAudit(null, "batch_anomaly.detected", uploader, "ai",
+                               {scopeType, scopeKey, documentCount, windowHours, documentId})
+  随后读取三个范围的 active 暂停，任一存在即 R014 blocked，当前单据不会自动入账。
+  用例：
+    ExpenseServiceTest.batchAnomalyCreatesHoldAndBlocksAutoPost
+      batchCounts=(4,0,0) -> 同供应商第 5 张
+      verify insertHoldIfAbsent(TENANT,"vendor",...,count=5,...)
+      verify insertAudit(..., "batch_anomaly.detected", ...)
+      单据落 manual_review，never markPosted
+    ExpenseServiceTest.existingActiveHoldBlocksAutoPostEvenBelowThreshold
+      无新命中但存在 active 上传人暂停 -> 仍转人工
+
+四、解除暂停
+  POST /api/v1/expense/holds/{holdId}/release {note}
+  权限 expense.document.post；note 必填（400 EXPENSE_HOLD_NOTE_REQUIRED）；
+  仅 active 可解除（409 EXPENSE_HOLD_NOT_ACTIVE）；写入
+  batch_hold.released 审计（holdId + note）。
+  用例：ExpenseServiceTest.releaseHoldRequiresNoteAndWritesAudit、
+        ExpenseApiTest.releaseHoldDelegatesToService
+
+五、数据库断言（tests/db/99-expense.sql 第 7 节）
+  - 跨租户不可见且不能写入（RLS FORCE）
+  - 同租户同范围重复 active 被部分唯一索引拒绝（unique_violation）
+  - released 缺少释放人或备注被 CHECK 拒绝
+  - DELETE 被触发器拒绝
+  - 释放后可再次触发新的 active 记录
+
+结论：批量异常会告警并暂停该批次自动入账，需人工解除且全过程留痕。

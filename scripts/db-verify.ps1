@@ -712,6 +712,12 @@ COMMIT;
     Assert-True ($workflowSummary -match 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0') "工作流用例未全部执行：$workflowSummary"
     Write-Host "  $workflowSummary"
 
+    # ---------------------------------------------------------------- 5n 单据预审
+    Write-Step '5n 单据预审：RLS、只追加审计/抽取/复核、发票号占用与策略默认值'
+    $expenseSql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '99-expense.sql'
+    Write-Host $expenseSql.Output
+    Assert-True ($expenseSql.Output -match 'WP04-03 单据预审数据库断言通过') '单据预审 SQL 断言未通过'
+
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'
     Invoke-Psql -Database $upgradeDb -User $OwnerUser -Password $OwnerPassword -Sql `

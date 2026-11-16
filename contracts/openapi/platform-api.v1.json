@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.10.0",
-    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。"
+    "version": "1.12.0",
+    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。 单据域覆盖报销单/发票/账单上传、AI 预审、人工复核、入账与撤销，OCR 不可用时一律转人工。"
   },
   "servers": [
     {
@@ -12061,6 +12061,645 @@
           }
         }
       }
+    },
+    "/api/v1/expense/documents": {
+      "get": {
+        "operationId": "listExpenseDocuments",
+        "summary": "单据列表",
+        "description": "员工默认只看本人单据；持 expense.document.review 的复核人可查看全租户。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "单据列表（含最近一次预审结论与抽取摘要）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpenseDocumentView"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少 expense.document.read 权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createExpenseDocument",
+        "summary": "提交单据并执行 AI 预审",
+        "description": "文件必须本人上传且已通过安全扫描；规则全部通过才自动入账，任何异常转人工。手工字段同样跑全部规则。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseDocumentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "预审结论",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDocumentView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "单据类型或文件缺失",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "文件不属于本人或缺少提交权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "文件不存在",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "文件尚未通过安全扫描",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expense/documents/{documentId}": {
+      "get": {
+        "operationId": "getExpenseDocument",
+        "summary": "单据详情",
+        "description": "返回字段、逐条规则结论、置信度与抽取摘要；越权查看返回 403。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "单据详情",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDocumentView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权查看该单据",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "单据不存在",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expense/documents/{documentId}/audit": {
+      "get": {
+        "operationId": "listExpenseDocumentAudit",
+        "summary": "单据审计时间线",
+        "description": "只追加事件：提交、抽取、预审、复核、入账、撤销；不返回 OCR 原文。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "审计事件",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpenseAuditEvent"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "无权查看该单据",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "单据不存在",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expense/documents/{documentId}/review": {
+      "post": {
+        "operationId": "reviewExpenseDocument",
+        "summary": "人工复核",
+        "description": "通过后进入待入账；驳回必须填写原因；提交人不能复核自己的单据（返回 EXPENSE_SOD_VIOLATION）。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpenseReviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "复核后的单据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDocumentView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "动作非法或驳回未填原因",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少复核权限或违反职责分离",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "当前状态不允许复核",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expense/documents/{documentId}/post": {
+      "post": {
+        "operationId": "postExpenseDocument",
+        "summary": "执行入账",
+        "description": "仅 approved 状态可入账；入账只记录入账事实，不生成借贷凭证。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "已入账单据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDocumentView"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少 expense.document.post 权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "状态不允许入账或发票号已被占用",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expense/documents/{documentId}/void": {
+      "post": {
+        "operationId": "voidExpenseDocument",
+        "summary": "撤销已入账单据",
+        "description": "必须填写原因；撤销保留入账事实并释放发票号占用。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpenseVoidRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已撤销单据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseDocumentView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "未填写撤销原因",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少 expense.document.void 权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "当前状态不允许撤销",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expense/policy": {
+      "get": {
+        "operationId": "getExpensePolicy",
+        "summary": "读取租户预审策略",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "租户策略",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpensePolicy"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少复核权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateExpensePolicy",
+        "summary": "更新租户预审策略",
+        "description": "金额阈值、白名单与人工科目变更需 expense.policy.manage 并写入审计。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpensePolicyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的策略",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpensePolicy"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少策略管理权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "策略取值非法",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expense/holds": {
+      "get": {
+        "operationId": "listExpenseBatchHolds",
+        "summary": "查询批量异常暂停记录",
+        "description": "默认返回 active 记录；读取需 expense.document.review 权限。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["active", "released"],
+              "default": "active"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "暂停记录列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExpenseBatchHold"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少复核权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/expense/holds/{holdId}/release": {
+      "post": {
+        "operationId": "releaseExpenseBatchHold",
+        "summary": "解除批量异常暂停",
+        "description": "解除后该批次恢复自动入账判定；需 expense.document.post 权限并写入审计。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "holdId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExpenseBatchHoldReleaseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已解除的暂停记录",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseBatchHold"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "缺少解除说明",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少入账权限",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "暂停记录不存在或已解除",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -18442,6 +19081,692 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "ExpenseDocumentView": {
+        "type": "object",
+        "required": [
+          "document"
+        ],
+        "properties": {
+          "document": {
+            "$ref": "#/components/schemas/ExpenseDocument"
+          },
+          "extraction": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ExpenseExtractionSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ExpenseDocument": {
+        "type": "object",
+        "required": [
+          "id",
+          "uploaderPersonId",
+          "fileId",
+          "docType",
+          "status",
+          "findings",
+          "confidence",
+          "ruleVersion",
+          "policyVersion",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uploaderPersonId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "docType": {
+            "type": "string",
+            "enum": [
+              "invoice",
+              "receipt",
+              "bill"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "manual_review",
+              "approved",
+              "posted",
+              "rejected",
+              "voided"
+            ]
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "amount": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "invoiceCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "invoiceNo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vendorName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vendorTaxNo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "occurredOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseFinding"
+            }
+          },
+          "confidence": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "ruleVersion": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "integer"
+          },
+          "extractionId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "postedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "postedBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "postActorKind": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ai",
+              "employee",
+              null
+            ]
+          },
+          "voidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "voidedBy": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "voidReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ExpenseFinding": {
+        "type": "object",
+        "required": [
+          "code",
+          "status",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail",
+              "blocked",
+              "skipped"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "actual": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expected": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "ExpenseExtractionSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OK",
+              "UNAVAILABLE",
+              "TIMEOUT",
+              "INVALID",
+              "PDF_UNSUPPORTED",
+              "MANUAL"
+            ]
+          },
+          "provider": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "errorCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ocrText": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ExpenseAuditEvent": {
+        "type": "object",
+        "required": [
+          "id",
+          "action",
+          "actorKind",
+          "detail",
+          "occurredAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "documentId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string"
+          },
+          "actorPersonId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "actorKind": {
+            "type": "string",
+            "enum": [
+              "employee",
+              "reviewer",
+              "poster",
+              "ai",
+              "system"
+            ]
+          },
+          "detail": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ExpensePolicy": {
+        "type": "object",
+        "required": [
+          "autoPostEnabled",
+          "autoPostLimit",
+          "windowDays",
+          "minConfidence",
+          "verifyRequired",
+          "version"
+        ],
+        "properties": {
+          "autoPostEnabled": {
+            "type": "boolean"
+          },
+          "autoPostLimit": {
+            "type": "number"
+          },
+          "windowDays": {
+            "type": "integer"
+          },
+          "legalTitle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "taxId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vendorAllowlist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "manualCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minConfidence": {
+            "type": "number"
+          },
+          "verifyRequired": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
+      "ExpensePolicyRequest": {
+        "type": "object",
+        "required": [
+          "autoPostEnabled",
+          "autoPostLimit",
+          "windowDays",
+          "minConfidence",
+          "verifyRequired"
+        ],
+        "properties": {
+          "autoPostEnabled": {
+            "type": "boolean"
+          },
+          "autoPostLimit": {
+            "type": "number"
+          },
+          "windowDays": {
+            "type": "integer"
+          },
+          "legalTitle": {
+            "type": "string"
+          },
+          "taxId": {
+            "type": "string"
+          },
+          "vendorAllowlist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "manualCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowedCategories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minConfidence": {
+            "type": "number"
+          },
+          "verifyRequired": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateExpenseDocumentRequest": {
+        "type": "object",
+        "required": [
+          "fileId",
+          "docType"
+        ],
+        "properties": {
+          "fileId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "docType": {
+            "type": "string",
+            "enum": [
+              "invoice",
+              "receipt",
+              "bill"
+            ]
+          },
+          "fields": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ExpenseManualFields"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "ExpenseManualFields": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "invoiceCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "invoiceNo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vendorName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "vendorTaxNo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "occurredOn": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "category": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseLineItem"
+            }
+          }
+        }
+      },
+      "ExpenseLineItem": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "amount": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      },
+      "ExpenseReviewRequest": {
+        "type": "object",
+        "required": [
+          "decision"
+        ],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "reject"
+            ]
+          },
+          "comment": {
+            "type": "string"
+          },
+          "overrides": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExpenseReviewOverride"
+            }
+          }
+        }
+      },
+      "ExpenseReviewOverride": {
+        "type": "object",
+        "required": [
+          "ruleCode",
+          "reason"
+        ],
+        "properties": {
+          "ruleCode": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ExpenseVoidRequest": {
+        "type": "object",
+        "required": [
+          "reason"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "ExpenseBatchHold": {
+        "type": "object",
+        "required": [
+          "id",
+          "scopeType",
+          "scopeKey",
+          "reason",
+          "windowHours",
+          "documentCount",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scopeType": {
+            "type": "string",
+            "enum": ["vendor", "uploader", "amount"]
+          },
+          "scopeKey": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "windowHours": {
+            "type": "integer"
+          },
+          "documentCount": {
+            "type": "integer"
+          },
+          "amountTotal": {
+            "type": ["number", "null"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "released"]
+          },
+          "createdBy": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "releasedBy": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          },
+          "releasedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "releaseNote": {
+            "type": ["string", "null"]
+          }
+        }
+      },
+      "ExpenseBatchHoldReleaseRequest": {
+        "type": "object",
+        "required": [
+          "note"
+        ],
+        "properties": {
+          "note": {
+            "type": "string"
           }
         }
       }

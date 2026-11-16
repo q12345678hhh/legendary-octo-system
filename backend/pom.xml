@@ -48,6 +48,7 @@
     <module>modules/workflow</module>
     <module>modules/hr</module>
     <module>modules/worklog</module>
+    <module>modules/expense</module>
     <module>modules/collaboration</module>
     <module>modules/integration</module>
     <module>modules/plugin</module>
@@ -116,6 +117,11 @@
       <dependency>
         <groupId>com.acme.platform</groupId>
         <artifactId>worklog</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.acme.platform</groupId>
+        <artifactId>expense</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

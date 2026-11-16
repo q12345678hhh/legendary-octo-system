@@ -12,6 +12,7 @@ export type RouteName =
   | 'myWork'
   | 'work'
   | 'worklog'
+  | 'expense'
   | 'insights'
   | 'modules'
   | 'collaboration'
@@ -69,6 +70,13 @@ export const routes: readonly RouteDefinition[] = [
     title: '工时与周报',
     requiresSession: true,
     permission: 'worklog.time.write',
+  },
+  {
+    name: 'expense',
+    path: '#/expense',
+    title: '单据预审',
+    requiresSession: true,
+    permission: 'expense.document.read',
   },
   {
     name: 'insights',
