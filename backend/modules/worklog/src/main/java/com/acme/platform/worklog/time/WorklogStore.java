@@ -222,15 +222,21 @@ public class WorklogStore {
 
     public List<Submission> submissionsInWeek(UUID personId, LocalDate weekStart,
                                               LocalDate weekEnd) {
+        // 先取每天最新版本，再过滤状态：避免 v2 已退回时把过期的 v1 submitted 当作已确认。
         return jdbcTemplate.query("""
-                SELECT DISTINCT ON (work_date)
-                       id, person_id, work_date, version, status, snapshot::text AS snapshot,
+                SELECT id, person_id, work_date, version, status, snapshot,
                        total_minutes, submitted_at
-                  FROM worklog_submission
-                 WHERE person_id = ?
-                   AND work_date BETWEEN ? AND ?
-                   AND status IN ('submitted', 'approved')
-                 ORDER BY work_date, version DESC
+                  FROM (
+                        SELECT DISTINCT ON (work_date)
+                               id, person_id, work_date, version, status,
+                               snapshot::text AS snapshot, total_minutes, submitted_at
+                          FROM worklog_submission
+                         WHERE person_id = ?
+                           AND work_date BETWEEN ? AND ?
+                         ORDER BY work_date, version DESC
+                       ) latest
+                 WHERE status IN ('submitted', 'approved')
+                 ORDER BY work_date
                 """, (rs, rowNum) -> new Submission(
                         rs.getObject("id", UUID.class),
                         rs.getObject("person_id", UUID.class),
@@ -241,6 +247,20 @@ public class WorklogStore {
                         rs.getInt("total_minutes"),
                         rs.getObject("submitted_at", OffsetDateTime.class)),
                 personId, weekStart, weekEnd);
+    }
+
+    /** 周内每天的状态（draft/submitted/approved/returned/empty），用于区分缺勤与未确认。 */
+    public Map<LocalDate, String> dayStatesInRange(UUID personId, LocalDate start,
+                                                   LocalDate end) {
+        Map<LocalDate, String> result = new HashMap<>();
+        jdbcTemplate.query("""
+                SELECT work_date, state
+                  FROM worklog_day
+                 WHERE person_id = ? AND work_date BETWEEN ? AND ?
+                """, (rs) -> {
+            result.put(rs.getObject("work_date", LocalDate.class), rs.getString("state"));
+        }, personId, start, end);
+        return Map.copyOf(result);
     }
 
     public void reviewSubmission(UUID id, String status, UUID reviewer, String comment) {
@@ -304,6 +324,17 @@ public class WorklogStore {
                         """, WorklogStore::mapReport, personId, weekStart).stream().findFirst();
     }
 
+    /** 该周全部周报版本，倒序；仅用于本人查看历史。 */
+    public List<Report> reportsForWeek(UUID personId, LocalDate weekStart) {
+        return jdbcTemplate.query("""
+                SELECT id, person_id, week_start, week_end, version, status,
+                       content::text AS content, submitted_at
+                  FROM worklog_weekly_report
+                 WHERE person_id = ? AND week_start = ?
+                 ORDER BY version DESC
+                """, WorklogStore::mapReport, personId, weekStart);
+    }
+
     public Report insertReport(UUID personId, LocalDate weekStart, LocalDate weekEnd, int version,
                                String content) {
         return jdbcTemplate.queryForObject("""
@@ -339,15 +370,15 @@ public class WorklogStore {
                 """, status, reviewer, comment, id);
     }
 
-    public void replaceReportSources(UUID reportId, Map<UUID, Integer> minutesBySubmission) {
+    public void replaceReportSources(UUID reportId, List<ReportSourceRow> rows) {
         jdbcTemplate.update("DELETE FROM worklog_report_source WHERE report_id = ?", reportId);
-        for (Map.Entry<UUID, Integer> entry : minutesBySubmission.entrySet()) {
+        for (ReportSourceRow row : rows) {
             jdbcTemplate.update("""
                     INSERT INTO worklog_report_source
                         (tenant_id, report_id, submission_id, item_key, minutes)
                     VALUES (nullif(current_setting('app.tenant_id', true), '')::uuid,
-                            ?, ?, 'total', ?)
-                    """, reportId, entry.getKey(), entry.getValue());
+                            ?, ?, ?, ?)
+                    """, reportId, row.submissionId(), row.itemKey(), row.minutes());
         }
     }
 
@@ -494,5 +525,9 @@ public class WorklogStore {
     }
 
     public record Setting(int minGroupSize, int maxDailyMinutes) {
+    }
+
+    /** 周报来源映射的一行：total / project:<id> / entry:<uuid>。 */
+    public record ReportSourceRow(UUID submissionId, String itemKey, int minutes) {
     }
 }

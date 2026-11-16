@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-13T11:14:40.060Z",
+  "frozenAt": "2026-11-16T02:39:26.221Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "0d21800322714d8e59c6106be9d4e365dfbfd4f1ca130f2ea6873b588ac838a8",
+      "sha256": "5a570aadd59b5778b3431a0309fb5ff9ca9ab16b03ba311be2c0bdce74a48efb",
       "tokens": {
         "operation:GET /api/v1/app-catalog/modules": {
           "requestBodyRequired": false
@@ -3545,6 +3545,108 @@
         "parameter:DELETE /api/v1/worklog/voice/captures/{captureId}:path:captureId": {
           "required": true,
           "type": "string"
+        },
+        "operation:GET /api/v1/worklog/reports/{weekStart}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/worklog/reports/{weekStart}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/worklog/reports/{weekStart}:400": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/worklog/reports/{weekStart}:path:weekStart": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:PATCH /api/v1/worklog/reports/{weekStart}": {
+          "requestBodyRequired": true
+        },
+        "response:PATCH /api/v1/worklog/reports/{weekStart}:200": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/worklog/reports/{weekStart}:404": {
+          "defined": true
+        },
+        "response:PATCH /api/v1/worklog/reports/{weekStart}:409": {
+          "defined": true
+        },
+        "parameter:PATCH /api/v1/worklog/reports/{weekStart}:path:weekStart": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/worklog/reports/{weekStart}/generate": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/worklog/reports/{weekStart}/generate:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/reports/{weekStart}/generate:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/reports/{weekStart}/generate:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/worklog/reports/{weekStart}/generate:path:weekStart": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/worklog/reports/{weekStart}/submit": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/worklog/reports/{weekStart}/submit:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/reports/{weekStart}/submit:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/reports/{weekStart}/submit:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/worklog/reports/{weekStart}/submit:path:weekStart": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/worklog/reports/{weekStart}/versions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/worklog/reports/{weekStart}/versions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/worklog/reports/{weekStart}/versions:400": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/worklog/reports/{weekStart}/versions:path:weekStart": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/worklog/reports/{reportId}/review": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/worklog/reports/{reportId}/review:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/reports/{reportId}/review:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/reports/{reportId}/review:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/reports/{reportId}/review:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/worklog/reports/{reportId}/review:path:reportId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/worklog/reports/reviews": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/worklog/reports/reviews:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/worklog/reports/reviews:403": {
+          "defined": true
         },
         "schema:PlatformLoginRequest.email": {
           "type": "string",
@@ -7387,6 +7489,215 @@
         "schema:VoiceConfirmView.audioDeleted": {
           "type": "boolean",
           "required": true
+        },
+        "schema:WeeklyReport.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WeeklyReport.personId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WeeklyReport.weekStart": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WeeklyReport.weekEnd": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WeeklyReport.version": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:WeeklyReport.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "approved",
+            "draft",
+            "returned",
+            "submitted"
+          ]
+        },
+        "schema:WeeklyReport.content": {
+          "type": "$ref",
+          "required": true
+        },
+        "schema:WeeklyReport.submittedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:WeeklyReportContent.schemaVersion": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:WeeklyReportContent.weekStart": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportContent.weekEnd": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportContent.days": {
+          "type": "array",
+          "required": false
+        },
+        "schema:WeeklyReportContent.entries": {
+          "type": "array",
+          "required": false
+        },
+        "schema:WeeklyReportContent.items": {
+          "type": "array",
+          "required": false
+        },
+        "schema:WeeklyReportContent.summary": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportContent.summaryPoints": {
+          "type": "array",
+          "required": false
+        },
+        "schema:WeeklyReportContent.summarySource": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "ai",
+            "employee",
+            "fallback"
+          ]
+        },
+        "schema:WeeklyReportContent.highlights": {
+          "type": "array",
+          "required": false
+        },
+        "schema:WeeklyReportContent.anomalies": {
+          "type": "array",
+          "required": false
+        },
+        "schema:WeeklyReportContent.nextWeekPlan": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportContent.nextWeekPlanSource": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "ai-suggested",
+            "employee",
+            "empty"
+          ]
+        },
+        "schema:WeeklyReportContent.issues": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportContent.generation": {
+          "type": "$ref",
+          "required": false
+        },
+        "schema:WeeklyReportSummaryPoint.text": {
+          "type": "string",
+          "required": true
+        },
+        "schema:WeeklyReportSummaryPoint.entryIds": {
+          "type": "array",
+          "required": true
+        },
+        "schema:WeeklyReportAnomaly.code": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "BACKFILLED_DAY",
+            "EMPTY_DESCRIPTION",
+            "LONG_DAY",
+            "MISSING_DAY",
+            "SHORT_DAY",
+            "SNAPSHOT_INVALID",
+            "SNAPSHOT_MISMATCH",
+            "UNCONFIRMED_DAY"
+          ]
+        },
+        "schema:WeeklyReportAnomaly.message": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportAnomaly.date": {
+          "type": "object",
+          "required": false
+        },
+        "schema:WeeklyReportAnomaly.entryId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:WeeklyReportGeneration.mode": {
+          "type": "string",
+          "required": false,
+          "enum": [
+            "ai",
+            "fallback"
+          ]
+        },
+        "schema:WeeklyReportGeneration.provider": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportGeneration.model": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportGeneration.promptVersion": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportGeneration.generatedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportGeneration.fallbackReason": {
+          "type": "object",
+          "required": false,
+          "enum": [
+            "AI_FAILED",
+            "AI_INVALID_OUTPUT",
+            "AI_NOT_CONFIGURED",
+            "ALL_CLAIMS_DROPPED",
+            "null"
+          ]
+        },
+        "schema:WeeklyReportGeneration.droppedClaims": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:WeeklyReportGeneration.truncated": {
+          "type": "boolean",
+          "required": false
+        },
+        "schema:WeeklyReportNotesRequest.summary": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportNotesRequest.issues": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportNotesRequest.nextWeekPlan": {
+          "type": "string",
+          "required": false
+        },
+        "schema:WeeklyReportReviewRequest.action": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "approve",
+            "return"
+          ]
+        },
+        "schema:WeeklyReportReviewRequest.comment": {
+          "type": "object",
+          "required": false
         }
       }
     },

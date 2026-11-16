@@ -90,7 +90,7 @@ class WorklogController {
     record ReviewRequest(String action, String comment) {
     }
 
-    record NotesRequest(String issues, String nextWeekPlan) {
+    record NotesRequest(String summary, String issues, String nextWeekPlan) {
     }
 
     record VoiceCaptureRequest(LocalDate workDate, String contentType, long sizeBytes,
@@ -258,7 +258,17 @@ class WorklogController {
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
             @RequestBody NotesRequest request) {
         UUID personId = requireSelf("worklog.report.submit");
-        return reports.updateNotes(personId, weekStart, request.issues(), request.nextWeekPlan());
+        return reports.updateNotes(personId, weekStart,
+                new WorklogReportService.NotesPatch(request.summary(), request.issues(),
+                        request.nextWeekPlan()));
+    }
+
+    /** 本人查看该周全部版本；主管仍只能通过 /reports/reviews 查看已提交周报。 */
+    @GetMapping("/reports/{weekStart}/versions")
+    List<WorklogReportService.ReportView> reportVersions(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart) {
+        UUID personId = requireSelf("worklog.report.read");
+        return reports.versions(personId, weekStart);
     }
 
     @PostMapping("/reports/{weekStart}/submit")
