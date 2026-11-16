@@ -41,6 +41,7 @@ function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
     generateWeeklyReport: vi.fn(),
     updateWeeklyReportNotes: vi.fn(),
     submitWeeklyReport: vi.fn(),
+    listWeeklyReportVersions: vi.fn(async () => []),
     listPendingReportReviews: vi.fn(async () => []),
     reviewWeeklyReport: vi.fn(),
     listCollabChannels: vi.fn(async () => []),

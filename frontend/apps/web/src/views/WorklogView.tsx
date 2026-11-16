@@ -10,6 +10,7 @@ import {
   Alert,
   Button,
   Card,
+  Collapse,
   Form,
   Input,
   InputNumber,
@@ -23,7 +24,7 @@ import {
 } from 'antd';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AsyncState, type AsyncPhase } from '../components/AsyncState';
-import { describeError, formatDateTime } from '../utils/format';
+import { describeError, formatDateTime, shortId } from '../utils/format';
 import { useVoiceRecorder } from './useVoiceRecorder';
 
 const { Text, Paragraph } = Typography;
@@ -85,6 +86,30 @@ const STATE_LABEL: Record<string, string> = {
   returned: '已退回',
 };
 
+const SUMMARY_SOURCE_LABEL: Record<string, string> = {
+  ai: 'AI 生成',
+  fallback: '时长模板',
+  employee: '已手动修改',
+};
+
+/** 降级原因来自后端 generation.fallbackReason，只在 fallback 模式出现。 */
+const FALLBACK_REASON_LABEL: Record<string, string> = {
+  AI_NOT_CONFIGURED: '未配置平台 AI 地址、密钥或模型，已按已确认时长生成模板摘要',
+  AI_FAILED: 'AI 服务调用失败，已按已确认时长生成模板摘要',
+  AI_INVALID_OUTPUT: 'AI 返回内容无法解析，已按已确认时长生成模板摘要',
+  ALL_CLAIMS_DROPPED: 'AI 摘要中的数字无法回溯到工时条目，已全部丢弃并改用时长模板',
+};
+
+function itemLabel(key: string): string {
+  if (key === 'unassigned') {
+    return '未分配项目';
+  }
+  if (key.startsWith('project:')) {
+    return `项目 ${shortId(key.slice('project:'.length))}`;
+  }
+  return key;
+}
+
 interface EntryFormValues {
   workDate: string;
   minutes?: number;
@@ -103,6 +128,9 @@ export function WorklogView({ apiClient }: WorklogViewProps) {
   const [pendingReports, setPendingReports] = useState<WeeklyReport[]>([]);
   const [weekStart, setWeekStart] = useState(mondayOf(today()));
   const [report, setReport] = useState<WeeklyReport | null>(null);
+  const [versions, setVersions] = useState<WeeklyReport[]>([]);
+  const [summary, setSummary] = useState('');
+  const [generating, setGenerating] = useState(false);
   const [issues, setIssues] = useState('');
   const [nextWeekPlan, setNextWeekPlan] = useState('');
   const [reviewTarget, setReviewTarget] = useState<
@@ -138,12 +166,20 @@ export function WorklogView({ apiClient }: WorklogViewProps) {
     apiClient.listPendingWorklogReviews().then(setPending).catch(() => setPending([]));
   }, [apiClient]);
 
+  const loadVersions = useCallback(() => {
+    apiClient
+      .listWeeklyReportVersions(weekStart)
+      .then(setVersions)
+      .catch(() => setVersions([]));
+  }, [apiClient, weekStart]);
+
   const loadReport = useCallback(() => {
     apiClient
       .getWeeklyReport(weekStart)
       .then((value) => {
         setReport(value.report);
         const content = value.report?.content ?? {};
+        setSummary(typeof content.summary === 'string' ? content.summary : '');
         setIssues(typeof content.issues === 'string' ? content.issues : '');
         setNextWeekPlan(typeof content.nextWeekPlan === 'string' ? content.nextWeekPlan : '');
       })
@@ -153,6 +189,7 @@ export function WorklogView({ apiClient }: WorklogViewProps) {
   useEffect(loadDay, [loadDay]);
   useEffect(loadPending, [loadPending]);
   useEffect(loadReport, [loadReport]);
+  useEffect(loadVersions, [loadVersions]);
 
   const flushQueue = useCallback(async () => {
     const items = readPendingQueue();
@@ -359,21 +396,37 @@ export function WorklogView({ apiClient }: WorklogViewProps) {
   };
 
   const generateReport = async () => {
+    setGenerating(true);
     try {
       const value = await apiClient.generateWeeklyReport(weekStart);
       setReport(value);
-      message.success('已按已确认工时生成草稿');
+      const content = value.content ?? {};
+      setSummary(typeof content.summary === 'string' ? content.summary : '');
+      setIssues(typeof content.issues === 'string' ? content.issues : '');
+      setNextWeekPlan(typeof content.nextWeekPlan === 'string' ? content.nextWeekPlan : '');
+      message.success(content.generation?.mode === 'ai'
+        ? '已生成 AI 周报草稿'
+        : 'AI 不可用，已按已确认时长生成草稿');
       loadReport();
+      loadVersions();
     } catch (cause) {
       message.error(describeError(cause));
+    } finally {
+      setGenerating(false);
     }
   };
 
   const saveNotes = async () => {
+    const currentSummary = typeof report?.content.summary === 'string' ? report.content.summary : '';
     try {
-      await apiClient.updateWeeklyReportNotes(weekStart, { issues, nextWeekPlan });
+      await apiClient.updateWeeklyReportNotes(weekStart, {
+        ...(summary !== currentSummary ? { summary } : {}),
+        issues,
+        nextWeekPlan,
+      });
       message.success('已保存');
       loadReport();
+      loadVersions();
     } catch (cause) {
       message.error(describeError(cause));
     }
@@ -384,6 +437,7 @@ export function WorklogView({ apiClient }: WorklogViewProps) {
       await apiClient.submitWeeklyReport(weekStart);
       message.success('周报已提交');
       loadReport();
+      loadVersions();
     } catch (cause) {
       message.error(describeError(cause));
     }
@@ -415,8 +469,16 @@ export function WorklogView({ apiClient }: WorklogViewProps) {
     apiClient.listPendingReportReviews().then(setPendingReports).catch(() => setPendingReports([]));
   }, [apiClient]);
 
-  const reportContent = (report?.content ?? {}) as Record<string, unknown>;
-  const reportDays = Array.isArray(reportContent.days) ? reportContent.days : [];
+  const reportContent = report?.content ?? {};
+  const reportDays = reportContent.days ?? [];
+  const reportEntries = reportContent.entries ?? [];
+  const reportItems = reportContent.items ?? [];
+  const anomalies = reportContent.anomalies ?? [];
+  const summaryPoints = reportContent.summaryPoints ?? [];
+  const highlights = reportContent.highlights ?? [];
+  const generation = reportContent.generation;
+  const editable = report?.status === 'draft';
+  const weekMinutes = reportDays.reduce((sum, row) => sum + row.minutes, 0);
 
   return (
     <Card title="工时与周报">
@@ -683,51 +745,242 @@ export function WorklogView({ apiClient }: WorklogViewProps) {
                     style={{ width: 180 }}
                   />
                   {report ? <Tag>{STATE_LABEL[report.status] ?? report.status}</Tag> : null}
-                  <Button onClick={generateReport}>按已确认工时生成草稿</Button>
-                  <Button
-                    onClick={saveNotes}
-                    disabled={!report || report.status !== 'draft'}
-                  >
+                  <Button onClick={generateReport} loading={generating}>
+                    AI 生成周报草稿
+                  </Button>
+                  <Button onClick={saveNotes} disabled={!editable}>
                     保存说明
                   </Button>
-                  <Button
-                    type="primary"
-                    onClick={submitReport}
-                    disabled={!report || report.status !== 'draft'}
-                  >
+                  <Button type="primary" onClick={submitReport} disabled={!editable}>
                     提交周报
                   </Button>
                 </Space>
+                {generation ? (
+                  generation.mode === 'ai' ? (
+                    <Space wrap>
+                      <Tag color="blue">
+                        AI 生成 · {generation.provider} / {generation.model}
+                      </Tag>
+                      <Text type="secondary">提示词版本 {generation.promptVersion}</Text>
+                      {generation.droppedClaims > 0 ? (
+                        <Text type="secondary">
+                          已丢弃 {generation.droppedClaims} 条无法回溯的数字
+                        </Text>
+                      ) : null}
+                      {generation.truncated ? (
+                        <Text type="secondary">输入过长已截断</Text>
+                      ) : null}
+                    </Space>
+                  ) : (
+                    <Alert
+                      type="warning"
+                      showIcon
+                      message="AI 不可用，本次已按已确认时长生成模板"
+                      description={
+                        FALLBACK_REASON_LABEL[generation.fallbackReason ?? '']
+                        ?? `降级原因：${generation.fallbackReason ?? '未知'}`
+                      }
+                    />
+                  )
+                ) : null}
                 {report ? (
                   <>
                     <Text type="secondary">
                       {report.weekStart} 至 {report.weekEnd} · 版本 v{report.version}
+                      {' · '}已确认 {reportDays.length} 天 / {weekMinutes} 分钟
                     </Text>
+                    <Card
+                      size="small"
+                      title={(
+                        <Space>
+                          本周摘要
+                          {reportContent.summarySource ? (
+                            <Tag>
+                              {SUMMARY_SOURCE_LABEL[reportContent.summarySource]
+                                ?? reportContent.summarySource}
+                            </Tag>
+                          ) : null}
+                        </Space>
+                      )}
+                    >
+                      {editable ? (
+                        <Input.TextArea
+                          rows={4}
+                          placeholder="本周工作总结"
+                          value={summary}
+                          onChange={(event) => setSummary(event.target.value)}
+                        />
+                      ) : (
+                        <Paragraph style={{ whiteSpace: 'pre-wrap', marginBottom: 0 }}>
+                          {reportContent.summary || '—'}
+                        </Paragraph>
+                      )}
+                    </Card>
+                    {reportContent.summarySource !== 'employee' && summaryPoints.length > 0 ? (
+                      <Card size="small" title="摘要要点（只读，含来源）">
+                        <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                          {summaryPoints.map((point, index) => (
+                            <Text key={`point-${index}`}>
+                              {point.text}
+                              <Text type="secondary"> · 来源 {point.entryIds.length} 条</Text>
+                            </Text>
+                          ))}
+                        </Space>
+                      </Card>
+                    ) : null}
+                    {highlights.length > 0 ? (
+                      <Card size="small" title="工作产出">
+                        <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                          {highlights.map((point, index) => (
+                            <Text key={`highlight-${index}`}>
+                              {point.text}
+                              <Text type="secondary"> · 来源 {point.entryIds.length} 条</Text>
+                            </Text>
+                          ))}
+                        </Space>
+                      </Card>
+                    ) : null}
+                    <Card size="small" title={`异常（${anomalies.length}）`}>
+                      <Table
+                        rowKey={(_row, index) => String(index)}
+                        size="small"
+                        pagination={false}
+                        dataSource={anomalies}
+                        locale={{ emptyText: '没有发现异常' }}
+                        columns={[
+                          {
+                            title: '日期',
+                            dataIndex: 'date',
+                            render: (value?: string | null) => value ?? '—',
+                          },
+                          {
+                            title: '条目',
+                            dataIndex: 'entryId',
+                            render: (value?: string | null) => (value ? shortId(value) : '—'),
+                          },
+                          { title: '说明', dataIndex: 'message' },
+                        ]}
+                      />
+                    </Card>
+                    <Card size="small" title="项目聚合">
+                      <Table
+                        rowKey="key"
+                        size="small"
+                        pagination={false}
+                        dataSource={reportItems}
+                        locale={{ emptyText: '没有可聚合的条目' }}
+                        columns={[
+                          {
+                            title: '项目',
+                            dataIndex: 'key',
+                            render: (value: string) => itemLabel(value),
+                          },
+                          { title: '分钟', dataIndex: 'minutes' },
+                          {
+                            title: '条目数',
+                            render: (_value, row) => row.entryIds?.length ?? 0,
+                          },
+                        ]}
+                      />
+                    </Card>
                     <Table
                       rowKey="date"
                       size="small"
                       pagination={false}
-                      dataSource={reportDays as Array<Record<string, unknown>>}
+                      dataSource={reportDays}
+                      locale={{ emptyText: '本周没有已确认工时' }}
                       columns={[
                         { title: '日期', dataIndex: 'date' },
                         { title: '分钟', dataIndex: 'minutes' },
-                        { title: '来源快照', dataIndex: 'submissionId' },
+                        {
+                          title: '来源快照',
+                          dataIndex: 'submissionId',
+                          render: (value: string) => shortId(value),
+                        },
                       ]}
                     />
-                    <Input.TextArea
-                      rows={3}
-                      placeholder="本周遇到的问题"
-                      value={issues}
-                      onChange={(event) => setIssues(event.target.value)}
-                      disabled={report.status !== 'draft'}
+                    <Collapse
+                      size="small"
+                      items={[
+                        {
+                          key: 'entries',
+                          label: `条目明细（${reportEntries.length}）`,
+                          children: (
+                            <Table
+                              rowKey="entryId"
+                              size="small"
+                              pagination={false}
+                              dataSource={reportEntries}
+                              locale={{ emptyText: '没有条目明细' }}
+                              columns={[
+                                { title: '日期', dataIndex: 'date' },
+                                { title: '分钟', dataIndex: 'minutes' },
+                                {
+                                  title: '说明',
+                                  dataIndex: 'description',
+                                  render: (value?: string) => value || '—',
+                                },
+                                {
+                                  title: '条目号',
+                                  dataIndex: 'entryId',
+                                  render: (value: string) => shortId(value),
+                                },
+                              ]}
+                            />
+                          ),
+                        },
+                      ]}
                     />
-                    <Input.TextArea
-                      rows={3}
-                      placeholder="下周计划"
-                      value={nextWeekPlan}
-                      onChange={(event) => setNextWeekPlan(event.target.value)}
-                      disabled={report.status !== 'draft'}
-                    />
+                    <Card size="small" title="问题与下周计划">
+                      <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                        <Input.TextArea
+                          rows={3}
+                          placeholder="本周遇到的问题"
+                          value={issues}
+                          onChange={(event) => setIssues(event.target.value)}
+                          disabled={!editable}
+                        />
+                        <Space>
+                          <Text>下周计划</Text>
+                          {reportContent.nextWeekPlanSource === 'ai-suggested' ? (
+                            <Tag color="gold">AI 建议，待确认</Tag>
+                          ) : null}
+                        </Space>
+                        <Input.TextArea
+                          rows={3}
+                          placeholder="下周计划"
+                          value={nextWeekPlan}
+                          onChange={(event) => setNextWeekPlan(event.target.value)}
+                          disabled={!editable}
+                        />
+                      </Space>
+                    </Card>
+                    <Card size="small" title={`历史版本（${versions.length}）`}>
+                      <Table
+                        rowKey="id"
+                        size="small"
+                        pagination={false}
+                        dataSource={versions}
+                        locale={{ emptyText: '还没有历史版本' }}
+                        columns={[
+                          {
+                            title: '版本',
+                            dataIndex: 'version',
+                            render: (value: number) => `v${value}`,
+                          },
+                          {
+                            title: '状态',
+                            dataIndex: 'status',
+                            render: (value: string) => STATE_LABEL[value] ?? value,
+                          },
+                          {
+                            title: '提交时间',
+                            dataIndex: 'submittedAt',
+                            render: (value?: string | null) => formatDateTime(value),
+                          },
+                        ]}
+                      />
+                    </Card>
                   </>
                 ) : (
                   <Paragraph type="secondary">
