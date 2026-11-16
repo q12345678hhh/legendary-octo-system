@@ -43,10 +43,9 @@ BEGIN
           FROM pg_class c
          WHERE c.relname IN ('platform_idempotency', 'platform_job', 'platform_file',
                              'platform_outbox_replay',
-                             'work_assistant_device', 'work_assistant_policy',
-                             'work_assistant_segment',
                              'department_space', 'department_space_setting',
                              'worklog_access_log', 'worklog_entry', 'worklog_submission',
+                             'worklog_voice_capture',
                              'worklog_day', 'worklog_weekly_report', 'worklog_report_source',
                              'worklog_setting',
                              'collab_channel', 'collab_channel_member', 'collab_post',
@@ -98,10 +97,9 @@ BEGIN
       FROM pg_class c
      WHERE c.relname IN ('platform_idempotency', 'platform_job', 'platform_file',
                          'platform_outbox_replay',
-                         'work_assistant_device', 'work_assistant_policy',
-                         'work_assistant_segment',
                          'department_space', 'department_space_setting',
                          'worklog_access_log', 'worklog_entry', 'worklog_submission',
+                         'worklog_voice_capture',
                          'worklog_day', 'worklog_weekly_report', 'worklog_report_source',
                          'worklog_setting',
                          'collab_channel', 'collab_channel_member', 'collab_post',
@@ -140,8 +138,8 @@ BEGIN
                          'authorization_access_request', 'authorization_access_review',
                          'authorization_access_review_item', 'authorization_admin_action',
                          'retention_bin_item', 'retention_legal_hold', 'retention_event');
-    IF policy_count <> 96 THEN
-        RAISE EXCEPTION 'V4–V17 未完整生效：应有 96 张租户表，实际 %', policy_count;
+    IF policy_count <> 94 THEN
+        RAISE EXCEPTION 'V4–V19 未完整生效：应有 94 张租户表，实际 %', policy_count;
     END IF;
 
     -- WP02-07：平台目录投影是设计内例外，必须不启用 RLS，且同步触发器存在

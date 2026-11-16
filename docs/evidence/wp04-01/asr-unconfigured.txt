@@ -1,0 +1,4 @@
+﻿login: HTTP 200
+create capture: HTTP 200 id=9c2b7abd-382d-4d3e-ba4a-29f2b9a4f186 status=uploaded
+transcribe: HTTP 503
+{"detail":"语音转写未配置，请改用文字录入或联系管理员配置 ASR","instance":"/api/v1/worklog/voice/captures/9c2b7abd-382d-4d3e-ba4a-29f2b9a4f186/transcription","status":503,"title":"服务暂不可用","code":"ASR_NOT_CONFIGURED","timestamp":"2026-11-13T19:26:09.329938100+08:00","correlationId":"2788b7f1-91f0-473f-b54e-376083cbae15","traceId":"ad740aad324f4ee3bdac5970e834e1d7"}

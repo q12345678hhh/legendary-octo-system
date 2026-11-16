@@ -17,15 +17,34 @@
         "summary": "模块目录列表",
         "description": "按关键词、分类与健康状态检索当前租户的模块目录；安装状态仅为占位。",
         "parameters": [
-          { "name": "q", "in": "query", "required": false, "schema": { "type": "string" } },
-          { "name": "category", "in": "query", "required": false, "schema": { "type": "string" } },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "health",
             "in": "query",
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["healthy", "degraded", "offline", "unknown"]
+              "enum": [
+                "healthy",
+                "degraded",
+                "offline",
+                "unknown"
+              ]
             }
           }
         ],
@@ -39,38 +58,90 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "id": { "type": "string", "format": "uuid" },
-                      "code": { "type": "string" },
-                      "name": { "type": "string" },
-                      "category": { "type": "string" },
-                      "description": { "type": "string" },
-                      "templateKey": { "type": ["string", "null"] },
-                      "ownerPersonId": { "type": ["string", "null"], "format": "uuid" },
-                      "version": { "type": "string" },
-                      "dependencies": { "type": "string" },
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "category": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "templateKey": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "ownerPersonId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "uuid"
+                      },
+                      "version": {
+                        "type": "string"
+                      },
+                      "dependencies": {
+                        "type": "string"
+                      },
                       "applicableScope": {
                         "type": "string",
-                        "enum": ["tenant", "department", "project", "person"]
+                        "enum": [
+                          "tenant",
+                          "department",
+                          "project",
+                          "person"
+                        ]
                       },
                       "healthStatus": {
                         "type": "string",
-                        "enum": ["healthy", "degraded", "offline", "unknown"]
+                        "enum": [
+                          "healthy",
+                          "degraded",
+                          "offline",
+                          "unknown"
+                        ]
                       },
                       "installStatus": {
                         "type": "string",
-                        "enum": ["not_installed", "installed", "disabled"]
+                        "enum": [
+                          "not_installed",
+                          "installed",
+                          "disabled"
+                        ]
                       },
-                      "createdAt": { "type": "string", "format": "date-time" },
-                      "updatedAt": { "type": "string", "format": "date-time" }
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       },
       "post": {
@@ -82,27 +153,68 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["code", "name"],
+                "required": [
+                  "code",
+                  "name"
+                ],
                 "properties": {
-                  "code": { "type": "string" },
-                  "name": { "type": "string" },
-                  "category": { "type": "string" },
-                  "description": { "type": "string" },
-                  "templateKey": { "type": ["string", "null"] },
-                  "ownerPersonId": { "type": ["string", "null"], "format": "uuid" },
-                  "version": { "type": "string" },
-                  "dependencies": { "type": "string", "description": "JSON 数组字符串" },
+                  "code": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "templateKey": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "ownerPersonId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "dependencies": {
+                    "type": "string",
+                    "description": "JSON 数组字符串"
+                  },
                   "applicableScope": {
                     "type": "string",
-                    "enum": ["tenant", "department", "project", "person"]
+                    "enum": [
+                      "tenant",
+                      "department",
+                      "project",
+                      "person"
+                    ]
                   },
                   "healthStatus": {
                     "type": "string",
-                    "enum": ["healthy", "degraded", "offline", "unknown"]
+                    "enum": [
+                      "healthy",
+                      "degraded",
+                      "offline",
+                      "unknown"
+                    ]
                   },
                   "installStatus": {
                     "type": "string",
-                    "enum": ["not_installed", "installed", "disabled"]
+                    "enum": [
+                      "not_installed",
+                      "installed",
+                      "disabled"
+                    ]
                   }
                 }
               }
@@ -110,11 +222,21 @@
           }
         },
         "responses": {
-          "200": { "description": "已登记的模块" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "已登记的模块"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -127,14 +249,25 @@
             "name": "moduleId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "模块详情" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "404": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "模块详情"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       },
       "put": {
@@ -145,20 +278,37 @@
             "name": "moduleId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
           "content": {
-            "application/json": { "schema": { "type": "object" } }
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
           }
         },
         "responses": {
-          "200": { "description": "更新后的模块" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "404": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "更新后的模块"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -172,7 +322,14 @@
             "name": "scope",
             "in": "query",
             "required": false,
-            "schema": { "type": "string", "enum": ["mine", "all"], "default": "mine" }
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mine",
+                "all"
+              ],
+              "default": "mine"
+            }
           }
         ],
         "responses": {
@@ -185,21 +342,52 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "id": { "type": "string", "format": "uuid" },
-                      "title": { "type": "string" },
-                      "requesterPersonId": { "type": "string", "format": "uuid" },
-                      "businessProblem": { "type": "string" },
-                      "goal": { "type": "string" },
-                      "scope": { "type": "string" },
-                      "dataScope": { "type": "string" },
-                      "permissionsNeeded": { "type": "string" },
-                      "costEstimate": { "type": "string" },
-                      "benefitEstimate": { "type": "string" },
-                      "suggestedOwnerPersonId": {
-                        "type": ["string", "null"],
+                      "id": {
+                        "type": "string",
                         "format": "uuid"
                       },
-                      "configOwnerPersonId": { "type": ["string", "null"], "format": "uuid" },
+                      "title": {
+                        "type": "string"
+                      },
+                      "requesterPersonId": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "businessProblem": {
+                        "type": "string"
+                      },
+                      "goal": {
+                        "type": "string"
+                      },
+                      "scope": {
+                        "type": "string"
+                      },
+                      "dataScope": {
+                        "type": "string"
+                      },
+                      "permissionsNeeded": {
+                        "type": "string"
+                      },
+                      "costEstimate": {
+                        "type": "string"
+                      },
+                      "benefitEstimate": {
+                        "type": "string"
+                      },
+                      "suggestedOwnerPersonId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "uuid"
+                      },
+                      "configOwnerPersonId": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "uuid"
+                      },
                       "status": {
                         "type": "string",
                         "enum": [
@@ -220,16 +408,26 @@
                           "deprecated"
                         ]
                       },
-                      "createdAt": { "type": "string", "format": "date-time" },
-                      "updatedAt": { "type": "string", "format": "date-time" }
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       },
       "post": {
@@ -241,27 +439,60 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["title", "businessProblem"],
+                "required": [
+                  "title",
+                  "businessProblem"
+                ],
                 "properties": {
-                  "title": { "type": "string" },
-                  "businessProblem": { "type": "string" },
-                  "goal": { "type": "string" },
-                  "scope": { "type": "string" },
-                  "dataScope": { "type": "string" },
-                  "permissionsNeeded": { "type": "string" },
-                  "costEstimate": { "type": "string" },
-                  "benefitEstimate": { "type": "string" },
-                  "suggestedOwnerPersonId": { "type": ["string", "null"], "format": "uuid" }
+                  "title": {
+                    "type": "string"
+                  },
+                  "businessProblem": {
+                    "type": "string"
+                  },
+                  "goal": {
+                    "type": "string"
+                  },
+                  "scope": {
+                    "type": "string"
+                  },
+                  "dataScope": {
+                    "type": "string"
+                  },
+                  "permissionsNeeded": {
+                    "type": "string"
+                  },
+                  "costEstimate": {
+                    "type": "string"
+                  },
+                  "benefitEstimate": {
+                    "type": "string"
+                  },
+                  "suggestedOwnerPersonId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "已创建的建议" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "已创建的建议"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -275,14 +506,25 @@
             "name": "suggestionId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "建议与事件时间线" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "404": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "建议与事件时间线"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -296,7 +538,10 @@
             "name": "suggestionId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -304,7 +549,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["action"],
+                "required": [
+                  "action"
+                ],
                 "properties": {
                   "action": {
                     "type": "string",
@@ -329,20 +576,40 @@
                       "close"
                     ]
                   },
-                  "comment": { "type": "string" },
-                  "configOwnerPersonId": { "type": ["string", "null"], "format": "uuid" }
+                  "comment": {
+                    "type": "string"
+                  },
+                  "configOwnerPersonId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "uuid"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "流转后的建议与事件时间线" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "404": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "流转后的建议与事件时间线"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -1351,137 +1618,6 @@
           },
           "404": {
             "description": "文件不存在",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "detail": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "被留置或属于受保护数据类",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "detail": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/work-assistant/segments/{segmentId}": {
-      "delete": {
-        "operationId": "recycleWorkAssistantSegment",
-        "summary": "删除语音片段（进回收站）",
-        "parameters": [
-          {
-            "name": "segmentId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "回收站条目",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "dataClass": {
-                      "type": "string",
-                      "enum": [
-                        "file",
-                        "work_assistant_segment"
-                      ]
-                    },
-                    "objectId": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "objectRef": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "string",
-                      "enum": [
-                        "active",
-                        "restored",
-                        "purged",
-                        "anonymized"
-                      ]
-                    },
-                    "deletedBy": {
-                      "type": "string"
-                    },
-                    "deletedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "purgeAfter": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "restoredAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    },
-                    "purgedAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "未登录",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "string"
-                    },
-                    "detail": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "片段不存在",
             "content": {
               "application/json": {
                 "schema": {
@@ -2654,278 +2790,6 @@
             "$ref": "#/components/responses/Problem"
           },
           "422": {
-            "$ref": "#/components/responses/Problem"
-          }
-        }
-      }
-    },
-    "/api/v1/work-assistant/devices/register": {
-      "post": {
-        "operationId": "registerWorkAssistantDevice",
-        "summary": "注册工作助手设备",
-        "description": "客户端提交本地生成的 ECDSA P-256 公钥；同一主体同一公钥重复注册是幂等的。响应下发签名策略与验签公钥，管理员无法通过本接口开启采集。",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterDeviceRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "注册成功或幂等命中",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkAssistantRegistration"
-                }
-              }
-            }
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "409": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/Problem"
-          }
-        }
-      }
-    },
-    "/api/v1/work-assistant/devices/{deviceId}/heartbeat": {
-      "post": {
-        "operationId": "workAssistantHeartbeat",
-        "summary": "设备心跳与版本报告",
-        "description": "设备签名后上报应用与策略版本；被撤销的设备返回 403 DEVICE_REVOKED。",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
-            "$ref": "#/components/parameters/WorkAssistantDeviceId"
-          },
-          {
-            "$ref": "#/components/parameters/DeviceTimestamp"
-          },
-          {
-            "$ref": "#/components/parameters/DeviceSignature"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HeartbeatRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "心跳已记录",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HeartbeatResult"
-                }
-              }
-            }
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          }
-        }
-      }
-    },
-    "/api/v1/work-assistant/devices/{deviceId}/policy": {
-      "get": {
-        "operationId": "getWorkAssistantPolicy",
-        "summary": "拉取签名策略",
-        "description": "返回基线 ∪ 租户追加项的签名信封；客户端必须验签并拒绝旧版本。",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
-            "$ref": "#/components/parameters/WorkAssistantDeviceId"
-          },
-          {
-            "$ref": "#/components/parameters/DeviceTimestamp"
-          },
-          {
-            "$ref": "#/components/parameters/DeviceSignature"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "当前签名策略",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SignedPolicy"
-                }
-              }
-            }
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "503": {
-            "$ref": "#/components/responses/Problem"
-          }
-        }
-      }
-    },
-    "/api/v1/work-assistant/devices/{deviceId}/revoke": {
-      "post": {
-        "operationId": "revokeWorkAssistantDevice",
-        "summary": "撤销设备",
-        "description": "撤销后该设备的上传、心跳与策略拉取一律 403，必须先由管理员重新登记。",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
-            "$ref": "#/components/parameters/WorkAssistantDeviceId"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "已撤销",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RevokeResult"
-                }
-              }
-            }
-          },
-          "404": {
-            "$ref": "#/components/responses/Problem"
-          }
-        }
-      }
-    },
-    "/api/v1/work-assistant/segments": {
-      "post": {
-        "operationId": "uploadWorkAssistantSegment",
-        "summary": "上传最小化片段元数据",
-        "description": "必须先通过设备签名与策略版本校验；相同 clientSegmentId 重传返回 duplicate=true，不产生重复行。",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          },
-          {
-            "$ref": "#/components/parameters/DeviceTimestamp"
-          },
-          {
-            "$ref": "#/components/parameters/DeviceSignature"
-          },
-          {
-            "$ref": "#/components/parameters/WorkAssistantDeviceIdRequired"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SegmentUploadRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "已接收或幂等命中",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SegmentUploadResult"
-                }
-              }
-            }
-          },
-          "403": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "409": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "422": {
-            "$ref": "#/components/responses/Problem"
-          }
-        }
-      }
-    },
-    "/api/v1/work-assistant/update-manifest": {
-      "get": {
-        "operationId": "getWorkAssistantUpdateManifest",
-        "summary": "获取签名更新清单",
-        "description": "客户端用注册时固定的公钥验签并校验包哈希；未配置签名密钥时返回 503。",
-        "responses": {
-          "200": {
-            "description": "签名更新清单",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UpdateManifest"
-                }
-              }
-            }
-          },
-          "503": {
-            "$ref": "#/components/responses/Problem"
-          }
-        }
-      }
-    },
-    "/api/v1/work-assistant/policies/current": {
-      "put": {
-        "operationId": "appendWorkAssistantPolicy",
-        "summary": "追加租户排除项",
-        "description": "只接受 additional_exclusions；出现任何未知字段（删除列表、采集开关等）返回 422。",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/TenantHeader"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PolicyAppendRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "追加后的签名策略",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SignedPolicy"
-                }
-              }
-            }
-          },
-          "422": {
-            "$ref": "#/components/responses/Problem"
-          },
-          "503": {
             "$ref": "#/components/responses/Problem"
           }
         }
@@ -11007,9 +10871,15 @@
         "summary": "工作流定义列表",
         "description": "返回当前租户全部定义版本；只有草稿可修改。",
         "responses": {
-          "200": { "description": "成功" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       },
       "post": {
@@ -11022,19 +10892,33 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "key": { "type": "string" },
-                  "name": { "type": "string" },
-                  "schema": { "type": "string" }
+                  "key": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "schema": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "成功" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11048,7 +10932,10 @@
             "name": "definitionId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -11057,20 +10944,36 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": { "type": "string" },
-                  "schema": { "type": "string" }
+                  "name": {
+                    "type": "string"
+                  },
+                  "schema": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "成功" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "404": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11084,15 +10987,28 @@
             "name": "definitionId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "成功" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11106,14 +11022,25 @@
             "name": "definitionId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "成功" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11128,21 +11055,40 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "definitionKey": { "type": "string" },
-                  "businessType": { "type": "string" },
-                  "businessId": { "type": "string", "format": "uuid" },
-                  "businessKey": { "type": "string" },
-                  "variables": { "type": "object" }
+                  "definitionKey": {
+                    "type": "string"
+                  },
+                  "businessType": {
+                    "type": "string"
+                  },
+                  "businessId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "businessKey": {
+                    "type": "string"
+                  },
+                  "variables": {
+                    "type": "object"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "成功" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11156,14 +11102,25 @@
             "name": "instanceId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "成功" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "404": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11177,14 +11134,25 @@
             "name": "instanceId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "成功" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11198,14 +11166,25 @@
             "name": "instanceId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "成功" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11221,15 +11200,24 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": ["mine", "all"],
+              "enum": [
+                "mine",
+                "all"
+              ],
               "default": "mine"
             }
           }
         ],
         "responses": {
-          "200": { "description": "成功" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11243,14 +11231,25 @@
             "name": "taskId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "responses": {
-          "200": { "description": "成功" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11264,7 +11263,10 @@
             "name": "taskId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -11273,19 +11275,37 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "action": { "type": "string", "enum": ["approve", "return"] },
-                  "comment": { "type": "string" }
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "approve",
+                      "return"
+                    ]
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "成功" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" },
-          "409": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11299,7 +11319,10 @@
             "name": "taskId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -11308,18 +11331,31 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "targetPersonId": { "type": "string", "format": "uuid" },
-                  "comment": { "type": "string" }
+                  "targetPersonId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "成功" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11329,9 +11365,15 @@
         "summary": "工作流异常队列",
         "description": "需要 workflow.instance.admin；按打开时间倒序。",
         "responses": {
-          "200": { "description": "成功" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
         }
       }
     },
@@ -11345,7 +11387,10 @@
             "name": "exceptionId",
             "in": "path",
             "required": true,
-            "schema": { "type": "string", "format": "uuid" }
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         ],
         "requestBody": {
@@ -11356,19 +11401,291 @@
                 "properties": {
                   "action": {
                     "type": "string",
-                    "enum": ["retry", "reassign", "compensate", "close"]
+                    "enum": [
+                      "retry",
+                      "reassign",
+                      "compensate",
+                      "close"
+                    ]
                   },
-                  "assigneePersonId": { "type": "string", "format": "uuid" }
+                  "assigneePersonId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "成功" },
-          "400": { "$ref": "#/components/responses/Problem" },
-          "401": { "$ref": "#/components/responses/Problem" },
-          "403": { "$ref": "#/components/responses/Problem" }
+          "200": {
+            "description": "成功"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/worklog/voice/captures": {
+      "post": {
+        "operationId": "createVoiceCapture",
+        "summary": "创建语音上传会话",
+        "description": "只签发预签名 PUT 地址；未配置 ASR 时不影响上传，但转写会返回 503。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceCaptureRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "上传地址与录音记录",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceCaptureView"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "音频类型或大小不合法",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "只能为本人创建录音",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/worklog/voice/captures/{captureId}/transcription": {
+      "post": {
+        "operationId": "transcribeVoiceCapture",
+        "summary": "转写已上传的录音",
+        "description": "未配置 ASR 时返回 503，不会读取对象存储，也不会返回占位文本。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "captureId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "转写结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceCaptureView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "录音不存在",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "音频尚未上传完成或录音状态不允许转写",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "没有识别到语音内容",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "转写服务不可达或返回异常",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "语音转写未配置",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/worklog/voice/captures/{captureId}/confirm": {
+      "post": {
+        "operationId": "confirmVoiceCapture",
+        "summary": "确认转写文本并生成工时",
+        "description": "生成 sourceType=voice 的工时条目后立即删除音频；重复确认返回同一条目。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "captureId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VoiceConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "生成的工时条目与音频删除结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceConfirmView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "录音不存在",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "尚未转写或已生成工时",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "工时说明为空或不符合工时规则",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/worklog/voice/captures/{captureId}": {
+      "delete": {
+        "operationId": "discardVoiceCapture",
+        "summary": "放弃录音",
+        "description": "删除音频并标记为已放弃；已生成工时的录音不能放弃。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          },
+          {
+            "name": "captureId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "已放弃"
+          },
+          "404": {
+            "description": "录音不存在",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "录音已生成工时",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -17232,6 +17549,198 @@
           "occurredAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "VoiceCaptureRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "workDate",
+          "contentType",
+          "sizeBytes",
+          "clientRequestId"
+        ],
+        "properties": {
+          "workDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "audio/webm",
+              "audio/ogg",
+              "audio/mpeg",
+              "audio/mp4",
+              "audio/wav",
+              "audio/x-wav"
+            ]
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10485760
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "clientRequestId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "VoiceConfirmRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "clientEntryId"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1440
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endsAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "clientEntryId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "VoiceCaptureView": {
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "uploaded",
+              "transcribed",
+              "confirmed",
+              "discarded",
+              "failed"
+            ]
+          },
+          "uploadUrl": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri"
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "transcript": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "editedText": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provider": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "confidence": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "transcribedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "worklogEntryId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "errorCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "VoiceConfirmView": {
+        "type": "object",
+        "required": [
+          "entry",
+          "audioDeleted"
+        ],
+        "properties": {
+          "entry": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "audioDeleted": {
+            "type": "boolean"
           }
         }
       }
