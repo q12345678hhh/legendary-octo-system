@@ -179,7 +179,7 @@ class TenantLifecycleDbTest {
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM tenancy_tenant", Long.class)).isZero();
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM tenancy_business_number", Long.class))
                 .isZero();
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM work_assistant_segment", Long.class))
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM worklog_entry", Long.class))
                 .isZero();
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM tenancy_plan", Long.class))
                 .isGreaterThanOrEqualTo(3);

@@ -47,7 +47,16 @@ public class WorklogEntryService {
         return transactions.inTenant(context -> store.entries(personId, date));
     }
 
+    public WorklogEntry get(UUID personId, UUID entryId) {
+        return transactions.inTenant(context -> requireOwnedEntry(personId, entryId));
+    }
+
     public WorklogEntry create(UUID personId, UUID employmentId, EntryInput input) {
+        return create(personId, employmentId, input, "manual");
+    }
+
+    public WorklogEntry create(UUID personId, UUID employmentId, EntryInput input,
+                               String sourceType) {
         return transactions.inTenant(context -> {
             LocalDate date = requireEditableDate(input.workDate());
             requireEditableDay(personId, date);
@@ -67,7 +76,7 @@ public class WorklogEntryService {
             validateDailyTotal(personId, date, minutes, null);
             UUID id = store.insertEntry(personId, employmentId, date, input.startsAt(),
                     input.endsAt(), minutes, input.projectId(), input.taskId(), description,
-                    input.clientEntryId(), 1);
+                    input.clientEntryId(), 1, sourceType);
             return requireEntry(id);
         });
     }

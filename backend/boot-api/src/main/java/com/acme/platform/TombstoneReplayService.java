@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 /**
  * 恢复后重放删除墓碑：把备份里「复活」的对象再次清理或匿名化。
  *
- * <p>只处理两类墓碑：已物理清理的对象（file / work_assistant_segment）与
+ * <p>只处理两类墓碑：已物理清理的对象（file 与工时数据）与
  * 已匿名化的自然人。重放结果逐条记录，接口可重复调用。
  */
 @Service

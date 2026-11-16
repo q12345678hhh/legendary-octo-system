@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-13T09:46:37.429Z",
+  "frozenAt": "2026-11-13T11:14:40.060Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "05be005aa884699a3012c8840d5eaf318bac08f940a6debbf7db46aea21c4243",
+      "sha256": "0d21800322714d8e59c6106be9d4e365dfbfd4f1ca130f2ea6873b588ac838a8",
       "tokens": {
         "operation:GET /api/v1/app-catalog/modules": {
           "requestBodyRequired": false
@@ -305,25 +305,6 @@
           "required": true,
           "type": "string"
         },
-        "operation:DELETE /api/v1/work-assistant/segments/{segmentId}": {
-          "requestBodyRequired": false
-        },
-        "response:DELETE /api/v1/work-assistant/segments/{segmentId}:200": {
-          "defined": true
-        },
-        "response:DELETE /api/v1/work-assistant/segments/{segmentId}:401": {
-          "defined": true
-        },
-        "response:DELETE /api/v1/work-assistant/segments/{segmentId}:404": {
-          "defined": true
-        },
-        "response:DELETE /api/v1/work-assistant/segments/{segmentId}:409": {
-          "defined": true
-        },
-        "parameter:DELETE /api/v1/work-assistant/segments/{segmentId}:path:segmentId": {
-          "required": true,
-          "type": "string"
-        },
         "operation:GET /platform/api/v1/retention/policy": {
           "requestBodyRequired": false
         },
@@ -550,87 +531,6 @@
           "defined": true
         },
         "response:POST /api/v1/system/outbox/dead-letters/{eventId}/replay:422": {
-          "defined": true
-        },
-        "operation:POST /api/v1/work-assistant/devices/register": {
-          "requestBodyRequired": true
-        },
-        "response:POST /api/v1/work-assistant/devices/register:200": {
-          "defined": true
-        },
-        "response:POST /api/v1/work-assistant/devices/register:403": {
-          "defined": true
-        },
-        "response:POST /api/v1/work-assistant/devices/register:409": {
-          "defined": true
-        },
-        "response:POST /api/v1/work-assistant/devices/register:422": {
-          "defined": true
-        },
-        "operation:POST /api/v1/work-assistant/devices/{deviceId}/heartbeat": {
-          "requestBodyRequired": true
-        },
-        "response:POST /api/v1/work-assistant/devices/{deviceId}/heartbeat:200": {
-          "defined": true
-        },
-        "response:POST /api/v1/work-assistant/devices/{deviceId}/heartbeat:403": {
-          "defined": true
-        },
-        "operation:GET /api/v1/work-assistant/devices/{deviceId}/policy": {
-          "requestBodyRequired": false
-        },
-        "response:GET /api/v1/work-assistant/devices/{deviceId}/policy:200": {
-          "defined": true
-        },
-        "response:GET /api/v1/work-assistant/devices/{deviceId}/policy:403": {
-          "defined": true
-        },
-        "response:GET /api/v1/work-assistant/devices/{deviceId}/policy:503": {
-          "defined": true
-        },
-        "operation:POST /api/v1/work-assistant/devices/{deviceId}/revoke": {
-          "requestBodyRequired": false
-        },
-        "response:POST /api/v1/work-assistant/devices/{deviceId}/revoke:200": {
-          "defined": true
-        },
-        "response:POST /api/v1/work-assistant/devices/{deviceId}/revoke:404": {
-          "defined": true
-        },
-        "operation:POST /api/v1/work-assistant/segments": {
-          "requestBodyRequired": true
-        },
-        "response:POST /api/v1/work-assistant/segments:200": {
-          "defined": true
-        },
-        "response:POST /api/v1/work-assistant/segments:403": {
-          "defined": true
-        },
-        "response:POST /api/v1/work-assistant/segments:409": {
-          "defined": true
-        },
-        "response:POST /api/v1/work-assistant/segments:422": {
-          "defined": true
-        },
-        "operation:GET /api/v1/work-assistant/update-manifest": {
-          "requestBodyRequired": false
-        },
-        "response:GET /api/v1/work-assistant/update-manifest:200": {
-          "defined": true
-        },
-        "response:GET /api/v1/work-assistant/update-manifest:503": {
-          "defined": true
-        },
-        "operation:PUT /api/v1/work-assistant/policies/current": {
-          "requestBodyRequired": true
-        },
-        "response:PUT /api/v1/work-assistant/policies/current:200": {
-          "defined": true
-        },
-        "response:PUT /api/v1/work-assistant/policies/current:422": {
-          "defined": true
-        },
-        "response:PUT /api/v1/work-assistant/policies/current:503": {
           "defined": true
         },
         "operation:GET /api/v1/tenant": {
@@ -3571,6 +3471,78 @@
           "defined": true
         },
         "parameter:POST /api/v1/workflow/exceptions/{exceptionId}/resolve:path:exceptionId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/worklog/voice/captures": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/worklog/voice/captures:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/worklog/voice/captures/{captureId}/transcription": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/transcription:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/transcription:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/transcription:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/transcription:422": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/transcription:502": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/transcription:503": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/worklog/voice/captures/{captureId}/transcription:path:captureId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/worklog/voice/captures/{captureId}/confirm": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/confirm:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/confirm:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/confirm:409": {
+          "defined": true
+        },
+        "response:POST /api/v1/worklog/voice/captures/{captureId}/confirm:422": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/worklog/voice/captures/{captureId}/confirm:path:captureId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:DELETE /api/v1/worklog/voice/captures/{captureId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/worklog/voice/captures/{captureId}:204": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/worklog/voice/captures/{captureId}:404": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/worklog/voice/captures/{captureId}:409": {
+          "defined": true
+        },
+        "parameter:DELETE /api/v1/worklog/voice/captures/{captureId}:path:captureId": {
           "required": true,
           "type": "string"
         },
@@ -7291,6 +7263,129 @@
         },
         "schema:AuthorizationAdminAction.occurredAt": {
           "type": "string",
+          "required": true
+        },
+        "schema:VoiceCaptureRequest.workDate": {
+          "type": "string",
+          "required": true
+        },
+        "schema:VoiceCaptureRequest.contentType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "audio/mp4",
+            "audio/mpeg",
+            "audio/ogg",
+            "audio/wav",
+            "audio/webm",
+            "audio/x-wav"
+          ]
+        },
+        "schema:VoiceCaptureRequest.sizeBytes": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:VoiceCaptureRequest.durationSeconds": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:VoiceCaptureRequest.clientRequestId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:VoiceConfirmRequest.text": {
+          "type": "string",
+          "required": true
+        },
+        "schema:VoiceConfirmRequest.durationMinutes": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:VoiceConfirmRequest.startsAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:VoiceConfirmRequest.endsAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:VoiceConfirmRequest.projectId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:VoiceConfirmRequest.taskId": {
+          "type": "string",
+          "required": false
+        },
+        "schema:VoiceConfirmRequest.description": {
+          "type": "string",
+          "required": false
+        },
+        "schema:VoiceConfirmRequest.clientEntryId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:VoiceCaptureView.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:VoiceCaptureView.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "confirmed",
+            "discarded",
+            "failed",
+            "transcribed",
+            "uploaded"
+          ]
+        },
+        "schema:VoiceCaptureView.uploadUrl": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.expiresAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.transcript": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.editedText": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.provider": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.model": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.confidence": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.transcribedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.worklogEntryId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceCaptureView.errorCode": {
+          "type": "object",
+          "required": false
+        },
+        "schema:VoiceConfirmView.entry": {
+          "type": "object",
+          "required": true
+        },
+        "schema:VoiceConfirmView.audioDeleted": {
+          "type": "boolean",
           "required": true
         }
       }
