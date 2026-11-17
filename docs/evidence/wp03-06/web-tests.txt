@@ -1,0 +1,17 @@
+WP03-06 前端验证摘录
+====================
+
+pnpm -C frontend/apps/web typecheck
+  通过（无错误）
+
+pnpm -C frontend/apps/web test
+  Test Files  4 passed (4)
+       Tests  18 passed (18)
+  包含 src/views/WorkflowInboxView.test.tsx（2 个用例：列出待办、空态）
+
+pnpm -C frontend/apps/web build
+  通过
+
+新增页面：
+  #/workflow              审批箱（我的待办 / 全部待办）
+  #/workflow/:instanceId  流程实例详情（令牌、任务、只追加日志）
