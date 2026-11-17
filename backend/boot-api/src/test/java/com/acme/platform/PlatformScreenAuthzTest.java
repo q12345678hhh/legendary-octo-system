@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.acme.platform.appcatalog.ModuleActivationService;
 import com.acme.platform.identity.IdentityProperties;
 import com.acme.platform.identity.SessionService;
 import com.acme.platform.identity.operator.PlatformActorContext;
@@ -103,6 +104,9 @@ class PlatformScreenAuthzTest {
 
     @MockitoBean
     private PlatformAuditStore auditStore;
+
+    @MockitoBean
+    private ModuleActivationService moduleActivationService;
 
     @Autowired
     private MockMvc mockMvc;
