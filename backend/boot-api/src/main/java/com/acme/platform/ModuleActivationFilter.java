@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
@@ -24,8 +23,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * <p>位于认证之后：认证失败不会被本过滤器掩盖；命中已停用模块的 API 一律 403
  * {@code MODULE_DISABLED}。登录、能力清单、模块中心与健康检查放行，保证管理员可以自救。
  * 查询激活状态异常时放行并告警，避免数据库抖动演变成全站不可用。
+ *
+ * <p>由 {@link ModuleActivationFilterConfig} 显式注册，而不是 {@code @Component}：
+ * {@code @WebMvcTest} 会自动收集 Filter 类型的 Bean，组件扫描会让切片测试因缺少
+ * 模块激活服务而启动失败。
  */
-@Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 26)
 class ModuleActivationFilter extends OncePerRequestFilter {
 

@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.acme.platform.appcatalog.ModuleActivationService;
 import com.acme.platform.identity.IdentityProperties;
 import com.acme.platform.identity.SessionPrincipal;
 import com.acme.platform.identity.SessionService;
@@ -80,6 +81,9 @@ class TenantApiBoundaryTest {
 
     @MockitoBean
     private PlatformAuditStore platformAuditStore;
+
+    @MockitoBean
+    private ModuleActivationService moduleActivationService;
 
     @Autowired
     private MockMvc mockMvc;
