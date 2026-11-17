@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.19.0",
+    "version": "1.20.0",
     "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。 单据域覆盖报销单/发票/账单上传、AI 预审、人工复核、入账与撤销，OCR 不可用时一律转人工。 模块中心支持租户级启停：记录缺失视为启用，显式停用由后端过滤器强制拦截。"
   },
   "servers": [
@@ -289,6 +289,95 @@
         }
       }
     },
+    "/api/v1/goals/team/{goalId}": {
+      "put": {
+        "operationId": "updateTeamGoal",
+        "summary": "编辑或归档团队目标",
+        "description": "需要 work.goal.team.manage；目标必须属于 orgUnitId 对应的团队。进度由关键结果派生，忽略请求里的 progress；expectedVersion 不匹配返回 409。",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "period": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "dueDate": {
+                    "type": ["string", "null"],
+                    "format": "date"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["active", "achieved", "archived"]
+                  },
+                  "expectedVersion": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的团队目标",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Goal"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
     "/api/v1/goals/{goalId}/key-results": {
       "post": {
         "operationId": "addKeyResult",
@@ -452,6 +541,126 @@
             "$ref": "#/components/responses/Problem"
           },
           "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteKeyResult",
+        "summary": "删除关键结果",
+        "description": "需要 work.goal.team.manage；关键结果必须属于 orgUnitId 对应的团队目标。",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "keyResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "删除成功"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/goals/{goalId}/key-results/{keyResultId}/move": {
+      "post": {
+        "operationId": "moveKeyResult",
+        "summary": "上移或下移关键结果",
+        "description": "需要 work.goal.team.manage；direction 为 up 或 down，返回排序后的完整关键结果列表。",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "keyResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["up", "down"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "排序后的关键结果列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KeyResult"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
             "$ref": "#/components/responses/Problem"
           }
         }
