@@ -113,12 +113,19 @@ public class ExpenseStore {
 
     public Optional<ExpenseDocument> find(UUID id) {
         return jdbcTemplate.query("SELECT " + DOCUMENT_COLUMNS
+                + " FROM expense_document WHERE id = ? AND recycled_at IS NULL",
+                mapper(), id).stream().findFirst();
+    }
+
+    /** 含回收站中的单据，供数据主体删除判断状态。 */
+    public Optional<ExpenseDocument> findIncludingRecycled(UUID id) {
+        return jdbcTemplate.query("SELECT " + DOCUMENT_COLUMNS
                 + " FROM expense_document WHERE id = ?", mapper(), id).stream().findFirst();
     }
 
     public List<ExpenseDocument> list(UUID uploaderPersonId, String status, int limit) {
         StringBuilder sql = new StringBuilder("SELECT " + DOCUMENT_COLUMNS
-                + " FROM expense_document WHERE 1 = 1");
+                + " FROM expense_document WHERE recycled_at IS NULL");
         List<Object> args = new java.util.ArrayList<>();
         if (uploaderPersonId != null) {
             sql.append(" AND uploader_person_id = ?");
@@ -133,6 +140,59 @@ public class ExpenseStore {
         return jdbcTemplate.query(sql.toString(), mapper(), args.toArray());
     }
 
+    public void markRecycled(UUID id) {
+        jdbcTemplate.update("""
+                UPDATE expense_document SET recycled_at = now(), updated_at = now()
+                 WHERE id = ? AND recycled_at IS NULL
+                """, id);
+    }
+
+    public void restore(UUID id) {
+        jdbcTemplate.update("""
+                UPDATE expense_document SET recycled_at = NULL, updated_at = now()
+                 WHERE id = ?
+                """, id);
+    }
+
+    /**
+     * 物理清理单据：复核与抽取随单据删除，审计只解除关联，金额与状态在删除前已由调用方判定。
+     *
+     * <p>匿名化开关只在当前事务内生效，方法结束前复位，避免后续语句绕过只插入约束。
+     */
+    public void purgeDocument(UUID id) {
+        privacyAnonymize(true);
+        try {
+            jdbcTemplate.update("UPDATE expense_audit_event SET document_id = NULL"
+                    + " WHERE document_id = ?", id);
+            jdbcTemplate.update("DELETE FROM expense_document_review WHERE document_id = ?", id);
+            jdbcTemplate.update("DELETE FROM expense_document_extraction"
+                    + " WHERE document_id = ?", id);
+            jdbcTemplate.update("DELETE FROM expense_invoice_claim WHERE document_id = ?", id);
+            jdbcTemplate.update("DELETE FROM expense_document WHERE id = ?", id);
+        } finally {
+            privacyAnonymize(false);
+        }
+    }
+
+    /** 已入账单据只能匿名化：清空 OCR 原文与结构化字段，金额/状态/审计保持原样。 */
+    public void anonymizeExtraction(UUID documentId) {
+        privacyAnonymize(true);
+        try {
+            jdbcTemplate.update("""
+                    UPDATE expense_document_extraction
+                       SET ocr_text = NULL, fields = '{}'::jsonb
+                     WHERE document_id = ?
+                    """, documentId);
+        } finally {
+            privacyAnonymize(false);
+        }
+    }
+
+    private void privacyAnonymize(boolean on) {
+        jdbcTemplate.queryForObject("SELECT set_config('app.privacy_anonymize', ?, true)",
+                String.class, on ? "on" : "off");
+    }
+
     /** 是否已有同哈希文件的有效单据（驳回/撤销的不算）。 */
     public boolean sameFileSubmitted(String sha256, UUID excludeDocumentId) {
         if (sha256 == null || sha256.isBlank()) {
@@ -145,6 +205,7 @@ public class ExpenseStore {
                  WHERE f.sha256 = ?
                    AND d.id <> ?
                    AND d.status NOT IN ('rejected', 'voided')
+                   AND d.recycled_at IS NULL
                 """, Integer.class, sha256.toLowerCase(), excludeDocumentId);
         return count != null && count > 0;
     }
@@ -214,6 +275,7 @@ public class ExpenseStore {
                   FROM expense_document
                  WHERE created_at >= now() - make_interval(hours => ?)
                    AND status <> 'voided'
+                   AND recycled_at IS NULL
                    AND id <> ?
                 """, (rs, rowNum) -> new BatchCounts(
                         rs.getInt(1), rs.getInt(2), rs.getInt(3)),

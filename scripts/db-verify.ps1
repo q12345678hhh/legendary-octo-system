@@ -718,6 +718,12 @@ COMMIT;
     Write-Host $expenseSql.Output
     Assert-True ($expenseSql.Output -match 'WP04-03 单据预审数据库断言通过') '单据预审 SQL 断言未通过'
 
+    # ---------------------------------------------------------------- 5o 隐私与删除
+    Write-Step '5o 隐私与删除：设置 RLS、新数据类回收、匿名化开关'
+    $privacySql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '9a-privacy.sql'
+    Write-Host $privacySql.Output
+    Assert-True ($privacySql.Output -match 'WP04-05 隐私保留与删除数据库断言通过') '隐私保留 SQL 断言未通过'
+
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'
     Invoke-Psql -Database $upgradeDb -User $OwnerUser -Password $OwnerPassword -Sql `

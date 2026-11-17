@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.12.0",
+    "version": "1.13.0",
     "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。 单据域覆盖报销单/发票/账单上传、AI 预审、人工复核、入账与撤销，OCR 不可用时一律转人工。"
   },
   "servers": [
@@ -12700,6 +12700,298 @@
           }
         }
       }
+    },
+    "/api/v1/privacy/data-classes": {
+      "get": {
+        "operationId": "listPrivacyDataClasses",
+        "summary": "查询数据分类与保留期",
+        "description": "返回已登记的数据类、用途、保留天数与访问角色；需 tenant.admin 权限。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "数据分类注册表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["dataClass", "purpose", "retentionDays", "retentionNote", "accessRoles"],
+                    "properties": {
+                      "dataClass": {
+                        "type": "string",
+                        "enum": ["file", "worklog_entry", "worklog_weekly_report",
+                                 "worklog_voice_capture", "expense_document",
+                                 "expense_extraction", "audit"]
+                      },
+                      "purpose": { "type": "string" },
+                      "retentionDays": { "type": "integer" },
+                      "retentionNote": { "type": "string" },
+                      "accessRoles": {
+                        "type": "array",
+                        "items": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少租户管理员权限",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/privacy/settings": {
+      "get": {
+        "operationId": "getPrivacySettings",
+        "summary": "查询租户隐私设置与供应商",
+        "description": "返驻留地、训练开关、语音/OCR 保留天数与只读供应商信息；需 tenant.admin 权限。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "隐私设置",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrivacySettings" }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少租户管理员权限",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updatePrivacySettings",
+        "summary": "更新租户隐私设置",
+        "description": "驻留地只支持 cn/eu/us/sg，保留天数必须在 1..3650 之间；需 tenant.admin 权限。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["dataResidency", "trainingOptOut",
+                             "voiceTranscriptRetentionDays", "expenseOcrRetentionDays"],
+                "properties": {
+                  "dataResidency": { "type": "string", "enum": ["cn", "eu", "us", "sg"] },
+                  "trainingOptOut": { "type": "boolean" },
+                  "voiceTranscriptRetentionDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3650
+                  },
+                  "expenseOcrRetentionDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 3650
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的隐私设置",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrivacySettings" }
+              }
+            }
+          },
+          "400": {
+            "description": "驻留地或保留天数不合法",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          },
+          "403": {
+            "description": "缺少租户管理员权限",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/privacy/my-data": {
+      "get": {
+        "operationId": "getMyPrivacyData",
+        "summary": "查询我的语音与单据",
+        "description": "只返回当前登录主体本人的语音转写记录与单据；登录即可访问。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "我的数据",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrivacyMyData" }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          },
+          "403": {
+            "description": "当前账号未绑定员工",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/privacy/my-data/export": {
+      "get": {
+        "operationId": "exportMyPrivacyData",
+        "summary": "导出我的数据",
+        "description": "导出本人语音转写文本、编辑文本与单据 OCR 摘要；绝不包含文件字节。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "我的数据导出",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PrivacyDataExport" }
+              }
+            }
+          },
+          "401": {
+            "description": "未登录",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/privacy/my-data/delete": {
+      "post": {
+        "operationId": "deleteMyPrivacyData",
+        "summary": "删除我的语音与单据",
+        "description": "语音与未入账单据进入回收站；已入账单据只匿名化 OCR 原文，金额、状态与审计不变。",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TenantHeader"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "voiceCaptureIds": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" }
+                  },
+                  "expenseDocumentIds": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "逐条处理结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["actions"],
+                  "properties": {
+                    "actions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["id", "dataClass", "action"],
+                        "properties": {
+                          "id": { "type": "string", "format": "uuid" },
+                          "dataClass": {
+                            "type": "string",
+                            "enum": ["worklog_voice_capture", "expense_document"]
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": ["recycled", "anonymized"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "试图删除他人数据",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          },
+          "404": {
+            "description": "对象不存在",
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/Problem" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -12971,6 +13263,118 @@
       }
     },
     "schemas": {
+      "PrivacySettings": {
+        "type": "object",
+        "required": ["dataResidency", "trainingOptOut",
+                     "voiceTranscriptRetentionDays", "expenseOcrRetentionDays", "suppliers"],
+        "properties": {
+          "dataResidency": { "type": "string", "enum": ["cn", "eu", "us", "sg"] },
+          "trainingOptOut": { "type": "boolean" },
+          "voiceTranscriptRetentionDays": { "type": "integer" },
+          "expenseOcrRetentionDays": { "type": "integer" },
+          "updatedBy": { "type": ["string", "null"] },
+          "updatedAt": { "type": ["string", "null"], "format": "date-time" },
+          "suppliers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["surface", "provider", "model", "configured"],
+              "properties": {
+                "surface": { "type": "string" },
+                "provider": { "type": "string" },
+                "model": { "type": "string" },
+                "configured": { "type": "boolean" }
+              }
+            }
+          }
+        }
+      },
+      "PrivacyMyData": {
+        "type": "object",
+        "required": ["personId", "voiceCaptures", "expenseDocuments"],
+        "properties": {
+          "personId": { "type": "string", "format": "uuid" },
+          "voiceCaptures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "workDate", "status", "transcribed"],
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "workDate": { "type": "string", "format": "date" },
+                "status": { "type": "string" },
+                "provider": { "type": ["string", "null"] },
+                "model": { "type": ["string", "null"] },
+                "audioDeletedAt": { "type": ["string", "null"], "format": "date-time" },
+                "createdAt": { "type": ["string", "null"], "format": "date-time" },
+                "transcribed": { "type": "boolean" }
+              }
+            }
+          },
+          "expenseDocuments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "docType", "status"],
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "docType": { "type": "string", "enum": ["invoice", "receipt", "bill"] },
+                "status": {
+                  "type": "string",
+                  "enum": ["manual_review", "approved", "posted", "rejected", "voided"]
+                },
+                "amount": { "type": ["number", "null"] },
+                "currency": { "type": ["string", "null"] },
+                "createdAt": { "type": ["string", "null"], "format": "date-time" }
+              }
+            }
+          }
+        }
+      },
+      "PrivacyDataExport": {
+        "type": "object",
+        "required": ["personId", "generatedAt", "voiceCaptures", "expenseDocuments"],
+        "properties": {
+          "personId": { "type": "string", "format": "uuid" },
+          "generatedAt": { "type": "string", "format": "date-time" },
+          "voiceCaptures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "workDate": { "type": "string", "format": "date" },
+                "status": { "type": "string" },
+                "provider": { "type": ["string", "null"] },
+                "model": { "type": ["string", "null"] },
+                "transcriptText": { "type": ["string", "null"] },
+                "editedText": { "type": ["string", "null"] },
+                "audioDeletedAt": { "type": ["string", "null"], "format": "date-time" },
+                "createdAt": { "type": ["string", "null"], "format": "date-time" }
+              }
+            }
+          },
+          "expenseDocuments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "format": "uuid" },
+                "docType": { "type": "string" },
+                "status": { "type": "string" },
+                "amount": { "type": ["number", "null"] },
+                "currency": { "type": ["string", "null"] },
+                "vendorName": { "type": ["string", "null"] },
+                "invoiceCode": { "type": ["string", "null"] },
+                "invoiceNo": { "type": ["string", "null"] },
+                "occurredOn": { "type": ["string", "null"], "format": "date" },
+                "createdAt": { "type": ["string", "null"], "format": "date-time" },
+                "extraction": { "type": ["object", "null"] }
+              }
+            }
+          }
+        }
+      },
       "PlatformLoginRequest": {
         "type": "object",
         "required": [
