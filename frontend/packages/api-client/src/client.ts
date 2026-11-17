@@ -1499,6 +1499,12 @@ export interface ApiClient {
   updateGoal(goalId: string, input: GoalInput, expectedVersion: number): Promise<Goal>;
   listTeamGoals(orgUnitId: string): Promise<Goal[]>;
   createTeamGoal(orgUnitId: string, input: GoalInput): Promise<Goal>;
+  updateTeamGoal(
+    goalId: string,
+    orgUnitId: string,
+    input: GoalInput,
+    expectedVersion: number,
+  ): Promise<Goal>;
   addKeyResult(goalId: string, orgUnitId: string, input: KeyResultInput): Promise<KeyResult>;
   updateKeyResult(
     goalId: string,
@@ -1507,6 +1513,13 @@ export interface ApiClient {
     currentValue: number,
     expectedVersion: number,
   ): Promise<KeyResult>;
+  deleteKeyResult(goalId: string, keyResultId: string, orgUnitId: string): Promise<void>;
+  moveKeyResult(
+    goalId: string,
+    keyResultId: string,
+    orgUnitId: string,
+    direction: 'up' | 'down',
+  ): Promise<KeyResult[]>;
   listModuleSuggestions(scope?: 'mine' | 'all'): Promise<ModuleSuggestion[]>;
   getModuleSuggestion(suggestionId: string): Promise<ModuleSuggestionDetail>;
   createModuleSuggestion(
@@ -2172,6 +2185,11 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         method: 'POST',
         body: JSON.stringify(input),
       }),
+    updateTeamGoal: (goalId, orgUnitId, input, expectedVersion) =>
+      request<Goal>(
+        `/api/v1/goals/team/${encodeURIComponent(goalId)}${queryString({ orgUnitId })}`,
+        { method: 'PUT', body: JSON.stringify({ ...input, expectedVersion }) },
+      ),
     addKeyResult: (goalId, orgUnitId, input) =>
       request<KeyResult>(
         `/api/v1/goals/${encodeURIComponent(goalId)}/key-results${queryString({ orgUnitId })}`,
@@ -2183,6 +2201,20 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
           keyResultId,
         )}${queryString({ orgUnitId })}`,
         { method: 'PUT', body: JSON.stringify({ currentValue, expectedVersion }) },
+      ),
+    deleteKeyResult: (goalId, keyResultId, orgUnitId) =>
+      request<void>(
+        `/api/v1/goals/${encodeURIComponent(goalId)}/key-results/${encodeURIComponent(
+          keyResultId,
+        )}${queryString({ orgUnitId })}`,
+        { method: 'DELETE' },
+      ),
+    moveKeyResult: (goalId, keyResultId, orgUnitId, direction) =>
+      request<KeyResult[]>(
+        `/api/v1/goals/${encodeURIComponent(goalId)}/key-results/${encodeURIComponent(
+          keyResultId,
+        )}/move${queryString({ orgUnitId, direction })}`,
+        { method: 'POST' },
       ),
     listModuleSuggestions: (scope = 'mine') =>
       request<ModuleSuggestion[]>(

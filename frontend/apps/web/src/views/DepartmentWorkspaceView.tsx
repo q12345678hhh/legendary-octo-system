@@ -14,7 +14,9 @@ import {
   Input,
   InputNumber,
   Modal,
+  Popconfirm,
   Progress,
+  Select,
   Space,
   Table,
   Tag,
@@ -70,6 +72,7 @@ interface TeamGoalFormValues {
   title?: string;
   period?: string;
   dueDate?: string;
+  status?: string;
 }
 
 interface KeyResultFormValues {
@@ -99,6 +102,7 @@ export function DepartmentWorkspaceView({
   const [goalActionError, setGoalActionError] = useState<string | null>(null);
   const [goalSaving, setGoalSaving] = useState(false);
   const [goalModalOpen, setGoalModalOpen] = useState(false);
+  const [goalEditing, setGoalEditing] = useState<Goal | null>(null);
   const [keyResultModalOpen, setKeyResultModalOpen] = useState(false);
   const [keyResultGoal, setKeyResultGoal] = useState<Goal | null>(null);
   const [keyResultEditing, setKeyResultEditing] = useState<
@@ -153,7 +157,20 @@ export function DepartmentWorkspaceView({
   }
 
   const openCreateGoal = () => {
+    setGoalEditing(null);
     goalForm.resetFields();
+    setGoalActionError(null);
+    setGoalModalOpen(true);
+  };
+
+  const openEditGoal = (goal: Goal) => {
+    setGoalEditing(goal);
+    goalForm.setFieldsValue({
+      title: goal.title,
+      period: goal.period,
+      ...(goal.dueDate ? { dueDate: goal.dueDate } : {}),
+      status: goal.status,
+    });
     setGoalActionError(null);
     setGoalModalOpen(true);
   };
@@ -179,18 +196,53 @@ export function DepartmentWorkspaceView({
     setGoalSaving(true);
     setGoalActionError(null);
     try {
-      await apiClient.createTeamGoal(orgUnitId, {
-        ...(values.title === undefined ? {} : { title: values.title }),
-        ...(values.period ? { period: values.period } : {}),
-        dueDate: values.dueDate ? values.dueDate : null,
-      });
+      if (goalEditing) {
+        await apiClient.updateTeamGoal(
+          goalEditing.id,
+          orgUnitId,
+          {
+            ...(values.title === undefined ? {} : { title: values.title }),
+            ...(values.period ? { period: values.period } : {}),
+            dueDate: values.dueDate ? values.dueDate : null,
+            ...(values.status ? { status: values.status } : {}),
+          },
+          goalEditing.version,
+        );
+      } else {
+        await apiClient.createTeamGoal(orgUnitId, {
+          ...(values.title === undefined ? {} : { title: values.title }),
+          ...(values.period ? { period: values.period } : {}),
+          dueDate: values.dueDate ? values.dueDate : null,
+        });
+      }
       setGoalModalOpen(false);
+      setGoalEditing(null);
       goalForm.resetFields();
       loadTeamGoals();
     } catch (cause) {
       setGoalActionError(describeError(cause));
     } finally {
       setGoalSaving(false);
+    }
+  };
+
+  const moveKeyResult = async (goal: Goal, keyResult: KeyResult, direction: 'up' | 'down') => {
+    setGoalActionError(null);
+    try {
+      await apiClient.moveKeyResult(goal.id, keyResult.id, orgUnitId, direction);
+      loadTeamGoals();
+    } catch (cause) {
+      setGoalActionError(describeError(cause));
+    }
+  };
+
+  const removeKeyResult = async (goal: Goal, keyResult: KeyResult) => {
+    setGoalActionError(null);
+    try {
+      await apiClient.deleteKeyResult(goal.id, keyResult.id, orgUnitId);
+      loadTeamGoals();
+    } catch (cause) {
+      setGoalActionError(describeError(cause));
     }
   };
 
@@ -345,14 +397,19 @@ export function DepartmentWorkspaceView({
                       {GOAL_STATUS_LABEL[goal.status] ?? goal.status}
                     </Tag>
                     {canManageTeamGoals ? (
-                      <Button size="small" type="link" onClick={() => openAddKeyResult(goal)}>
-                        添加关键结果
-                      </Button>
+                      <>
+                        <Button size="small" type="link" onClick={() => openEditGoal(goal)}>
+                          编辑
+                        </Button>
+                        <Button size="small" type="link" onClick={() => openAddKeyResult(goal)}>
+                          添加关键结果
+                        </Button>
+                      </>
                     ) : null}
                   </Space>
                   <Progress percent={goal.progress} size="small" />
                   {goal.keyResults && goal.keyResults.length > 0 ? (
-                    goal.keyResults.map((keyResult) => (
+                    goal.keyResults.map((keyResult, index) => (
                       <Space key={keyResult.id} wrap size={8}>
                         <Text>{keyResult.title}</Text>
                         <Text type="secondary">
@@ -365,13 +422,41 @@ export function DepartmentWorkspaceView({
                           style={{ width: 140 }}
                         />
                         {canManageTeamGoals ? (
-                          <Button
-                            size="small"
-                            type="link"
-                            onClick={() => openEditKeyResult(goal, keyResult)}
-                          >
-                            更新当前值
-                          </Button>
+                          <>
+                            <Button
+                              size="small"
+                              type="link"
+                              onClick={() => openEditKeyResult(goal, keyResult)}
+                            >
+                              更新当前值
+                            </Button>
+                            <Button
+                              size="small"
+                              type="link"
+                              disabled={index === 0}
+                              onClick={() => void moveKeyResult(goal, keyResult, 'up')}
+                            >
+                              上移
+                            </Button>
+                            <Button
+                              size="small"
+                              type="link"
+                              disabled={index === (goal.keyResults?.length ?? 0) - 1}
+                              onClick={() => void moveKeyResult(goal, keyResult, 'down')}
+                            >
+                              下移
+                            </Button>
+                            <Popconfirm
+                              title="删除这个关键结果？"
+                              okText="删除"
+                              cancelText="取消"
+                              onConfirm={() => void removeKeyResult(goal, keyResult)}
+                            >
+                              <Button size="small" type="link" danger>
+                                删除
+                              </Button>
+                            </Popconfirm>
+                          </>
                         ) : null}
                       </Space>
                     ))
@@ -386,9 +471,12 @@ export function DepartmentWorkspaceView({
       ) : null}
 
       <Modal
-        title="新建团队目标"
+        title={goalEditing ? '编辑团队目标' : '新建团队目标'}
         open={goalModalOpen}
-        onCancel={() => setGoalModalOpen(false)}
+        onCancel={() => {
+          setGoalModalOpen(false);
+          setGoalEditing(null);
+        }}
         onOk={() => void submitTeamGoal()}
         confirmLoading={goalSaving}
         okText="保存"
@@ -412,6 +500,17 @@ export function DepartmentWorkspaceView({
           >
             <Input placeholder="2026-12-31" />
           </Form.Item>
+          {goalEditing ? (
+            <Form.Item name="status" label="状态">
+              <Select
+                options={[
+                  { value: 'active', label: '进行中' },
+                  { value: 'achieved', label: '已达成' },
+                  { value: 'archived', label: '已归档' },
+                ]}
+              />
+            </Form.Item>
+          ) : null}
         </Form>
       </Modal>
 

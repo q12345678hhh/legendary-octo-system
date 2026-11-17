@@ -177,6 +177,120 @@ class GoalServiceTest {
         verify(store, never()).updateKeyResultCurrent(any(), any(), anyLong());
     }
 
+    @Test
+    void updateTeamRejectsGoalFromAnotherUnit() {
+        when(store.find(GOAL)).thenReturn(Optional.of(teamGoal(UUID.randomUUID(), 1L, 0)));
+
+        assertThatThrownBy(() -> service.updateTeam(GOAL, UNIT,
+                new GoalService.GoalInput("新标题", "", "", null, null, "archived"), 1L))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status()).isEqualTo(404);
+                    assertThat(error.code()).isEqualTo("GOAL_NOT_FOUND");
+                });
+        verify(store, never()).update(any(), anyString(), anyString(), anyString(), any(),
+                anyInt(), anyString(), anyLong());
+    }
+
+    @Test
+    void updateTeamStaleVersionIsRejected() {
+        when(store.find(GOAL)).thenReturn(Optional.of(teamGoal(UNIT, 3L, 20)));
+
+        assertThatThrownBy(() -> service.updateTeam(GOAL, UNIT,
+                new GoalService.GoalInput("新标题", "", "", null, null, null), 2L))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status()).isEqualTo(409);
+                    assertThat(error.code()).isEqualTo("GOAL_VERSION_CONFLICT");
+                });
+        verify(store, never()).update(any(), anyString(), anyString(), anyString(), any(),
+                anyInt(), anyString(), anyLong());
+    }
+
+    @Test
+    void updateTeamKeepsStoredProgressAndDerivesFromKeyResults() {
+        when(store.find(GOAL)).thenReturn(
+                Optional.of(teamGoal(UNIT, 1L, 0)),
+                Optional.of(teamGoal(UNIT, 2L, 0)));
+        when(store.update(any(), anyString(), anyString(), anyString(), any(), anyInt(),
+                anyString(), anyLong())).thenReturn(true);
+        when(store.listKeyResults(GOAL)).thenReturn(List.of(
+                keyResult(BigDecimal.valueOf(100), BigDecimal.valueOf(50), 0)));
+
+        GoalService.GoalView view = service.updateTeam(GOAL, UNIT,
+                new GoalService.GoalInput("新标题", "", null, null, 99, "archived"), 1L);
+
+        verify(store).update(GOAL, "新标题", "", "2026-Q4", null, 0, "archived", 1L);
+        assertThat(view.progress()).isEqualTo(50);
+    }
+
+    @Test
+    void deleteKeyResultRejectsKeyResultOfAnotherGoal() {
+        when(store.find(GOAL)).thenReturn(Optional.of(teamGoal(UNIT, 1L, 0)));
+        when(store.findKeyResult(KEY_RESULT)).thenReturn(Optional.of(
+                new GoalStore.KeyResultRow(KEY_RESULT, UUID.randomUUID(), "签约客户",
+                        BigDecimal.TEN, BigDecimal.ONE, "家", 0, 1L)));
+
+        assertThatThrownBy(() -> service.deleteKeyResult(GOAL, KEY_RESULT, UNIT))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status()).isEqualTo(404);
+                    assertThat(error.code()).isEqualTo("KEY_RESULT_NOT_FOUND");
+                });
+        verify(store, never()).deleteKeyResult(any());
+    }
+
+    @Test
+    void deleteKeyResultRemovesRow() {
+        when(store.find(GOAL)).thenReturn(Optional.of(teamGoal(UNIT, 1L, 0)));
+        when(store.findKeyResult(KEY_RESULT)).thenReturn(Optional.of(
+                new GoalStore.KeyResultRow(KEY_RESULT, GOAL, "签约客户", BigDecimal.TEN,
+                        BigDecimal.ONE, "家", 0, 1L)));
+        when(store.deleteKeyResult(KEY_RESULT)).thenReturn(true);
+
+        service.deleteKeyResult(GOAL, KEY_RESULT, UNIT);
+
+        verify(store).deleteKeyResult(KEY_RESULT);
+    }
+
+    @Test
+    void moveKeyResultSwapsNeighboursAndNormalizesOrder() {
+        UUID first = UUID.randomUUID();
+        UUID second = UUID.randomUUID();
+        List<GoalStore.KeyResultRow> rows = List.of(
+                keyResult(first, 0), keyResult(KEY_RESULT, 1), keyResult(second, 2));
+        when(store.find(GOAL)).thenReturn(Optional.of(teamGoal(UNIT, 1L, 0)));
+        when(store.listKeyResults(GOAL)).thenReturn(rows,
+                List.of(keyResult(KEY_RESULT, 0), keyResult(first, 1), keyResult(second, 2)));
+
+        List<GoalService.KeyResultView> moved = service.moveKeyResult(GOAL, KEY_RESULT, UNIT, "up");
+
+        verify(store).updateKeyResultOrder(KEY_RESULT, 0);
+        verify(store).updateKeyResultOrder(first, 1);
+        assertThat(moved).extracting(GoalService.KeyResultView::id)
+                .containsExactly(KEY_RESULT, first, second);
+    }
+
+    @Test
+    void moveKeyResultAtBoundaryLeavesOrderUntouched() {
+        UUID first = UUID.randomUUID();
+        when(store.find(GOAL)).thenReturn(Optional.of(teamGoal(UNIT, 1L, 0)));
+        when(store.listKeyResults(GOAL)).thenReturn(
+                List.of(keyResult(first, 0), keyResult(KEY_RESULT, 1)));
+
+        List<GoalService.KeyResultView> moved = service.moveKeyResult(GOAL, first, UNIT, "up");
+
+        verify(store, never()).updateKeyResultOrder(any(), anyInt());
+        assertThat(moved).extracting(GoalService.KeyResultView::id)
+                .containsExactly(first, KEY_RESULT);
+    }
+
+    @Test
+    void moveKeyResultRejectsUnknownDirection() {
+        assertThatThrownBy(() -> service.moveKeyResult(GOAL, KEY_RESULT, UNIT, "left"))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status()).isEqualTo(400);
+                    assertThat(error.code()).isEqualTo("KEY_RESULT_DIRECTION_INVALID");
+                });
+    }
+
     private static GoalStore.GoalRow goal(UUID owner, long version) {
         OffsetDateTime now = OffsetDateTime.now();
         return new GoalStore.GoalRow(GOAL, owner, "季度目标", "说明", "2026-Q4", null, 0,
@@ -192,6 +306,11 @@ class GoalServiceTest {
     private static GoalStore.KeyResultRow keyResult(BigDecimal target, BigDecimal current,
                                                     int sortOrder) {
         return new GoalStore.KeyResultRow(UUID.randomUUID(), GOAL, "关键结果", target, current,
+                "", sortOrder, 1L);
+    }
+
+    private static GoalStore.KeyResultRow keyResult(UUID id, int sortOrder) {
+        return new GoalStore.KeyResultRow(id, GOAL, "关键结果", BigDecimal.TEN, BigDecimal.ONE,
                 "", sortOrder, 1L);
     }
 }

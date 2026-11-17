@@ -165,4 +165,17 @@ public class GoalStore {
                  WHERE id = ? AND version = ?
                 """, currentValue, id, expectedVersion) == 1;
     }
+
+    public boolean deleteKeyResult(UUID id) {
+        return jdbcTemplate.update("DELETE FROM work_goal_key_result WHERE id = ?", id) == 1;
+    }
+
+    /** 重排只调整展示顺序，不动版本，避免与当前值更新互相干扰。 */
+    public void updateKeyResultOrder(UUID id, int sortOrder) {
+        jdbcTemplate.update("""
+                UPDATE work_goal_key_result
+                   SET sort_order = ?, updated_at = now()
+                 WHERE id = ?
+                """, sortOrder, id);
+    }
 }
