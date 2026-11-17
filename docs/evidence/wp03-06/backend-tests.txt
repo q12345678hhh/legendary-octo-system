@@ -1,0 +1,24 @@
+WP03-06 后端测试摘录（mvn clean install）
+==========================================
+
+Running com.acme.platform.workflow.WorkflowConditionEvaluatorTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+
+Running com.acme.platform.workflow.WorkflowEngineTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+
+Running com.acme.platform.workflow.WorkflowSchemaValidatorTest
+Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+
+Running com.acme.platform.WorkflowAuthzTest
+Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+
+BUILD SUCCESS
+
+真实数据库（db-verify.ps1 5m 段）
+----------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+  -- in com.acme.platform.workflow.WorkflowDbTest
+
+覆盖点：发布不可变、一 key 一 published、实例钉住版本、business_key 幂等、
+直连任务去重、状态日志只追加、无审批人不自动通过、SLA 超时不自动批准、跨租户隔离。

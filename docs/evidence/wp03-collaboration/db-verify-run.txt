@@ -1,0 +1,483 @@
+﻿psql 客户端：Docker Desktop 容器 platform-pg-dev
+目标：localhost:55432  owner=platform_owner  app=platform_app
+
+== 1 空库升级：DROP/CREATE 演练库 → migrate → validate
+  校验和（空库）：
+    1|-421171951
+    2|-1218073849
+    3|-1157903501
+    4|-2118030789
+    5|-2137171414
+    6|-1364102595
+    7|-638483512
+    8|-525129633
+    9|-1911349163
+    10|323247044
+    11|-1477428585
+    12|921004658
+    13|-836032864
+    14|-874332257
+    15|1915665089
+    16|725785493
+
+== 2 RLS 正向与负例（platform_app 身份）
+DO
+DO
+BEGIN
+SET
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+BEGIN
+
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+DO
+SET
+DO
+RESET
+DO
+DO
+RLS 用例全部通过（9/9）
+
+== 3 并发认领：两个独立会话同时 FOR UPDATE SKIP LOCKED
+  会话 1 持有：00000000-0000-0000-0000-000000000001
+  会话 2 取得：00000000-0000-0000-0000-000000000002（不同行，通过）
+
+== 4 上一受支持版本升级：migrate 到 V2 → 灌 50 万行 → migrate 到最新
+  V2 时的校验和：
+    1|-421171951
+    2|-1218073849
+  已灌入 outbox 行数：500000（3s）
+  迁移耗时 5.7s；探针执行 1501 条语句，最慢 35.6 ms，超过 1s 的语句 0 条
+  升级后的校验和：
+    1|-421171951
+    2|-1218073849
+    3|-1157903501
+    4|-2118030789
+    5|-2137171414
+    6|-1364102595
+    7|-638483512
+    8|-525129633
+    9|-1911349163
+    10|323247044
+    11|-1477428585
+    12|921004658
+    13|-836032864
+    14|-874332257
+    15|1915665089
+    16|725785493
+
+== 5 迁移后结构与一致性、索引执行计划
+DO
+结构与一致性断言全部通过
+Limit
+  ->  Index Scan using platform_outbox_dispatch_idx on platform_outbox
+        Index Cond: (available_at <= now())
+
+== 5b 租户生命周期：RLS、同号并存、约束与状态机
+BEGIN
+aaaaaaaa-0000-4000-8000-000000000001
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+bbbbbbbb-0000-4000-8000-000000000002
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+aaaaaaaa-0000-4000-8000-000000000001
+DO
+COMMIT
+BEGIN
+aaaaaaaa-0000-4000-8000-000000000001
+DO
+COMMIT
+DO
+BEGIN
+aaaaaaaa-0000-4000-8000-000000000001
+DO
+COMMIT
+WP02-01 租户生命周期数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.694 s -- in com.acme.platform.tenancy.TenantLifecycleDbTest
+  状态机、冻结门禁、冷静期删除、审计链、同号跨租户与支持访问时限全部通过
+
+== 5c 身份与会话：账号、成员、会话、MFA、令牌与跨租户拒绝
+BEGIN
+cccccccc-0000-4000-8000-000000000003
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+dddddddd-0000-4000-8000-000000000004
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+cccccccc-0000-4000-8000-000000000003
+DO
+COMMIT
+DO
+BEGIN
+cccccccc-0000-4000-8000-000000000003
+DO
+COMMIT
+BEGIN
+cccccccc-0000-4000-8000-000000000003
+INSERT 0 1
+UPDATE 1
+INSERT 0 1
+UPDATE 1
+DO
+COMMIT
+WP02-02 身份与会话数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.585 s -- in com.acme.platform.identity.IdentityDbTest
+  无账号员工、再雇佣、一人多雇佣、账号更换、auth_version 失效与跨租户令牌拒绝全部通过
+
+== 5d 组织结构：部门树、主兼岗、汇报线、委派、老板角色、变更历史与预览票据
+BEGIN
+eeeeeeee-0000-4000-8000-000000000005
+INSERT 0 1
+INSERT 0 1
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 3
+INSERT 0 3
+INSERT 0 2
+INSERT 0 3
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+ffffffff-0000-4000-8000-000000000006
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+eeeeeeee-0000-4000-8000-000000000005
+DO
+COMMIT
+BEGIN
+eeeeeeee-0000-4000-8000-000000000005
+DO
+COMMIT
+BEGIN
+eeeeeeee-0000-4000-8000-000000000005
+DO
+COMMIT
+DO
+BEGIN
+ffffffff-0000-4000-8000-000000000006
+DO
+COMMIT
+WP02-03 组织结构数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.801 s -- in com.acme.platform.organization.OrganizationDbTest
+  三级汇报链、兼岗、限时代管、虚线、调动历史、未来变更切换与跨租户引用全部通过
+
+== 5e 统一授权：权限目录、角色、授权、显式拒绝、字段/条件策略与缓存版本
+DO
+BEGIN
+eeeeeeee-0000-4000-8000-000000000005
+DO
+COMMIT
+BEGIN
+ffffffff-0000-4000-8000-000000000006
+INSERT 0 1
+COMMIT
+BEGIN
+eeeeeeee-0000-4000-8000-000000000005
+DO
+COMMIT
+BEGIN
+ffffffff-0000-4000-8000-000000000006
+DO
+COMMIT
+WP02-04 统一授权数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.071 s -- in com.acme.platform.authorization.AuthorizationDbTest
+  默认拒绝、显式拒绝优先、临时授权到期、委托引用、缓存版本递增与跨租户隔离全部通过
+
+== 5f 职责分离：申请、双人授予、季度复核、逾期暂停与管理员审计
+DO
+BEGIN
+eeeeeeee-0000-4000-8000-000000000005
+DO
+COMMIT
+BEGIN
+eeeeeeee-0000-4000-8000-000000000005
+DO
+COMMIT
+BEGIN
+ffffffff-0000-4000-8000-000000000006
+DO
+COMMIT
+BEGIN
+cccccccc-0000-4000-8000-000000000009
+INSERT 0 1
+COMMIT
+DO
+DO
+WP02-05 职责分离数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.673 s -- in com.acme.platform.authorization.AuthorizationSodDbTest
+  申请批准后授权生效、静态冲突拦截、季度生成幂等、逾期升级、宽限期后自动暂停与审计不可改删全部通过
+
+== 5g 跨租户攻击：双相似租户、逐表 UUID 猜测、连接复用与服务层越权
+DO
+BEGIN
+a1a1a1a1-0000-4000-8000-000000000001
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 3
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+BEGIN
+b2b2b2b2-0000-4000-8000-000000000002
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 3
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+COMMIT
+DO
+BEGIN
+a1a1a1a1-0000-4000-8000-000000000001
+DO
+COMMIT
+BEGIN
+a1a1a1a1-0000-4000-8000-000000000001
+DO
+COMMIT
+DO
+BEGIN
+NOTICE:  已知项：platform_webhook_delivery 尚未实现，Webhook 攻击面由 Outbox/作业用例替代
+DO
+COMMIT
+BEGIN
+a1a1a1a1-0000-4000-8000-000000000001
+DO
+COMMIT
+DO
+a1a1a1a1-0000-4000-8000-000000000001
+RESET
+DO
+BEGIN
+DO
+COMMIT
+BEGIN
+a1a1a1a1-0000-4000-8000-000000000001
+DO
+COMMIT
+BEGIN
+a1a1a1a1-0000-4000-8000-000000000001
+DO
+COMMIT
+WP02-06 跨租户数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.912 s -- in com.acme.platform.security.CrossTenantAttackDbTest
+  同姓名、同邮箱、同工号、同文件名下 17 个服务层攻击用例全部被拒
+
+== 5h 平台运营端：目录投影、审计不可变、设置白名单、指标与事件状态机
+DO
+DO
+BEGIN
+c3c3c3c3-0000-4000-8000-000000000003
+INSERT 0 1
+DO
+UPDATE 1
+DO
+UPDATE 1
+DO
+COMMIT
+DO
+DO
+BEGIN
+INSERT 0 1
+INSERT 0 1
+DO
+COMMIT
+DO
+DO
+WP02-07 平台运营数据库断言通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.783 s -- in com.acme.platform.platformops.PlatformOpsDbTest
+  目录同步、审计不可改删、设置白名单、指标幂等、事件状态机与平台表无 RLS 全部通过
+
+== 5i 删除与保留：回收站 RLS、留置、受保护类、不可变留痕与保留策略
+DO
+DO
+DO
+BEGIN
+SET
+INSERT 0 1
+DO
+SET
+DO
+COMMIT
+BEGIN
+SET
+DO
+COMMIT
+DO
+DO
+WP02-08 删除、保留与数据主体请求数据库断言通过
+  Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.657 s -- in com.acme.platform.tenancy.retention.RetentionDbTest
+  回收站 30 天默认、跨租户隔离、留置与受保护类拒绝、留痕与墓碑不可改删、案件状态机与非法迁移全部通过
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.334 s -- in com.acme.platform.DeletionAnonymizeDbTest
+  在职拒绝、匿名化替换显示名与邮箱、密码置空、墓碑写入与统计事实保留全部通过
+
+== 5j 部门工作区：自动建空间、归档同步、设置约束与跨租户隔离
+DO
+dddddddd-0000-4000-8000-000000000007
+BEGIN
+dddddddd-0000-4000-8000-000000000007
+INSERT 0 1
+DELETE 0
+INSERT 0 1
+INSERT 0 3
+COMMIT
+DO
+BEGIN
+dddddddd-0000-4000-8000-000000000007
+UPDATE 1
+COMMIT
+DO
+DO
+BEGIN
+cccccccc-0000-4000-8000-000000000003
+INSERT 0 0
+DO
+COMMIT
+DO
+DO
+WP03-01 部门工作区数据库断言通过
+
+== 5k 工时与周报：时长约束、快照不可变、周报冻结、阈值与跨租户隔离
+DO
+dddddddd-0000-4000-8000-000000000008
+BEGIN
+INSERT 0 1
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+INSERT 0 2
+INSERT 0 2
+COMMIT
+DO
+BEGIN
+INSERT 0 1
+COMMIT
+DO
+BEGIN
+UPDATE 1
+COMMIT
+DO
+BEGIN
+INSERT 0 1
+COMMIT
+DO
+DO
+BEGIN
+cccccccc-0000-4000-8000-000000000004
+INSERT 0 1
+DO
+COMMIT
+DO
+WP03-05 工时与周报数据库断言通过
+
+== 5l 部门协作：频道成员、帖子任务会议知识页、文件引用与跨租户隔离
+DO
+BEGIN
+eeeeeeee-0000-4000-8000-000000000011
+INSERT 0 1
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+INSERT 0 1
+COMMIT
+BEGIN
+eeeeeeee-0000-4000-8000-000000000011
+DO
+DO
+DO
+DO
+DO
+DO
+COMMIT
+BEGIN
+ffffffff-0000-4000-8000-000000000012
+INSERT 0 1
+DO
+COMMIT
+DO
+WP03-03 部门协作数据库断言通过
+
+== 6 校验和门禁：篡改历史 checksum 后 validate 必须失败
+  flyway:validate 按预期失败（exit=1）
+  篡改被拦截，还原后 validate 通过
+
+== 7 连接池：租户上下文随连接复用不得残留
+  Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.572 s -- in com.acme.platform.db.ConnectionPoolTenantContextTest
+  事务级 SET LOCAL 提交后不残留；会话级 SET 会泄漏（故禁用）；两个连接并发各看各租户
+
+全部检查通过：空库升级、上一版本升级、校验和门禁、RLS、租户生命周期、身份与会话、组织结构与生效日期、统一授权、职责分离与访问复核、跨租户攻击套件、平台运营端、删除与保留、并发、索引、锁等待评估、连接池隔离。

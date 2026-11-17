@@ -1,0 +1,21 @@
+﻿pnpm.exe : $ vitest run
+所在位置 C:\Users\Administrator\AppData\Roaming\npm\pnpm.ps1:14 字符: 3
++   & "$basedir/node_modules/pnpm/pnpm.exe"   $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ($ vitest run:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90mD:/Projects/temp_20261109_01/frontend/apps/web[39m
+
+ [32m✓[39m src/router.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/components/AsyncState.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 278[2mms[22m[39m
+ [32m✓[39m src/App.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1144[2mms[22m[39m
+     [33m[2m✓[22m[39m signs in with UUIDs and lands on the home view [33m 373[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects malformed identities without leaving the login view [33m 391[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m16 passed[39m[22m[90m (16)[39m
+[2m   Start at [22m 13:49:23
+[2m   Duration [22m 4.45s[2m (transform 317ms, setup 142ms, import 4.91s, tests 1.43s, environment 1.45s)[22m
+
