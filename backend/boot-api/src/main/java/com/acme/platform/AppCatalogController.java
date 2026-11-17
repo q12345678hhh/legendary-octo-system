@@ -100,8 +100,7 @@ class AppCatalogController {
     @RequestMapping(value = "/modules/{moduleId}", method = RequestMethod.PUT)
     AppCatalogViews.ModuleView updateModule(@PathVariable UUID moduleId,
                                             @RequestBody ModuleRequest request) {
-        require("appcatalog.module.manage", "appcatalog.module", moduleId,
-                Map.of("moduleId", moduleId));
+        require("appcatalog.module.manage", "appcatalog.module", null, Map.of());
         return service.updateModule(moduleId, request.toInput());
     }
 
