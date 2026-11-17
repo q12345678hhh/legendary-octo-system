@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-13T02:57:21.022Z",
+  "frozenAt": "2026-11-13T07:31:49.813Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "60ed2c6ecb2f0f1b382d52407829efbc0c6c7ef51a2f319b46b595602f6f112a",
+      "sha256": "5fde5e512e32dace0f81e753086407a3d27934197bf7c08e3815ce3611a0ce45",
       "tokens": {
         "operation:GET /api/v1/retention/bin": {
           "requestBodyRequired": false
@@ -3140,6 +3140,278 @@
         "parameter:GET /api/v1/authorization/admin-actions:query:limit": {
           "required": false,
           "type": "integer"
+        },
+        "operation:GET /api/v1/workflow/definitions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/workflow/definitions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/definitions:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/definitions:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/workflow/definitions": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/definitions:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions:403": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/workflow/definitions/{definitionId}": {
+          "requestBodyRequired": false
+        },
+        "response:PUT /api/v1/workflow/definitions/{definitionId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/workflow/definitions/{definitionId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/workflow/definitions/{definitionId}:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/workflow/definitions/{definitionId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/workflow/definitions/{definitionId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/workflow/definitions/{definitionId}:409": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/workflow/definitions/{definitionId}:path:definitionId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/workflow/definitions/{definitionId}/publish": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/publish:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/publish:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/publish:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/publish:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/publish:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/workflow/definitions/{definitionId}/publish:path:definitionId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/workflow/definitions/{definitionId}/retire": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/retire:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/retire:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/retire:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/definitions/{definitionId}/retire:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/workflow/definitions/{definitionId}/retire:path:definitionId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/workflow/instances": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/instances:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/workflow/instances/{instanceId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/workflow/instances/{instanceId}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/instances/{instanceId}:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/instances/{instanceId}:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/instances/{instanceId}:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/workflow/instances/{instanceId}:path:instanceId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/workflow/instances/{instanceId}/withdraw": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/instances/{instanceId}/withdraw:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances/{instanceId}/withdraw:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances/{instanceId}/withdraw:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances/{instanceId}/withdraw:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/workflow/instances/{instanceId}/withdraw:path:instanceId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/workflow/instances/{instanceId}/cancel": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/instances/{instanceId}/cancel:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances/{instanceId}/cancel:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances/{instanceId}/cancel:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/instances/{instanceId}/cancel:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/workflow/instances/{instanceId}/cancel:path:instanceId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/workflow/tasks": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/workflow/tasks:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/tasks:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/tasks:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/workflow/tasks:query:scope": {
+          "required": false,
+          "type": "string"
+        },
+        "operation:POST /api/v1/workflow/tasks/{taskId}/claim": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/claim:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/claim:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/claim:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/claim:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/workflow/tasks/{taskId}/claim:path:taskId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/workflow/tasks/{taskId}/complete": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/complete:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/complete:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/complete:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/complete:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/complete:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/workflow/tasks/{taskId}/complete:path:taskId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/workflow/tasks/{taskId}/transfer": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/transfer:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/transfer:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/transfer:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/tasks/{taskId}/transfer:403": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/workflow/tasks/{taskId}/transfer:path:taskId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/workflow/exceptions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/workflow/exceptions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/exceptions:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/workflow/exceptions:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/workflow/exceptions/{exceptionId}/resolve": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/workflow/exceptions/{exceptionId}/resolve:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/exceptions/{exceptionId}/resolve:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/exceptions/{exceptionId}/resolve:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/workflow/exceptions/{exceptionId}/resolve:403": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/workflow/exceptions/{exceptionId}/resolve:path:exceptionId": {
+          "required": true,
+          "type": "string"
         },
         "schema:PlatformLoginRequest.email": {
           "type": "string",
@@ -6979,6 +7251,44 @@
         }
       }
     },
+    "events/workflow.task.created.v1.json": {
+      "kind": "events",
+      "sha256": "4e3d4dad5b111ccd045d34a036eaf75cc2da4a13bfac37c70c93fbd2e4c4eed6",
+      "tokens": {
+        "event.data": {
+          "type": "object",
+          "required": true
+        },
+        "event.data.task_id": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.instance_id": {
+          "type": "string",
+          "required": false
+        },
+        "event.data.business_type": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.business_id": {
+          "type": "string",
+          "required": false
+        },
+        "event.data.title": {
+          "type": "string",
+          "required": true
+        },
+        "event.data.assignee_person_id": {
+          "type": "string",
+          "required": false
+        },
+        "event.data.due_at": {
+          "type": "string",
+          "required": false
+        }
+      }
+    },
     "plugins/plugin-manifest.v1.json": {
       "kind": "plugins",
       "sha256": "fd92d3576264966965fcf84fde62ec695f5319e9a1a7aeb1f77327f5373ecffa",
@@ -7026,7 +7336,7 @@
     },
     "events/event-catalog.json": {
       "kind": "events-catalog",
-      "sha256": "ae5b50417d319f5ef6e94b8c99dd3197f87bbf24d997b407ef270504661155fb",
+      "sha256": "8d75f7be014f493607cf0f7f0d6fd6aacb7e248c97107e36983ec754e4035021",
       "tokens": {
         "catalog:employee.hired.v1": {
           "version": 1,
@@ -7043,6 +7353,10 @@
         "catalog:platform.file.scanned.v1": {
           "version": 1,
           "schema": "platform.file.scanned.v1.json"
+        },
+        "catalog:workflow.task.created.v1": {
+          "version": 1,
+          "schema": "workflow.task.created.v1.json"
         }
       }
     }

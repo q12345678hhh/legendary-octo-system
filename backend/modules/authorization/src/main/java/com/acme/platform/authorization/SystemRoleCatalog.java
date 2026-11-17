@@ -24,8 +24,10 @@ public final class SystemRoleCatalog {
     public static final String SECURITY_ADMIN = "security-admin";
     public static final String HR_ADMIN = "hr-admin";
     public static final String MANAGER = "manager";
+    public static final String MANAGER_UNIT = "manager-unit";
     public static final String DELEGATE_MANAGER = "delegate-manager";
     public static final String EMPLOYEE = "employee";
+    public static final String EMPLOYEE_SELF = "employee-self";
     public static final String PAYROLL_PREPARER = "payroll-preparer";
     public static final String PAYROLL_REVIEWER = "payroll-reviewer";
     public static final String PAYROLL_APPROVER = "payroll-approver";
@@ -55,16 +57,25 @@ public final class SystemRoleCatalog {
                 "authorization.audit.read", "authorization.cache.read",
                 "authorization.access.approve", "authorization.review.manage",
                 "authorization.review.read", "authorization.review.decide",
-                "authorization.admin_action.read")));
+                "authorization.admin_action.read",
+                "department.workspace.manage", "workflow.definition.manage",
+                "workflow.instance.admin",
+                "appcatalog.module.read", "appcatalog.module.manage")));
         map.put(TENANT_ADMIN, new RoleTemplate(TENANT_ADMIN, "租户管理员", Set.of(
                 "tenant.admin", "identity.member.manage",
                 "organization.structure.read", "organization.structure.manage",
                 "directory.person.read", "directory.employment.read",
-                "file.read", "search.read", "report.read")));
+                "file.read", "search.read", "report.read",
+                "department.workspace.manage", "workflow.definition.manage",
+                "workflow.instance.admin",
+                "appcatalog.module.read", "appcatalog.module.manage")));
         map.put(BUSINESS_OWNER, new RoleTemplate(BUSINESS_OWNER, "企业老板", Set.of(
                 "business.work.read", "directory.person.read", "directory.employment.read",
                 "directory.person.export", "file.read", "search.read",
-                "report.read", "report.export", "ai.context.read")));
+                "report.read", "report.export", "ai.context.read",
+                "worklog.time.read", "worklog.report.read",
+                "insight.work.read", "insight.work.export",
+                "appcatalog.module.read", "appcatalog.suggestion.review")));
         map.put(SECURITY_ADMIN, new RoleTemplate(SECURITY_ADMIN, "安全管理员", Set.of(
                 "authorization.role.manage", "authorization.assignment.manage",
                 "authorization.deny.manage", "authorization.policy.manage",
@@ -72,18 +83,35 @@ public final class SystemRoleCatalog {
                 "authorization.audit.read", "authorization.cache.read",
                 "authorization.access.approve", "authorization.review.manage",
                 "authorization.review.read", "authorization.review.decide",
-                "authorization.admin_action.read")));
+                "authorization.admin_action.read", "workflow.instance.admin")));
         map.put(HR_ADMIN, new RoleTemplate(HR_ADMIN, "HR 核心管理员", Set.of(
                 "directory.person.read", "directory.employment.read",
                 "directory.person.manage", "directory.person.export",
                 "organization.structure.read", "file.read", "search.read", "report.read")));
         map.put(MANAGER, new RoleTemplate(MANAGER, "部门主管", Set.of(
                 "directory.person.read", "business.work.read",
-                "authorization.review.read", "authorization.review.decide")));
+                "authorization.review.read", "authorization.review.decide",
+                "worklog.time.read", "worklog.time.review",
+                "worklog.report.read", "worklog.report.review",
+                "workflow.task.act", "workflow.instance.start")));
+        map.put(MANAGER_UNIT, new RoleTemplate(MANAGER_UNIT, "部门主管（部门范围）", Set.of(
+                "department.workspace.read", "insight.work.read",
+                "collaboration.channel.read", "collaboration.channel.manage",
+                "collaboration.page.manage")));
         map.put(DELEGATE_MANAGER, new RoleTemplate(DELEGATE_MANAGER, "代管人", Set.of(
-                "directory.person.read", "business.work.read")));
-        map.put(EMPLOYEE, new RoleTemplate(EMPLOYEE, "普通员工", Set.of(
-                "directory.person.read", "file.read", "authorization.access.request")));
+                "directory.person.read", "business.work.read",
+                "worklog.time.read", "worklog.report.read",
+                "department.workspace.read", "insight.work.read")));
+        map.put(EMPLOYEE, new RoleTemplate(EMPLOYEE, "普通员工（部门范围）", Set.of(
+                "directory.person.read", "file.read", "search.read",
+                "authorization.access.request", "department.workspace.read",
+                "collaboration.channel.read", "collaboration.post.write",
+                "collaboration.task.write", "appcatalog.suggestion.create")));
+        map.put(EMPLOYEE_SELF, new RoleTemplate(EMPLOYEE_SELF, "普通员工（本人范围）", Set.of(
+                "directory.person.read", "file.read", "search.read",
+                "authorization.access.request", "business.work.read",
+                "worklog.time.read", "worklog.time.write",
+                "worklog.report.read", "worklog.report.submit")));
         map.put(PAYROLL_PREPARER, new RoleTemplate(PAYROLL_PREPARER, "薪酬制单", Set.of(
                 "payroll.run.prepare")));
         map.put(PAYROLL_REVIEWER, new RoleTemplate(PAYROLL_REVIEWER, "薪酬复核", Set.of(
@@ -110,7 +138,8 @@ public final class SystemRoleCatalog {
                 "directory.person.read", "directory.employment.read",
                 "organization.structure.read", "file.read", "search.read", "report.read",
                 "authorization.audit.read", "authorization.review.read",
-                "authorization.admin_action.read", "authorization.cache.read")));
+                "authorization.admin_action.read", "authorization.cache.read",
+                "worklog.time.export")));
         ROLES = Collections.unmodifiableMap(map);
     }
 

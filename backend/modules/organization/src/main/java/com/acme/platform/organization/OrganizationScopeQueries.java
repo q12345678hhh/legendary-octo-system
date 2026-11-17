@@ -227,6 +227,119 @@ public class OrganizationScopeQueries {
                 """, (rs, rowNum) -> rs.getObject("id", UUID.class));
     }
 
+    /** 人员当前实线主管的 personId；无主管返回空。审批人解析的「部门负责人」按此口径。 */
+    public Optional<UUID> managerPersonOf(UUID personId, LocalDate today) {
+        if (personId == null) {
+            return Optional.empty();
+        }
+        return jdbcTemplate.query("""
+                SELECT me.person_id
+                  FROM organization_employment e
+                  JOIN organization_reporting_line r
+                    ON r.subordinate_employment_id = e.id
+                   AND r.tenant_id = e.tenant_id
+                   AND r.line_type = 'solid'
+                   AND r.effective_from <= ?
+                   AND (r.effective_to IS NULL OR r.effective_to > ?)
+                  JOIN organization_employment me
+                    ON me.id = r.manager_employment_id AND me.tenant_id = r.tenant_id
+                 WHERE e.person_id = ?
+                   AND e.status = 'active'
+                   AND e.effective_from <= ?
+                   AND (e.effective_to IS NULL OR e.effective_to > ?)
+                 ORDER BY r.effective_from DESC
+                 LIMIT 1
+                """, (rs, rowNum) -> rs.getObject("person_id", UUID.class),
+                today, today, personId, today, today).stream().findFirst();
+    }
+
+    /** 从人员向上第 1..depth 层实线主管的 personId；不足 depth 时返回已有的层数。 */
+    public List<UUID> managerChainPersonIds(UUID personId, int depth, LocalDate today) {
+        if (personId == null || depth < 1) {
+            return List.of();
+        }
+        return jdbcTemplate.query("""
+                WITH RECURSIVE chain(employment_id, depth) AS (
+                    SELECT e.id, 0
+                      FROM organization_employment e
+                     WHERE e.person_id = ?
+                       AND e.status = 'active'
+                       AND e.effective_from <= ?
+                       AND (e.effective_to IS NULL OR e.effective_to > ?)
+                    UNION ALL
+                    SELECT r.manager_employment_id, c.depth + 1
+                      FROM chain c
+                      JOIN organization_reporting_line r
+                        ON r.subordinate_employment_id = c.employment_id
+                       AND r.line_type = 'solid'
+                       AND r.effective_from <= ?
+                       AND (r.effective_to IS NULL OR r.effective_to > ?)
+                     WHERE c.depth < ?
+                )
+                SELECT DISTINCT me.person_id
+                  FROM chain c
+                  JOIN organization_employment me ON me.id = c.employment_id
+                 WHERE c.depth >= 1
+                 ORDER BY me.person_id
+                """, (rs, rowNum) -> rs.getObject("person_id", UUID.class),
+                personId, today, today, today, today, depth);
+    }
+
+    /** 当前老板角色（owner + trustee）对应的 personId。 */
+    public List<UUID> ownerPersonIds(LocalDate today) {
+        return jdbcTemplate.query("""
+                SELECT DISTINCT e.person_id
+                  FROM organization_owner_role o
+                  JOIN organization_employment e
+                    ON e.id = o.employment_id AND e.tenant_id = o.tenant_id
+                 WHERE o.role_type IN ('owner', 'trustee')
+                   AND o.effective_from <= ?
+                   AND (o.effective_to IS NULL OR o.effective_to > ?)
+                 ORDER BY e.person_id
+                """, (rs, rowNum) -> rs.getObject("person_id", UUID.class), today, today);
+    }
+
+    /** 人员是否在职：person active 且存在覆盖今天的 active 雇佣。 */
+    public boolean activePerson(UUID personId, LocalDate today) {
+        if (personId == null) {
+            return false;
+        }
+        Boolean found = jdbcTemplate.queryForObject("""
+                SELECT EXISTS (
+                    SELECT 1
+                      FROM organization_person p
+                      JOIN organization_employment e
+                        ON e.person_id = p.id AND e.tenant_id = p.tenant_id
+                     WHERE p.id = ?
+                       AND p.status = 'active'
+                       AND e.status = 'active'
+                       AND e.effective_from <= ?
+                       AND (e.effective_to IS NULL OR e.effective_to > ?))
+                """, Boolean.class, personId, today, today);
+        return Boolean.TRUE.equals(found);
+    }
+
+    /** 岗位当前在职人员：用于 position 型审批人。 */
+    public List<UUID> personIdsAtPosition(UUID positionId, LocalDate today) {
+        if (positionId == null) {
+            return List.of();
+        }
+        return jdbcTemplate.query("""
+                SELECT DISTINCT e.person_id
+                  FROM organization_employment_assignment a
+                  JOIN organization_employment e
+                    ON e.id = a.employment_id AND e.tenant_id = a.tenant_id
+                 WHERE a.position_id = ?
+                   AND a.effective_from <= ?
+                   AND (a.effective_to IS NULL OR a.effective_to > ?)
+                   AND e.status = 'active'
+                   AND e.effective_from <= ?
+                   AND (e.effective_to IS NULL OR e.effective_to > ?)
+                 ORDER BY e.person_id
+                """, (rs, rowNum) -> rs.getObject("person_id", UUID.class),
+                positionId, today, today, today, today);
+    }
+
     public boolean unitExists(UUID unitId) {
         if (unitId == null) {
             return false;
