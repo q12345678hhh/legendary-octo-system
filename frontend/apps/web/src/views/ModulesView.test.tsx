@@ -84,4 +84,50 @@ describe('ModulesView', () => {
 
     expect(await screen.findByText('合同到期提醒')).toBeTruthy();
   });
+
+  it('shows the server error and keeps the modal open when module creation fails', async () => {
+    const client = fakeClient();
+    vi.mocked(client.createAppModule).mockRejectedValue(new Error('模块编码已存在'));
+    render(
+      <ModulesView
+        apiClient={client}
+        permissions={new Set(['appcatalog.module.read', 'appcatalog.module.manage'])}
+      />,
+    );
+
+    expect(await screen.findByText('考勤管理', {}, { timeout: 10000 })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '新增模块' }));
+    fireEvent.change(screen.getByLabelText('模块编码'), { target: { value: 'demo.duplicate' } });
+    fireEvent.change(screen.getByLabelText('模块名称'), { target: { value: '重复模块' } });
+    fireEvent.click(screen.getByRole('button', { name: '保 存' }));
+
+    expect(await screen.findByText('模块登记失败', {}, { timeout: 10000 })).toBeTruthy();
+    expect(await screen.findByText(/模块编码已存在/, {}, { timeout: 10000 })).toBeTruthy();
+    expect(screen.getByText('登记模块')).toBeTruthy();
+  }, 30000);
+
+  it('rejects an invalid module code before calling the API', async () => {
+    const client = fakeClient();
+    render(
+      <ModulesView
+        apiClient={client}
+        permissions={new Set(['appcatalog.module.read', 'appcatalog.module.manage'])}
+      />,
+    );
+
+    expect(await screen.findByText('考勤管理', {}, { timeout: 10000 })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '新增模块' }));
+    fireEvent.change(screen.getByLabelText('模块编码'), { target: { value: '中文编码' } });
+    fireEvent.change(screen.getByLabelText('模块名称'), { target: { value: '中文模块' } });
+    fireEvent.click(screen.getByRole('button', { name: '保 存' }));
+
+    expect(
+      await screen.findByText(
+        '需以小写字母开头，只含小写字母、数字、点、下划线或连字符',
+        {},
+        { timeout: 10000 },
+      ),
+    ).toBeTruthy();
+    expect(client.createAppModule).not.toHaveBeenCalled();
+  }, 30000);
 });
