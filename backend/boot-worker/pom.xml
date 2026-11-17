@@ -68,6 +68,11 @@
       <groupId>com.acme.platform</groupId>
       <artifactId>workflow</artifactId>
     </dependency>
+    <!-- 审批任务事件消费后写站内通知 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>collaboration</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.acme.platform</groupId>
       <artifactId>integration</artifactId>
