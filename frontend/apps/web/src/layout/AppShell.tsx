@@ -3,6 +3,7 @@ import type { MenuProps } from 'antd';
 import type { ReactNode, RefObject } from 'react';
 import { navigate, routePermission, routeTitle, routes, type RouteName } from '../router';
 import type { Session } from '../session';
+import { isModuleEnabled } from '../modules/manifest';
 import { shortId } from '../utils/format';
 
 const { Header, Sider, Content } = Layout;
@@ -28,6 +29,8 @@ export interface AppShellProps {
   session: Session;
   route: RouteName;
   permissions: Set<string> | null;
+  /** 已启用模块；null 表示尚未拿到，不做模块过滤。 */
+  enabledModules: Set<string> | null;
   onSignOut: () => void;
   mainRef: RefObject<HTMLElement>;
   children: ReactNode;
@@ -38,6 +41,7 @@ export function AppShell({
   session,
   route,
   permissions,
+  enabledModules,
   onSignOut,
   mainRef,
   children,
@@ -50,7 +54,10 @@ export function AppShell({
       }
       const permission = routePermission(item.name);
       const allowed = !permission || permissions === null || permissions.has(permission);
-      return allowed ? [{ key: item.name, label: item.title }] : [];
+      if (!allowed || !isModuleEnabled(item.name, enabledModules)) {
+        return [];
+      }
+      return [{ key: item.name, label: item.title }];
     });
 
   const items: NonNullable<MenuProps['items']> = [];

@@ -143,6 +143,8 @@ export interface RequestOptions {
 /** 当前主体持有的权限码，仅用于隐藏导航，不作为前端放行依据。 */
 export interface Capabilities {
   permissions: string[];
+  /** 当前租户已启用的模块 code；旧后端可能缺省，缺失时前端不过滤模块。 */
+  enabledModules?: string[];
 }
 
 export interface DepartmentSummary {
@@ -945,6 +947,7 @@ export interface WorkflowException {
 export type AppModuleHealth = 'healthy' | 'degraded' | 'offline' | 'unknown';
 export type AppModuleInstallStatus = 'not_installed' | 'installed' | 'disabled';
 export type AppModuleScope = 'tenant' | 'department' | 'project' | 'person';
+export type ModuleActivationStatus = 'enabled' | 'disabled';
 
 export interface AppModule {
   id: string;
@@ -959,8 +962,32 @@ export interface AppModule {
   applicableScope: AppModuleScope;
   healthStatus: AppModuleHealth;
   installStatus: AppModuleInstallStatus;
+  /** 无激活记录时为 enabled。 */
+  activationStatus: ModuleActivationStatus;
+  activationVersion: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ModuleActivation {
+  moduleId: string;
+  code: string;
+  status: ModuleActivationStatus;
+  version: number;
+  config: string;
+  enabledAt?: string | null;
+  enabledBy?: string | null;
+  disabledAt?: string | null;
+  disabledBy?: string | null;
+  updatedAt?: string | null;
+  /** false 表示没有显式记录，按默认启用处理。 */
+  explicit: boolean;
+}
+
+export interface ModuleActivationInput {
+  status: ModuleActivationStatus;
+  expectedVersion?: number | undefined;
+  comment?: string | undefined;
 }
 
 export interface AppModuleInput {
@@ -1353,6 +1380,12 @@ export interface ApiClient {
     input: AppModuleInput,
     options?: RequestOptions,
   ): Promise<AppModule>;
+  getModuleActivation(moduleId: string): Promise<ModuleActivation>;
+  setModuleActivation(
+    moduleId: string,
+    input: ModuleActivationInput,
+    options?: RequestOptions,
+  ): Promise<ModuleActivation>;
   listModuleSuggestions(scope?: 'mine' | 'all'): Promise<ModuleSuggestion[]>;
   getModuleSuggestion(suggestionId: string): Promise<ModuleSuggestionDetail>;
   createModuleSuggestion(
@@ -1973,6 +2006,16 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     updateAppModule: (moduleId, input, requestOptions) =>
       request<AppModule>(
         `/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}`,
+        { method: 'PUT', body: JSON.stringify(input) },
+        requestOptions ?? {},
+      ),
+    getModuleActivation: (moduleId) =>
+      request<ModuleActivation>(
+        `/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}/activation`,
+      ),
+    setModuleActivation: (moduleId, input, requestOptions) =>
+      request<ModuleActivation>(
+        `/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}/activation`,
         { method: 'PUT', body: JSON.stringify(input) },
         requestOptions ?? {},
       ),
