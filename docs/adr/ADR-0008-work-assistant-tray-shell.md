@@ -2,10 +2,10 @@
 
 | 项目 | 内容 |
 |---|---|
-| 状态 | 已接受（WP01-05 实施前） |
-| 日期 | 2026-11-11 |
-| 依据 | `PLAN.md` §3.7、§11.5；`docs/adr/ADR-0006-desktop-collection-boundary.md` |
-| 影响 | WP01-05、Phase 4 工作助手试点、Phase 10 发布 |
+| 状态 | **已废弃（Superseded）**：2026-11-13 需求变更，取消 Windows 托盘客户端与本地采集缓存 |
+| 日期 | 2026-11-11（2026-11-13 标注废弃） |
+| 依据 | `PLAN.md` §3.7、§11.5；`docs/adr/ADR-0006-desktop-collection-boundary.md`；`IMPLEMENTATION_PLAN.md` Phase 4 需求变更说明 |
+| 影响 | 原 WP01-05、Phase 4 工作助手试点、Phase 10 发布 |
 
 ## 1. 决策
 
