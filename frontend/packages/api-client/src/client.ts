@@ -1041,6 +1041,12 @@ export interface KeyResultInput {
   sortOrder?: number;
 }
 
+/** 关键结果可改字段：至少提供一项；目标值与单位需删除重建。 */
+export interface KeyResultPatch {
+  title?: string;
+  currentValue?: number;
+}
+
 /** 目标：个人目标或部门团队目标；团队目标的进度由 KR 派生。 */
 export interface Goal {
   id: string;
@@ -1510,7 +1516,7 @@ export interface ApiClient {
     goalId: string,
     keyResultId: string,
     orgUnitId: string,
-    currentValue: number,
+    patch: KeyResultPatch,
     expectedVersion: number,
   ): Promise<KeyResult>;
   deleteKeyResult(goalId: string, keyResultId: string, orgUnitId: string): Promise<void>;
@@ -2195,12 +2201,12 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         `/api/v1/goals/${encodeURIComponent(goalId)}/key-results${queryString({ orgUnitId })}`,
         { method: 'POST', body: JSON.stringify(input) },
       ),
-    updateKeyResult: (goalId, keyResultId, orgUnitId, currentValue, expectedVersion) =>
+    updateKeyResult: (goalId, keyResultId, orgUnitId, patch, expectedVersion) =>
       request<KeyResult>(
         `/api/v1/goals/${encodeURIComponent(goalId)}/key-results/${encodeURIComponent(
           keyResultId,
         )}${queryString({ orgUnitId })}`,
-        { method: 'PUT', body: JSON.stringify({ currentValue, expectedVersion }) },
+        { method: 'PUT', body: JSON.stringify({ ...patch, expectedVersion }) },
       ),
     deleteKeyResult: (goalId, keyResultId, orgUnitId) =>
       request<void>(

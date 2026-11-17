@@ -52,7 +52,7 @@ class GoalController {
                                   String unit, Integer sortOrder) {
     }
 
-    record KeyResultUpdateRequest(BigDecimal currentValue, Long expectedVersion) {
+    record KeyResultUpdateRequest(String title, BigDecimal currentValue, Long expectedVersion) {
     }
 
     @GetMapping
@@ -123,7 +123,7 @@ class GoalController {
                                               @RequestBody KeyResultUpdateRequest request) {
         requireTeam("work.goal.team.manage", orgUnitId);
         return goalService.updateKeyResult(goalId, keyResultId, orgUnitId,
-                request.currentValue(), request.expectedVersion());
+                request.title(), request.currentValue(), request.expectedVersion());
     }
 
     @DeleteMapping("/{goalId}/key-results/{keyResultId}")
