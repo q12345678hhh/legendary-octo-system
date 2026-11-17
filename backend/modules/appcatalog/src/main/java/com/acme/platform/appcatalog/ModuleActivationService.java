@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 
 /**
@@ -60,6 +62,13 @@ public class ModuleActivationService {
     public record ModuleRouteView(String code, String name, String routePath) {
     }
 
+    /** 启停审计事件出参。 */
+    public record ActivationEventView(UUID id, String action, String fromStatus, String toStatus,
+                                      String actor, String comment, OffsetDateTime occurredAt) {
+    }
+
+    private static final Pattern QUOTED = Pattern.compile("\"([^\"]+)\"");
+
     public ActivationView get(UUID moduleId) {
         return transactions.inTenant(context -> {
             AppCatalogStore.ModuleRow module = requireModule(moduleId);
@@ -93,6 +102,23 @@ public class ModuleActivationService {
                 throw ApiException.conflict("MODULE_ACTIVATION_VERSION_CONFLICT",
                         "模块启用状态已被其他人修改，请刷新后重试");
             }
+            if ("enabled".equals(target)) {
+                Set<String> currentlyEnabled = computeSnapshot().codes();
+                List<String> missing = dependencyCodes(module.dependencies()).stream()
+                        .filter(code -> !currentlyEnabled.contains(code))
+                        .distinct()
+                        .toList();
+                if (!missing.isEmpty()) {
+                    throw ApiException.conflict("MODULE_DEPENDENCY_DISABLED",
+                            "请先启用依赖模块：" + String.join("、", missing));
+                }
+            } else {
+                List<String> dependents = activationStore.enabledDependents(module.code());
+                if (!dependents.isEmpty()) {
+                    throw ApiException.conflict("MODULE_DEPENDENT_ENABLED",
+                            "以下模块仍依赖此模块，请先停用：" + String.join("、", dependents));
+                }
+            }
             if (existing.isPresent()) {
                 if (!activationStore.updateStatus(moduleId, target, currentVersion, operator,
                         comment == null ? "" : comment.trim())) {
@@ -105,6 +131,17 @@ public class ModuleActivationService {
             }
             invalidate(context.tenantId());
             return view(module, activationStore.find(moduleId));
+        });
+    }
+
+    /** 模块启停历史，只读；模块不存在时 404。 */
+    public List<ActivationEventView> events(UUID moduleId) {
+        return transactions.inTenant(context -> {
+            requireModule(moduleId);
+            return activationStore.events(moduleId).stream()
+                    .map(row -> new ActivationEventView(row.id(), row.action(), row.fromStatus(),
+                            row.toStatus(), row.actor(), row.comment(), row.occurredAt()))
+                    .toList();
         });
     }
 
@@ -224,6 +261,18 @@ public class ModuleActivationService {
                         value.disabledAt(), value.disabledBy(), value.updatedAt(), true))
                 .orElseGet(() -> new ActivationView(module.id(), module.code(), "enabled", 0L,
                         "{}", null, null, null, null, null, false));
+    }
+
+    private static List<String> dependencyCodes(String dependencies) {
+        if (dependencies == null || dependencies.isBlank()) {
+            return List.of();
+        }
+        Matcher matcher = QUOTED.matcher(dependencies);
+        List<String> codes = new java.util.ArrayList<>();
+        while (matcher.find()) {
+            codes.add(matcher.group(1));
+        }
+        return codes;
     }
 
     private void invalidate(UUID tenantId) {

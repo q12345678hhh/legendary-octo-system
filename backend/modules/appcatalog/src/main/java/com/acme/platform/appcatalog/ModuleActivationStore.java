@@ -29,6 +29,10 @@ public class ModuleActivationStore {
                                 OffsetDateTime updatedAt) {
     }
 
+    public record ActivationEventRow(UUID id, String action, String fromStatus, String toStatus,
+                                     String actor, String comment, OffsetDateTime occurredAt) {
+    }
+
     private static final String ACTIVATION_COLUMNS = """
             module_id, status, config::text AS config, version, enabled_at, enabled_by,
             disabled_at, disabled_by, updated_at
@@ -56,6 +60,33 @@ public class ModuleActivationStore {
                   JOIN app_module m ON m.id = a.module_id
                  WHERE a.status = 'disabled'
                 """, String.class));
+    }
+
+    /** 仍处于启用状态、且依赖声明里包含给定模块 code 的模块；用于阻止停用被依赖模块。 */
+    public List<String> enabledDependents(String code) {
+        return jdbcTemplate.queryForList("""
+                SELECT m.code
+                  FROM app_module m
+                  LEFT JOIN app_module_activation a ON a.module_id = m.id
+                 WHERE jsonb_exists(m.dependencies, ?)
+                   AND COALESCE(a.status, 'enabled') = 'enabled'
+                 ORDER BY m.code
+                """, String.class, code);
+    }
+
+    /** 模块启停审计事件，最新在前；只读追加表，最多返回 50 条。 */
+    public List<ActivationEventRow> events(UUID moduleId) {
+        return jdbcTemplate.query("""
+                SELECT id, action, from_status, to_status, actor, comment, occurred_at
+                  FROM app_module_activation_event
+                 WHERE module_id = ?
+                 ORDER BY occurred_at DESC, id DESC
+                 LIMIT 50
+                """, (rs, rowNum) -> new ActivationEventRow(
+                        rs.getObject("id", UUID.class), rs.getString("action"),
+                        rs.getString("from_status"), rs.getString("to_status"),
+                        rs.getString("actor"), rs.getString("comment"),
+                        rs.getObject("occurred_at", OffsetDateTime.class)), moduleId);
     }
 
     public List<String> moduleCodes() {
