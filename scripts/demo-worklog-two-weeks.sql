@@ -261,6 +261,7 @@ DECLARE
     v_status  text;
     v_version int;
     v_id      uuid;
+    v_report_id uuid;
     v_content jsonb;
     v_reviewed timestamptz;
 BEGIN
@@ -334,17 +335,16 @@ BEGIN
 
             IF p.person_id = '11111111-0000-4000-8000-000000000033'::uuid
                AND w.week_start = DATE '2026-11-02' THEN
+                -- 先以 draft 写入，来源映射完成后再流转状态（V20 守卫要求）
                 INSERT INTO worklog_weekly_report
                     (id, tenant_id, person_id, week_start, week_end, version, status,
                      content, snapshot_hash, generated_at, submitted_at,
                      reviewed_at, reviewed_by_person_id, review_comment)
                 VALUES
                     (md5('demo-wl-r:' || p.person_id || ':' || w.week_start || ':1')::uuid,
-                     v_tenant, p.person_id, w.week_start, w.week_start + 6, 1, 'returned',
-                     v_content, encode(sha256(convert_to(v_content::text, 'UTF8')), 'hex'),
-                     v_reviewed - make_interval(hours => 20),
-                     v_reviewed - make_interval(hours => 18), v_reviewed, p.reviewer_id,
-                     '周报没有说明延期原因，请补充后重新提交')
+                     v_tenant, p.person_id, w.week_start, w.week_start + 6, 1, 'draft',
+                     v_content, NULL, v_reviewed - make_interval(hours => 20),
+                     NULL, NULL, NULL, NULL)
                 ON CONFLICT (id) DO NOTHING;
 
                 INSERT INTO worklog_weekly_report
@@ -353,11 +353,9 @@ BEGIN
                      reviewed_at, reviewed_by_person_id, review_comment)
                 VALUES
                     (md5('demo-wl-r:' || p.person_id || ':' || w.week_start || ':2')::uuid,
-                     v_tenant, p.person_id, w.week_start, w.week_start + 6, 2, 'approved',
-                     v_content, encode(sha256(convert_to(v_content::text, 'UTF8')), 'hex'),
-                     v_reviewed - make_interval(hours => 8),
-                     v_reviewed - make_interval(hours => 6),
-                     v_reviewed + make_interval(hours => 4), p.reviewer_id, '已补充')
+                     v_tenant, p.person_id, w.week_start, w.week_start + 6, 2, 'draft',
+                     v_content, NULL, v_reviewed - make_interval(hours => 8),
+                     NULL, NULL, NULL, NULL)
                 ON CONFLICT (id) DO NOTHING;
             ELSE
                 INSERT INTO worklog_weekly_report
@@ -366,28 +364,21 @@ BEGIN
                      reviewed_at, reviewed_by_person_id, review_comment)
                 VALUES
                     (md5('demo-wl-r:' || p.person_id || ':' || w.week_start || ':1')::uuid,
-                     v_tenant, p.person_id, w.week_start, w.week_start + 6, 1, v_status,
-                     v_content,
-                     CASE WHEN v_status <> 'draft'
-                          THEN encode(sha256(convert_to(v_content::text, 'UTF8')), 'hex') END,
-                     v_reviewed - make_interval(hours => 20),
-                     CASE WHEN v_status <> 'draft'
-                          THEN v_reviewed - make_interval(hours => 18) END,
-                     CASE WHEN v_status = 'approved' THEN v_reviewed END,
-                     CASE WHEN v_status = 'approved' THEN p.reviewer_id END,
-                     NULL)
+                     v_tenant, p.person_id, w.week_start, w.week_start + 6, 1, 'draft',
+                     v_content, NULL, v_reviewed - make_interval(hours => 20),
+                     NULL, NULL, NULL, NULL)
                 ON CONFLICT (id) DO NOTHING;
             END IF;
 
-            v_id := md5('demo-wl-r:' || p.person_id || ':' || w.week_start ||
-                        CASE WHEN p.person_id = '11111111-0000-4000-8000-000000000033'::uuid
-                                  AND w.week_start = DATE '2026-11-02'
-                             THEN ':2' ELSE ':1' END)::uuid;
-
-            IF v_status <> 'draft' THEN
+            FOR v_report_id IN
+                SELECT id
+                  FROM worklog_weekly_report
+                 WHERE tenant_id = v_tenant AND person_id = p.person_id
+                   AND week_start = w.week_start AND status = 'draft'
+            LOOP
                 INSERT INTO worklog_report_source
                     (tenant_id, report_id, submission_id, item_key, minutes)
-                SELECT v_tenant, v_id, l.id, 'total', l.total_minutes
+                SELECT v_tenant, v_report_id, l.id, 'total', l.total_minutes
                   FROM (SELECT DISTINCT ON (work_date) id, total_minutes
                           FROM worklog_submission
                          WHERE tenant_id = v_tenant AND person_id = p.person_id
@@ -395,6 +386,45 @@ BEGIN
                            AND status IN ('submitted', 'approved')
                          ORDER BY work_date, version DESC) l
                 ON CONFLICT DO NOTHING;
+            END LOOP;
+
+            v_id := md5('demo-wl-r:' || p.person_id || ':' || w.week_start ||
+                        CASE WHEN p.person_id = '11111111-0000-4000-8000-000000000033'::uuid
+                                  AND w.week_start = DATE '2026-11-02'
+                             THEN ':2' ELSE ':1' END)::uuid;
+
+            IF p.person_id = '11111111-0000-4000-8000-000000000033'::uuid
+               AND w.week_start = DATE '2026-11-02' THEN
+                UPDATE worklog_weekly_report
+                   SET status = 'returned',
+                       snapshot_hash = encode(sha256(convert_to(v_content::text, 'UTF8')), 'hex'),
+                       submitted_at = v_reviewed - make_interval(hours => 18),
+                       reviewed_at = v_reviewed,
+                       reviewed_by_person_id = p.reviewer_id,
+                       review_comment = '周报没有说明延期原因，请补充后重新提交'
+                 WHERE id = md5('demo-wl-r:' || p.person_id || ':' ||
+                                w.week_start || ':1')::uuid
+                   AND status = 'draft';
+
+                UPDATE worklog_weekly_report
+                   SET status = 'approved',
+                       snapshot_hash = encode(sha256(convert_to(v_content::text, 'UTF8')), 'hex'),
+                       submitted_at = v_reviewed - make_interval(hours => 6),
+                       reviewed_at = v_reviewed + make_interval(hours => 4),
+                       reviewed_by_person_id = p.reviewer_id,
+                       review_comment = '已补充'
+                 WHERE id = v_id
+                   AND status = 'draft';
+            ELSIF v_status <> 'draft' THEN
+                UPDATE worklog_weekly_report
+                   SET status = v_status,
+                       snapshot_hash = encode(sha256(convert_to(v_content::text, 'UTF8')), 'hex'),
+                       submitted_at = v_reviewed - make_interval(hours => 18),
+                       reviewed_at = CASE WHEN v_status = 'approved' THEN v_reviewed END,
+                       reviewed_by_person_id = CASE WHEN v_status = 'approved'
+                                                    THEN p.reviewer_id END
+                 WHERE id = v_id
+                   AND status = 'draft';
             END IF;
         END LOOP;
     END LOOP;
