@@ -1,5 +1,6 @@
 package com.acme.platform;
 
+import com.acme.platform.authorization.AuthorizationGuard;
 import com.acme.platform.goal.GoalService;
 import com.acme.platform.organization.OrganizationScopeQueries;
 import com.acme.platform.platform.TenantTransactions;
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
-/** 个人工作页的目标分区：本人目标可维护，所在部门团队目标只读展示。 */
+/** 个人工作页的目标分区：本人目标可维护，所在部门团队目标按权限只读展示。 */
 @Component
 class WorkPageGoalsSectionProvider implements WorkPageSectionProvider {
 
@@ -20,15 +21,18 @@ class WorkPageGoalsSectionProvider implements WorkPageSectionProvider {
     private final GoalService goalService;
     private final OrganizationScopeQueries organizationScopes;
     private final TenantTransactions transactions;
+    private final AuthorizationGuard authorization;
     private final Clock clock;
 
     WorkPageGoalsSectionProvider(GoalService goalService,
                                  OrganizationScopeQueries organizationScopes,
                                  TenantTransactions transactions,
+                                 AuthorizationGuard authorization,
                                  Clock clock) {
         this.goalService = goalService;
         this.organizationScopes = organizationScopes;
         this.transactions = transactions;
+        this.authorization = authorization;
         this.clock = clock;
     }
 
@@ -71,16 +75,22 @@ class WorkPageGoalsSectionProvider implements WorkPageSectionProvider {
         return data;
     }
 
-    /** 部门团队目标需要组织范围：先在租户事务里定位主岗部门，再取该部门的进行中目标。 */
+    /** 部门团队目标需要组织范围与团队目标读权限；两者任一不满足就不返回该区块数据。 */
     private List<GoalService.GoalView> teamActiveGoals(UUID subjectPersonId) {
         return transactions.inTenant(context -> {
             LocalDate today = LocalDate.now(clock);
             return organizationScopes.primaryUnitOfPerson(subjectPersonId, today)
+                    .filter(this::canReadTeamGoals)
                     .map(unitId -> goalService.listTeam(unitId).stream()
                             .filter(goal -> "active".equals(goal.status()))
                             .toList())
                     .orElseGet(List::of);
         });
+    }
+
+    private boolean canReadTeamGoals(UUID unitId) {
+        return authorization.decide("work.goal.team.read", "org.unit", unitId,
+                Map.of("orgUnitId", unitId)).allowed();
     }
 
     private static Map<String, Object> personalItem(GoalService.GoalView goal) {

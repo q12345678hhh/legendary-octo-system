@@ -5,5 +5,5 @@
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "ai",
-        allowedDependencies = { "tenancy", "authorization", "appcatalog" })
+        allowedDependencies = { "tenancy", "authorization", "appcatalog", "platform" })
 package com.acme.platform.ai;
