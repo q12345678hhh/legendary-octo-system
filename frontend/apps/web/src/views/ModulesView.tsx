@@ -174,6 +174,9 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
   const [moduleOpen, setModuleOpen] = useState(false);
   const [savingModule, setSavingModule] = useState(false);
   const [moduleError, setModuleError] = useState<string | null>(null);
+  const [editingModule, setEditingModule] = useState<AppModule | null>(null);
+  const [markingId, setMarkingId] = useState<string | null>(null);
+  const [installError, setInstallError] = useState<string | null>(null);
   const [moduleForm] = Form.useForm();
 
   const loadCatalog = useCallback(() => {
@@ -257,30 +260,82 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
       .finally(() => setDetailLoading(false));
   }
 
+  function openCreateModule(): void {
+    setEditingModule(null);
+    setModuleError(null);
+    moduleForm.resetFields();
+    setModuleOpen(true);
+  }
+
+  function openEditModule(record: AppModule): void {
+    setEditingModule(record);
+    setModuleError(null);
+    moduleForm.setFieldsValue({
+      code: record.code,
+      name: record.name,
+      category: record.category,
+      description: record.description,
+      version: record.version,
+      dependencies: record.dependencies,
+      ownerPersonId: record.ownerPersonId ?? '',
+      applicableScope: record.applicableScope,
+      healthStatus: record.healthStatus,
+    });
+    setModuleOpen(true);
+  }
+
   function submitModule(values: Record<string, string>): void {
     setSavingModule(true);
     setModuleError(null);
-    apiClient
-      .createAppModule({
-        code: values.code ?? '',
-        name: values.name ?? '',
-        category: values.category,
-        description: values.description,
-        version: values.version,
-        dependencies: values.dependencies,
-        ownerPersonId: values.ownerPersonId || null,
-        applicableScope: (values.applicableScope as AppModule['applicableScope']) ?? 'tenant',
-        healthStatus: (values.healthStatus as AppModuleHealth) ?? 'unknown',
-        installStatus: 'not_installed',
-      })
+    const input = {
+      code: values.code ?? '',
+      name: values.name ?? '',
+      category: values.category,
+      description: values.description,
+      version: values.version,
+      dependencies: values.dependencies,
+      ownerPersonId: values.ownerPersonId || null,
+      applicableScope: (values.applicableScope as AppModule['applicableScope']) ?? 'tenant',
+      healthStatus: (values.healthStatus as AppModuleHealth) ?? 'unknown',
+    };
+    const request = editingModule
+      ? apiClient.updateAppModule(editingModule.id, {
+          ...input,
+          installStatus: editingModule.installStatus,
+        })
+      : apiClient.createAppModule({ ...input, installStatus: 'not_installed' });
+    request
       .then(() => {
         setModuleOpen(false);
+        setEditingModule(null);
         setModuleError(null);
         moduleForm.resetFields();
         loadCatalog();
       })
       .catch((cause: unknown) => setModuleError(describeError(cause)))
       .finally(() => setSavingModule(false));
+  }
+
+  function markInstalled(record: AppModule): void {
+    setMarkingId(record.id);
+    setInstallError(null);
+    apiClient
+      .updateAppModule(record.id, {
+        code: record.code,
+        name: record.name,
+        category: record.category,
+        description: record.description,
+        templateKey: record.templateKey,
+        ownerPersonId: record.ownerPersonId,
+        version: record.version,
+        dependencies: record.dependencies,
+        applicableScope: record.applicableScope,
+        healthStatus: record.healthStatus,
+        installStatus: 'installed',
+      })
+      .then(() => loadCatalog())
+      .catch((cause: unknown) => setInstallError(describeError(cause)))
+      .finally(() => setMarkingId(null));
   }
 
   function submitSuggestion(values: Record<string, string>): void {
@@ -386,13 +441,7 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                     }))}
                   />
                   {canManage && (
-                    <Button
-                      type="primary"
-                      onClick={() => {
-                        setModuleError(null);
-                        setModuleOpen(true);
-                      }}
-                    >
+                    <Button type="primary" onClick={openCreateModule}>
                       新增模块
                     </Button>
                   )}
@@ -400,8 +449,17 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
               }
             >
               <Paragraph type="secondary">
-                目录只登记模块的负责人、版本、依赖、适用范围与健康状态；安装动作在本阶段仅保留占位。
+                目录登记模块的负责人、版本、依赖、适用范围与健康状态；「标记已安装」只更新台账状态，不代表已完成部署。
               </Paragraph>
+              {installError && (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="标记已安装失败"
+                  description={installError}
+                  style={{ marginBottom: 12 }}
+                />
+              )}
               {canReadCatalog ? (
                 <AsyncState
                   phase={catalogPhase}
@@ -459,6 +517,32 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                         width: 90,
                         render: (value: string) => INSTALL_LABEL[value] ?? value,
                       },
+                      ...(canManage
+                        ? [
+                            {
+                              title: '操作',
+                              key: 'actions',
+                              width: 190,
+                              render: (_value: unknown, record: AppModule) => (
+                                <Space size={4}>
+                                  <Button size="small" onClick={() => openEditModule(record)}>
+                                    编辑
+                                  </Button>
+                                  {record.installStatus !== 'installed' && (
+                                    <Button
+                                      size="small"
+                                      type="primary"
+                                      loading={markingId === record.id}
+                                      onClick={() => markInstalled(record)}
+                                    >
+                                      标记已安装
+                                    </Button>
+                                  )}
+                                </Space>
+                              ),
+                            },
+                          ]
+                        : []),
                     ]}
                   />
                 </AsyncState>
@@ -574,10 +658,12 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
 
       {/* 新增模块 */}
     <Modal
-      title="登记模块"
+      title={editingModule ? '编辑模块' : '登记模块'}
       open={moduleOpen}
+      forceRender
       onCancel={() => {
         setModuleOpen(false);
+        setEditingModule(null);
         setModuleError(null);
       }}
       confirmLoading={savingModule}
@@ -594,7 +680,7 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
         <Alert
           type="error"
           showIcon
-          message="模块登记失败"
+          message="模块保存失败"
           description={moduleError}
           style={{ marginBottom: 12 }}
         />
@@ -603,7 +689,11 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
         <Form.Item
           name="code"
           label="模块编码"
-          extra="小写字母开头，可含数字、点、下划线与连字符，3-64 位"
+          extra={
+            editingModule
+              ? '编码创建后不可修改'
+              : '小写字母开头，可含数字、点、下划线与连字符，3-64 位'
+          }
           rules={[
             { required: true, message: '请输入模块编码' },
             {
@@ -612,7 +702,7 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
             },
           ]}
         >
-          <Input placeholder="例如 hr.attendance" />
+          <Input placeholder="例如 hr.attendance" disabled={editingModule !== null} />
         </Form.Item>
         <Form.Item name="name" label="模块名称" rules={[{ required: true, message: '请输入模块名称' }]}>
           <Input />
