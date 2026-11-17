@@ -23,5 +23,6 @@ public record VoiceCapture(
         String errorCode,
         UUID worklogEntryId,
         OffsetDateTime transcribedAt,
-        OffsetDateTime audioDeletedAt) {
+        OffsetDateTime audioDeletedAt,
+        OffsetDateTime createdAt) {
 }

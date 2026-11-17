@@ -8,5 +8,6 @@
  */
 @org.springframework.modulith.ApplicationModule(
         displayName = "expense",
-        allowedDependencies = { "platform", "platform :: file", "platform :: storage" })
+        allowedDependencies = { "platform", "platform :: file", "platform :: storage",
+                "platform :: retention" })
 package com.acme.platform.expense;

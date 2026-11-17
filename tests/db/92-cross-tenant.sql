@@ -220,10 +220,10 @@ BEGIN
       JOIN pg_class c ON c.relname = p.tablename
       JOIN pg_namespace ns ON ns.oid = c.relnamespace AND ns.nspname = 'public'
      WHERE p.schemaname = 'public' AND c.relforcerowsecurity;
-    -- 105 = 40-integrity 的 94 张租户表 + V18 appcatalog 3 张 + tenancy_tenant 自身
-    --       + V21 expense 6 张 + V22 批量异常暂停 1 张
-    IF tables <> 105 THEN
-        RAISE EXCEPTION '受 FORCE RLS 保护的租户表应为 105 张，实际 %', tables;
+    -- 106 = 40-integrity 的 94 张租户表 + V18 appcatalog 3 张 + tenancy_tenant 自身
+    --       + V21 expense 6 张 + V22 批量异常暂停 1 张 + V23 租户隐私设置 1 张
+    IF tables <> 106 THEN
+        RAISE EXCEPTION '受 FORCE RLS 保护的租户表应为 106 张，实际 %', tables;
     END IF;
 
     FOR t IN

@@ -18,6 +18,7 @@ import { ExpenseView } from './views/ExpenseView';
 import { FilesView } from './views/FilesView';
 import { HomeView } from './views/HomeView';
 import { InsightsView } from './views/InsightsView';
+import { PrivacyView } from './views/PrivacyView';
 import { JobsView } from './views/JobsView';
 import { LoginView } from './views/LoginView';
 import { ModulesView } from './views/ModulesView';
@@ -182,6 +183,9 @@ export function App({ apiClient }: AppProps) {
         {route === 'worklog' && <WorklogView apiClient={apiClient} />}
         {route === 'expense' && (
           <ExpenseView apiClient={apiClient} permissions={permissions} />
+        )}
+        {route === 'privacy' && (
+          <PrivacyView apiClient={apiClient} permissions={permissions} />
         )}
         {route === 'insights' && <InsightsView apiClient={apiClient} />}
         {route === 'modules' && <ModulesView apiClient={apiClient} permissions={permissions} />}
