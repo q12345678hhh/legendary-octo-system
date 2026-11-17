@@ -125,6 +125,13 @@ class AppCatalogController {
                 request.comment(), actorId());
     }
 
+    @GetMapping("/modules/{moduleId}/activation-events")
+    List<ModuleActivationService.ActivationEventView> activationEvents(
+            @PathVariable UUID moduleId) {
+        require("appcatalog.module.read", "appcatalog.module", null, Map.of());
+        return activationService.events(moduleId);
+    }
+
     // ------------------------------------------------------------------ 建议
 
     @GetMapping("/suggestions")

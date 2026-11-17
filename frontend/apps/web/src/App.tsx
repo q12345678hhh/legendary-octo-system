@@ -12,6 +12,7 @@ import {
   type RouteName,
 } from './router';
 import { clearSession, readSession, type Session } from './session';
+import { AiToolsView } from './views/AiToolsView';
 import { CollaborationView } from './views/CollaborationView';
 import { DepartmentWorkspaceView } from './views/DepartmentWorkspaceView';
 import { DepartmentsView } from './views/DepartmentsView';
@@ -79,6 +80,7 @@ export function App({ apiClient }: AppProps) {
   const [permissions, setPermissions] = useState<Set<string> | null>(null);
   const [enabledModules, setEnabledModules] = useState<Set<string> | null>(null);
   const [moduleRoutes, setModuleRoutes] = useState<ModuleRoute[] | null>(null);
+  const [moduleEnforcement, setModuleEnforcement] = useState<boolean | null>(null);
   const [capabilityReload, setCapabilityReload] = useState(0);
   const [route, setRoute] = useState<RouteName>(() =>
     resolveRoute(parseHash(globalThis.location.hash), readSession()),
@@ -101,6 +103,7 @@ export function App({ apiClient }: AppProps) {
       setPermissions(null);
       setEnabledModules(null);
       setModuleRoutes(null);
+      setModuleEnforcement(null);
       return undefined;
     }
     let active = true;
@@ -113,6 +116,7 @@ export function App({ apiClient }: AppProps) {
             capabilities.enabledModules ? new Set(capabilities.enabledModules) : null,
           );
           setModuleRoutes(capabilities.moduleRoutes ?? null);
+          setModuleEnforcement(capabilities.moduleEnforcement ?? null);
         }
       })
       .catch(() => {
@@ -238,8 +242,12 @@ export function App({ apiClient }: AppProps) {
           <ModulesView
             apiClient={apiClient}
             permissions={permissions}
+            moduleEnforcement={moduleEnforcement}
             onActivationChanged={refreshCapabilities}
           />
+        )}
+        {route === 'aiTools' && (
+          <AiToolsView apiClient={apiClient} permissions={permissions} />
         )}
         {route === 'collaboration' && <CollaborationView apiClient={apiClient} />}
         {route === 'collaborationChannel' && params.channelId && (

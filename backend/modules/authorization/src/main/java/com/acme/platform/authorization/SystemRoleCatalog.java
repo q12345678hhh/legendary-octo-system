@@ -134,11 +134,11 @@ public final class SystemRoleCatalog {
         map.put(PLUGIN_INSTALLER, new RoleTemplate(PLUGIN_INSTALLER, "插件安装", Set.of(
                 "plugin.install")));
         map.put(AI_TOOL_DEVELOPER, new RoleTemplate(AI_TOOL_DEVELOPER, "AI 工具开发", Set.of(
-                "ai.tool.register")));
+                "ai.context.read", "ai.tool.register")));
         map.put(AI_TOOL_REVIEWER, new RoleTemplate(AI_TOOL_REVIEWER, "AI 工具评级", Set.of(
-                "ai.tool.rate")));
+                "ai.context.read", "ai.tool.rate")));
         map.put(AI_TOOL_ENABLER, new RoleTemplate(AI_TOOL_ENABLER, "AI 工具启用", Set.of(
-                "ai.tool.enable")));
+                "ai.context.read", "ai.tool.enable")));
         map.put(MODULE_CONFIGURER, new RoleTemplate(MODULE_CONFIGURER, "模块配置", Set.of(
                 "module.activation.configure")));
         map.put(MODULE_APPROVER, new RoleTemplate(MODULE_APPROVER, "模块批准", Set.of(

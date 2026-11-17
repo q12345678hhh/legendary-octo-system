@@ -182,9 +182,71 @@ class ModuleActivationServiceTest {
         }
     }
 
+    @Test
+    void enablingWithDisabledDependencyIsRejected() {
+        UUID moduleId = UUID.randomUUID();
+        when(catalogStore.module(moduleId)).thenReturn(Optional.of(
+                module(moduleId, "installed", "[\"insights\"]")));
+        when(activationStore.find(moduleId)).thenReturn(Optional.of(
+                new ModuleActivationStore.ActivationRow(moduleId, "disabled", "{}", 1L, null,
+                        null, null, null, null)));
+        when(activationStore.moduleCodes()).thenReturn(List.of("hr.attendance"));
+        when(activationStore.disabledCodes()).thenReturn(Set.of("insights", "hr.attendance"));
+
+        assertThatThrownBy(() -> service.set(moduleId, "enabled", 1L, "", "actor"))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status()).isEqualTo(409);
+                    assertThat(error.code()).isEqualTo("MODULE_DEPENDENCY_DISABLED");
+                    assertThat(error.getMessage()).contains("insights");
+                });
+        verify(activationStore, never()).updateStatus(any(), anyString(), anyLong(), anyString(),
+                anyString());
+    }
+
+    @Test
+    void disablingModuleWithEnabledDependentIsRejected() {
+        UUID moduleId = UUID.randomUUID();
+        when(catalogStore.module(moduleId)).thenReturn(Optional.of(module(moduleId, "installed")));
+        when(activationStore.find(moduleId)).thenReturn(Optional.of(
+                new ModuleActivationStore.ActivationRow(moduleId, "enabled", "{}", 2L, null,
+                        null, null, null, null)));
+        when(activationStore.enabledDependents("worklog")).thenReturn(List.of("expense"));
+
+        assertThatThrownBy(() -> service.set(moduleId, "disabled", 2L, "", "actor"))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status()).isEqualTo(409);
+                    assertThat(error.code()).isEqualTo("MODULE_DEPENDENT_ENABLED");
+                    assertThat(error.getMessage()).contains("expense");
+                });
+        verify(activationStore, never()).updateStatus(any(), anyString(), anyLong(), anyString(),
+                anyString());
+    }
+
+    @Test
+    void activationEventsAreListedNewestFirstAsStored() {
+        UUID moduleId = UUID.randomUUID();
+        when(catalogStore.module(moduleId)).thenReturn(Optional.of(module(moduleId, "installed")));
+        when(activationStore.events(moduleId)).thenReturn(List.of(
+                new ModuleActivationStore.ActivationEventRow(UUID.randomUUID(), "disable",
+                        "enabled", "disabled", "actor", "停用", OffsetDateTime.now()),
+                new ModuleActivationStore.ActivationEventRow(UUID.randomUUID(), "enable",
+                        "disabled", "enabled", "actor", "启用", OffsetDateTime.now())));
+
+        List<ModuleActivationService.ActivationEventView> events = service.events(moduleId);
+
+        assertThat(events).hasSize(2);
+        assertThat(events.get(0).action()).isEqualTo("disable");
+        assertThat(events.get(1).comment()).isEqualTo("启用");
+    }
+
     private static AppCatalogStore.ModuleRow module(UUID id, String installStatus) {
+        return module(id, installStatus, "[]");
+    }
+
+    private static AppCatalogStore.ModuleRow module(UUID id, String installStatus,
+                                                    String dependencies) {
         return new AppCatalogStore.ModuleRow(id, "worklog", "工时", "基础", "", null, null,
-                "1.0.0", "[]", "tenant", "healthy", installStatus, null, null,
+                "1.0.0", dependencies, "tenant", "healthy", installStatus, null, null,
                 "enabled", 0L, OffsetDateTime.now(), OffsetDateTime.now());
     }
 }

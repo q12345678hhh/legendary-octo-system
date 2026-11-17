@@ -2,6 +2,7 @@ import type {
   ApiClient,
   AppModule,
   AppModuleHealth,
+  ModuleActivationEvent,
   ModuleActivationStatus,
   ModuleSuggestion,
   ModuleSuggestionDetail,
@@ -37,6 +38,8 @@ export interface ModulesViewProps {
   permissions: Set<string> | null;
   /** 启停成功后通知外层刷新能力清单，让菜单与路由立即生效。 */
   onActivationChanged?: () => void;
+  /** false 表示后端停用拦截处于灰度关闭，仅隐藏菜单、不拦截接口。 */
+  moduleEnforcement?: boolean | null;
 }
 
 const STATUS_LABEL: Record<ModuleSuggestionStatus, string> = {
@@ -153,7 +156,8 @@ const SCOPE_LABEL: Record<string, string> = {
 type TabKey = 'catalog' | 'suggestions';
 
 /** 模块中心：目录检索 + 模块建议与状态流转。 */
-export function ModulesView({ apiClient, permissions, onActivationChanged }: ModulesViewProps) {
+export function ModulesView({ apiClient, permissions, onActivationChanged,
+  moduleEnforcement }: ModulesViewProps) {
   const canReadCatalog = permissions === null || permissions.has('appcatalog.module.read');
   const canManage = permissions === null || permissions.has('appcatalog.module.manage');
   const canReview = permissions?.has('appcatalog.suggestion.review') ?? false;
@@ -182,6 +186,10 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
   const [installError, setInstallError] = useState<string | null>(null);
   const [activationBusyId, setActivationBusyId] = useState<string | null>(null);
   const [activationError, setActivationError] = useState<string | null>(null);
+  const [historyModule, setHistoryModule] = useState<AppModule | null>(null);
+  const [historyEvents, setHistoryEvents] = useState<ModuleActivationEvent[]>([]);
+  const [historyPhase, setHistoryPhase] = useState<AsyncPhase>('loading');
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [moduleForm] = Form.useForm();
 
   const loadCatalog = useCallback(() => {
@@ -384,6 +392,23 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
     applyActivation(record, 'enabled');
   }
 
+  function openHistory(record: AppModule): void {
+    setHistoryModule(record);
+    setHistoryEvents([]);
+    setHistoryError(null);
+    setHistoryPhase('loading');
+    apiClient
+      .listModuleActivationEvents(record.id)
+      .then((events) => {
+        setHistoryEvents(events);
+        setHistoryPhase(events.length === 0 ? 'empty' : 'ready');
+      })
+      .catch((error: unknown) => {
+        setHistoryError(describeError(error));
+        setHistoryPhase('error');
+      });
+  }
+
   function submitSuggestion(values: Record<string, string>): void {
     setSavingSuggestion(true);
     apiClient
@@ -515,6 +540,15 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
                   style={{ marginBottom: 12 }}
                 />
               )}
+              {moduleEnforcement === false && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="模块停用拦截处于灰度关闭"
+                  description="当前只隐藏菜单与能力清单，停用模块的接口仍可访问；需要强制拦截请开启 platform.module.activation.enforce。"
+                  style={{ marginBottom: 12 }}
+                />
+              )}
               {canReadCatalog ? (
                 <AsyncState
                   phase={catalogPhase}
@@ -593,7 +627,7 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
                             {
                               title: '操作',
                               key: 'actions',
-                              width: 250,
+                              width: 330,
                               render: (_value: unknown, record: AppModule) => (
                                 <Space size={4}>
                                   <Button size="small" onClick={() => openEditModule(record)}>
@@ -628,6 +662,9 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
                                   >
                                     {record.activationStatus === 'enabled' ? '停用' : '启用'}
                                   </Button>
+                                  <Button size="small" onClick={() => openHistory(record)}>
+                                    历史
+                                  </Button>
                                 </Space>
                               ),
                             },
@@ -644,6 +681,43 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
                   description="你仍可在「模块建议」中发起建议并跟踪处理进度。"
                 />
               )}
+              <Drawer
+                title={historyModule ? `启停历史 · ${historyModule.name}` : '启停历史'}
+                width={460}
+                open={historyModule !== null}
+                onClose={() => setHistoryModule(null)}
+              >
+                <AsyncState
+                  phase={historyPhase}
+                  emptyText="暂无启停记录"
+                  errorTitle="启停历史加载失败"
+                  {...(historyError ? { errorMessage: historyError } : {})}
+                >
+                  <Timeline
+                    items={historyEvents.map((event) => ({
+                      color: event.action === 'enable' ? 'green' : 'red',
+                      children: (
+                        <Space direction="vertical" size={2}>
+                          <Text strong>
+                            {event.action === 'enable' ? '启用' : '停用'}
+                            <Text type="secondary" style={{ fontWeight: 'normal' }}>
+                              {' '}
+                              {formatDateTime(event.occurredAt)}
+                            </Text>
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            操作人：{event.actor || '系统'}
+                            {event.fromStatus && event.toStatus
+                              ? `　${event.fromStatus} → ${event.toStatus}`
+                              : ''}
+                          </Text>
+                          {event.comment && <Text>{event.comment}</Text>}
+                        </Space>
+                      ),
+                    }))}
+                  />
+                </AsyncState>
+              </Drawer>
             </Card>
           ),
         },
