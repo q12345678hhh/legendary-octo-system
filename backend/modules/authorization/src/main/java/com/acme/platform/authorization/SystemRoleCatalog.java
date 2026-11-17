@@ -77,6 +77,7 @@ public final class SystemRoleCatalog {
                 "report.read", "report.export", "ai.context.read",
                 "worklog.time.read", "worklog.report.read",
                 "insight.work.read", "insight.work.export",
+                "work.goal.team.read", "work.goal.team.manage",
                 "appcatalog.module.read", "appcatalog.suggestion.review")));
         map.put(SECURITY_ADMIN, new RoleTemplate(SECURITY_ADMIN, "安全管理员", Set.of(
                 "authorization.role.manage", "authorization.assignment.manage",
@@ -96,12 +97,15 @@ public final class SystemRoleCatalog {
                 "worklog.time.read", "worklog.time.review",
                 "worklog.report.read", "worklog.report.review",
                 "expense.document.read", "expense.document.review",
+                "work.goal.team.read", "work.goal.team.manage",
                 "workflow.task.act", "workflow.instance.start",
                 "appcatalog.module.read")));
         map.put(MANAGER_UNIT, new RoleTemplate(MANAGER_UNIT, "部门主管（部门范围）", Set.of(
                 "department.workspace.read", "insight.work.read",
                 "collaboration.channel.read", "collaboration.channel.manage",
-                "collaboration.page.manage", "appcatalog.module.read")));
+                "collaboration.page.manage",
+                "work.goal.team.read", "work.goal.team.manage",
+                "appcatalog.module.read")));
         map.put(DELEGATE_MANAGER, new RoleTemplate(DELEGATE_MANAGER, "代管人", Set.of(
                 "directory.person.read", "business.work.read",
                 "worklog.time.read", "worklog.report.read",
@@ -120,7 +124,7 @@ public final class SystemRoleCatalog {
                 "worklog.report.read", "worklog.report.submit",
                 "expense.document.read", "expense.document.submit",
                 "workflow.task.act", "appcatalog.module.read",
-                "appcatalog.suggestion.create")));
+                "appcatalog.suggestion.create", "work.goal.read", "work.goal.manage")));
         map.put(PAYROLL_PREPARER, new RoleTemplate(PAYROLL_PREPARER, "薪酬制单", Set.of(
                 "payroll.run.prepare")));
         map.put(PAYROLL_REVIEWER, new RoleTemplate(PAYROLL_REVIEWER, "薪酬复核", Set.of(

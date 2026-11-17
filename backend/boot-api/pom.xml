@@ -130,6 +130,10 @@
     </dependency>
     <dependency>
       <groupId>com.acme.platform</groupId>
+      <artifactId>goal</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.acme.platform</groupId>
       <artifactId>platform</artifactId>
     </dependency>
 

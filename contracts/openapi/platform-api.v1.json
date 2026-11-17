@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.17.0",
+    "version": "1.19.0",
     "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。 单据域覆盖报销单/发票/账单上传、AI 预审、人工复核、入账与撤销，OCR 不可用时一律转人工。 模块中心支持租户级启停：记录缺失视为启用，显式停用由后端过滤器强制拦截。"
   },
   "servers": [
@@ -11,6 +11,452 @@
     }
   ],
   "paths": {
+    "/api/v1/goals": {
+      "get": {
+        "operationId": "listGoals",
+        "summary": "本人目标列表",
+        "description": "归属人取当前会话，需要 work.goal.read。",
+        "responses": {
+          "200": {
+            "description": "目标列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Goal"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createGoal",
+        "summary": "新建本人目标",
+        "description": "需要 work.goal.manage；归属人取当前会话，客户端不能指定他人。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "period": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "dueDate": {
+                    "type": ["string", "null"],
+                    "format": "date"
+                  },
+                  "progress": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建后的目标",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Goal"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/goals/{goalId}": {
+      "put": {
+        "operationId": "updateGoal",
+        "summary": "更新本人目标进度或状态",
+        "description": "需要 work.goal.manage；只更新请求中出现的字段，expectedVersion 不匹配返回 409。",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "period": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "dueDate": {
+                    "type": ["string", "null"],
+                    "format": "date"
+                  },
+                  "progress": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["active", "achieved", "archived"]
+                  },
+                  "expectedVersion": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的目标",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Goal"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/goals/team": {
+      "get": {
+        "operationId": "listTeamGoals",
+        "summary": "部门团队目标列表",
+        "description": "需要 work.goal.team.read；按 orgUnitId 做组织数据范围判定。团队目标进度由关键结果平均完成率派生。",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "团队目标列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Goal"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createTeamGoal",
+        "summary": "新建部门团队目标",
+        "description": "需要 work.goal.team.manage；归属组织单元由 orgUnitId 指定，创建人必须是当前会话成员。",
+        "parameters": [
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 2000
+                  },
+                  "period": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "dueDate": {
+                    "type": ["string", "null"],
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建后的团队目标",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Goal"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/goals/{goalId}/key-results": {
+      "post": {
+        "operationId": "addKeyResult",
+        "summary": "为团队目标添加关键结果",
+        "description": "需要 work.goal.team.manage；目标必须属于 orgUnitId 对应的团队。",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "targetValue"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "targetValue": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "currentValue": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "unit": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 999
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "创建后的关键结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeyResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/goals/{goalId}/key-results/{keyResultId}": {
+      "put": {
+        "operationId": "updateKeyResult",
+        "summary": "更新关键结果当前值",
+        "description": "需要 work.goal.team.manage；expectedVersion 不匹配返回 409。",
+        "parameters": [
+          {
+            "name": "goalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "keyResultId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "orgUnitId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["currentValue"],
+                "properties": {
+                  "currentValue": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "expectedVersion": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的关键结果",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KeyResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
     "/api/v1/ai/tools": {
       "get": {
         "operationId": "listAiTools",
@@ -13767,6 +14213,123 @@
       }
     },
     "schemas": {
+      "Goal": {
+        "type": "object",
+        "required": [
+          "id",
+          "ownerPersonId",
+          "scopeType",
+          "title",
+          "progress",
+          "status",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "ownerPersonId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "目标归属的自然人；团队目标为创建人"
+          },
+          "scopeType": {
+            "type": "string",
+            "enum": ["person", "team"],
+            "description": "person 为个人目标，team 为部门团队目标"
+          },
+          "orgUnitId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "团队目标所属组织单元；个人目标为 null"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string",
+            "description": "自填周期标签，例如 2026-Q4"
+          },
+          "dueDate": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "progress": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "团队目标有 KR 时由平均完成率派生"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["active", "achieved", "archived"]
+          },
+          "keyResults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/KeyResult"
+            }
+          },
+          "version": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "KeyResult": {
+        "type": "object",
+        "required": [
+          "id",
+          "goalId",
+          "title",
+          "targetValue",
+          "currentValue",
+          "unit",
+          "sortOrder",
+          "version"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "goalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "targetValue": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "currentValue": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "integer"
+          },
+          "version": {
+            "type": "integer"
+          }
+        }
+      },
       "AiTool": {
         "type": "object",
         "required": [

@@ -53,6 +53,7 @@
     <module>modules/integration</module>
     <module>modules/plugin</module>
     <module>modules/ai</module>
+    <module>modules/goal</module>
     <module>modules/platform</module>
     <module>db</module>
     <module>test-support</module>
@@ -142,6 +143,11 @@
       <dependency>
         <groupId>com.acme.platform</groupId>
         <artifactId>ai</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.acme.platform</groupId>
+        <artifactId>goal</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
