@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.15.0",
+    "version": "1.17.0",
     "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。 单据域覆盖报销单/发票/账单上传、AI 预审、人工复核、入账与撤销，OCR 不可用时一律转人工。 模块中心支持租户级启停：记录缺失视为启用，显式停用由后端过滤器强制拦截。"
   },
   "servers": [
@@ -11,6 +11,236 @@
     }
   ],
   "paths": {
+    "/api/v1/ai/tools": {
+      "get": {
+        "operationId": "listAiTools",
+        "summary": "AI 工具目录",
+        "description": "租户级工具元数据；需要 ai.context.read。",
+        "responses": {
+          "200": {
+            "description": "工具列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AiTool"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "registerAiTool",
+        "summary": "登记 AI 工具",
+        "description": "需要 ai.tool.register；只保存元数据，不保存调用密钥。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "name",
+                  "endpointUrl"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9._-]{2,63}$"
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "endpointUrl": {
+                    "type": "string"
+                  },
+                  "inputSchema": {
+                    "type": "string",
+                    "description": "JSON 对象字符串，留空等价于 {}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登记后的工具",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiTool"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/tools/{toolId}/status": {
+      "put": {
+        "operationId": "updateAiToolStatus",
+        "summary": "启停 AI 工具",
+        "description": "需要 ai.tool.enable；同状态重复提交幂等。",
+        "parameters": [
+          {
+            "name": "toolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "enabled",
+                      "disabled"
+                    ]
+                  },
+                  "expectedVersion": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的工具",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiTool"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/ai/tools/{toolId}/rating": {
+      "put": {
+        "operationId": "rateAiTool",
+        "summary": "为 AI 工具评分",
+        "description": "需要 ai.tool.rate；评分 1-5。",
+        "parameters": [
+          {
+            "name": "toolId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "rating"
+                ],
+                "properties": {
+                  "rating": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "expectedVersion": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的工具",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiTool"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
     "/api/v1/me/capabilities": {
       "get": {
         "operationId": "getCapabilities",
@@ -26,7 +256,8 @@
                   "required": [
                     "permissions",
                     "enabledModules",
-                    "moduleRoutes"
+                    "moduleRoutes",
+                    "moduleEnforcement"
                   ],
                   "properties": {
                     "permissions": {
@@ -62,6 +293,10 @@
                           }
                         }
                       }
+                    },
+                    "moduleEnforcement": {
+                      "type": "boolean",
+                      "description": "false 表示停用拦截处于灰度关闭，仅影响菜单与能力清单。"
                     }
                   }
                 }
@@ -496,6 +731,86 @@
             "$ref": "#/components/responses/Problem"
           },
           "409": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/app-catalog/modules/{moduleId}/activation-events": {
+      "get": {
+        "operationId": "listModuleActivationEvents",
+        "summary": "模块启停审计事件",
+        "description": "只追加事件，最新在前，最多 50 条；需要 appcatalog.module.read。",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "启停事件列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "action": {
+                        "type": "string",
+                        "enum": [
+                          "enable",
+                          "disable"
+                        ]
+                      },
+                      "fromStatus": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "toStatus": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "actor": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "comment": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "occurredAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "action",
+                      "occurredAt"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
             "$ref": "#/components/responses/Problem"
           }
         }
@@ -13452,6 +13767,73 @@
       }
     },
     "schemas": {
+      "AiTool": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "name",
+          "endpointUrl",
+          "status",
+          "version",
+          "createdAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "endpointUrl": {
+            "type": "string"
+          },
+          "inputSchema": {
+            "type": "string",
+            "description": "JSON 对象字符串"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "enabled",
+              "disabled"
+            ]
+          },
+          "rating": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 1,
+            "maximum": 5
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "登记人 actor id；评分与启用需与登记人分离"
+          },
+          "ratedBy": {
+            "type": ["string", "null"],
+            "description": "最近一次评分人 actor id；为空表示未评分"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "PrivacySettings": {
         "type": "object",
         "required": ["dataResidency", "trainingOptOut",

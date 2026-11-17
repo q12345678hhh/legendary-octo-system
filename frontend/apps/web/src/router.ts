@@ -16,6 +16,7 @@ export type RouteName =
   | 'privacy'
   | 'insights'
   | 'modules'
+  | 'aiTools'
   | 'collaboration'
   | 'collaborationChannel'
   | 'workflowInbox'
@@ -109,6 +110,13 @@ export const routes: readonly RouteDefinition[] = [
     title: '模块中心',
     requiresSession: true,
     module: 'appcatalog',
+  },
+  {
+    name: 'aiTools',
+    path: '#/ai/tools',
+    title: 'AI 工具',
+    requiresSession: true,
+    permission: 'ai.context.read',
   },
   {
     name: 'collaboration',

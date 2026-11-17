@@ -147,6 +147,8 @@ export interface Capabilities {
   enabledModules?: string[];
   /** 已启用且登记了前端路由的模块；用于动态注册菜单。 */
   moduleRoutes?: ModuleRoute[];
+  /** false 表示后端停用拦截处于灰度关闭，仅影响菜单与能力清单。 */
+  moduleEnforcement?: boolean;
 }
 
 export interface ModuleRoute {
@@ -1002,6 +1004,42 @@ export interface ModuleActivationInput {
   comment?: string | undefined;
 }
 
+/** AI 工具目录条目：只含元数据，不含调用密钥。 */
+export interface AiTool {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  endpointUrl: string;
+  inputSchema: string;
+  status: 'enabled' | 'disabled' | string;
+  rating?: number | null;
+  createdBy?: string;
+  ratedBy?: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RegisterAiToolInput {
+  code: string;
+  name: string;
+  description?: string;
+  endpointUrl: string;
+  inputSchema?: string;
+}
+
+/** 模块启停审计事件：只追加、不可修改。 */
+export interface ModuleActivationEvent {
+  id: string;
+  action: 'enable' | 'disable' | string;
+  fromStatus?: string | null;
+  toStatus?: string | null;
+  actor?: string | null;
+  comment?: string | null;
+  occurredAt: string;
+}
+
 export interface AppModuleInput {
   code: string;
   name: string;
@@ -1400,6 +1438,15 @@ export interface ApiClient {
     input: ModuleActivationInput,
     options?: RequestOptions,
   ): Promise<ModuleActivation>;
+  listModuleActivationEvents(moduleId: string): Promise<ModuleActivationEvent[]>;
+  listAiTools(): Promise<AiTool[]>;
+  registerAiTool(input: RegisterAiToolInput): Promise<AiTool>;
+  setAiToolStatus(
+    toolId: string,
+    status: 'enabled' | 'disabled',
+    expectedVersion?: number,
+  ): Promise<AiTool>;
+  rateAiTool(toolId: string, rating: number, expectedVersion?: number): Promise<AiTool>;
   listModuleSuggestions(scope?: 'mine' | 'all'): Promise<ModuleSuggestion[]>;
   getModuleSuggestion(suggestionId: string): Promise<ModuleSuggestionDetail>;
   createModuleSuggestion(
@@ -2033,6 +2080,23 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         { method: 'PUT', body: JSON.stringify(input) },
         requestOptions ?? {},
       ),
+    listModuleActivationEvents: (moduleId) =>
+      request<ModuleActivationEvent[]>(
+        `/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}/activation-events`,
+      ),
+    listAiTools: () => request<AiTool[]>('/api/v1/ai/tools'),
+    registerAiTool: (input) =>
+      request<AiTool>('/api/v1/ai/tools', { method: 'POST', body: JSON.stringify(input) }),
+    setAiToolStatus: (toolId, status, expectedVersion) =>
+      request<AiTool>(`/api/v1/ai/tools/${encodeURIComponent(toolId)}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status, expectedVersion }),
+      }),
+    rateAiTool: (toolId, rating, expectedVersion) =>
+      request<AiTool>(`/api/v1/ai/tools/${encodeURIComponent(toolId)}/rating`, {
+        method: 'PUT',
+        body: JSON.stringify({ rating, expectedVersion }),
+      }),
     listModuleSuggestions: (scope = 'mine') =>
       request<ModuleSuggestion[]>(
         `/api/v1/app-catalog/suggestions${queryString({ scope })}`,

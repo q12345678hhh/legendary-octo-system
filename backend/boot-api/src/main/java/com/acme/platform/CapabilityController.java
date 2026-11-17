@@ -3,6 +3,7 @@ package com.acme.platform;
 import com.acme.platform.appcatalog.ModuleActivationService;
 import com.acme.platform.authorization.AuthorizationService;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,11 +19,15 @@ class CapabilityController {
 
     private final AuthorizationService authorization;
     private final ModuleActivationService moduleActivationService;
+    private final boolean moduleEnforcement;
 
     CapabilityController(AuthorizationService authorization,
-                         ModuleActivationService moduleActivationService) {
+                         ModuleActivationService moduleActivationService,
+                         @Value("${platform.module.activation.enforce:true}")
+                         boolean moduleEnforcement) {
         this.authorization = authorization;
         this.moduleActivationService = moduleActivationService;
+        this.moduleEnforcement = moduleEnforcement;
     }
 
     @GetMapping("/me/capabilities")
@@ -30,6 +35,7 @@ class CapabilityController {
         return Map.of(
                 "permissions", authorization.heldPermissions(),
                 "enabledModules", moduleActivationService.enabledModuleCodes(),
-                "moduleRoutes", moduleActivationService.enabledModuleRoutes());
+                "moduleRoutes", moduleActivationService.enabledModuleRoutes(),
+                "moduleEnforcement", moduleEnforcement);
     }
 }
