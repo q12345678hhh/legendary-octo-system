@@ -691,8 +691,9 @@ COMMIT;
     if (Test-Path $pinnedJavaHome) { $env:JAVA_HOME = $pinnedJavaHome }
     $workflowArgs = @(
         '-B', '-ntp', '-q', '-f', (Join-Path $repoRoot 'backend\pom.xml'), 'test',
-        '-pl', 'modules/workflow',
-        '-Dtest=WorkflowDbTest', '-DfailIfNoTests=true',
+        '-pl', 'modules/workflow', '-am',
+        '-Dtest=WorkflowDbTest',
+        '-Dsurefire.failIfNoSpecifiedTests=false', '-DfailIfNoTests=false',
         '-Djacoco.skip=true',
         "-Dplatform.db.url=jdbc:postgresql://$($DbHost):$Port/$upgradeDb",
         "-Dplatform.db.user=$AppUser",
