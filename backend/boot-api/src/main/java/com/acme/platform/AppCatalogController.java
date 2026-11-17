@@ -50,12 +50,12 @@ class AppCatalogController {
     record ModuleRequest(String code, String name, String category, String description,
                          String templateKey, UUID ownerPersonId, String version,
                          String dependencies, String applicableScope, String healthStatus,
-                         String installStatus) {
+                         String installStatus, String routePath, String apiPathPrefix) {
 
         AppCatalogService.ModuleInput toInput() {
             return new AppCatalogService.ModuleInput(code, name, category, description,
                     templateKey, ownerPersonId, version, dependencies, applicableScope,
-                    healthStatus, installStatus);
+                    healthStatus, installStatus, routePath, apiPathPrefix);
         }
     }
 

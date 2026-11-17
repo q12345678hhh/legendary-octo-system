@@ -285,6 +285,8 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
       ownerPersonId: record.ownerPersonId ?? '',
       applicableScope: record.applicableScope,
       healthStatus: record.healthStatus,
+      routePath: record.routePath ?? '',
+      apiPathPrefix: record.apiPathPrefix ?? '',
     });
     setModuleOpen(true);
   }
@@ -302,6 +304,8 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
       ownerPersonId: values.ownerPersonId || null,
       applicableScope: (values.applicableScope as AppModule['applicableScope']) ?? 'tenant',
       healthStatus: (values.healthStatus as AppModuleHealth) ?? 'unknown',
+      routePath: values.routePath || null,
+      apiPathPrefix: values.apiPathPrefix || null,
     };
     const request = editingModule
       ? apiClient.updateAppModule(editingModule.id, {
@@ -316,6 +320,7 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
         setModuleError(null);
         moduleForm.resetFields();
         loadCatalog();
+        onActivationChanged?.();
       })
       .catch((cause: unknown) => setModuleError(describeError(cause)))
       .finally(() => setSavingModule(false));
@@ -336,6 +341,8 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
         dependencies: record.dependencies,
         applicableScope: record.applicableScope,
         healthStatus: record.healthStatus,
+        routePath: record.routePath ?? null,
+        apiPathPrefix: record.apiPathPrefix ?? null,
         installStatus: 'installed',
       })
       .then(() => loadCatalog())
@@ -531,6 +538,11 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
                             <Text type="secondary" style={{ fontSize: 12 }}>
                               {record.code} · {record.description || '暂无说明'}
                             </Text>
+                            {record.routePath && (
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                菜单 {record.routePath}
+                              </Text>
+                            )}
                           </Space>
                         ),
                       },
@@ -813,6 +825,36 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
         <Form.Item name="dependencies" label="依赖（JSON 数组）" initialValue="[]">
           <Input.TextArea rows={2} placeholder='["org.structure"]' />
         </Form.Item>
+        <Space style={{ width: '100%' }} size="middle">
+          <Form.Item
+            name="routePath"
+            label="菜单路由"
+            style={{ width: 260 }}
+            extra="形如 /apps/attendance；留空表示不注册菜单"
+            rules={[
+              {
+                pattern: /^$|^\/apps\/[a-z0-9][a-z0-9._-]*$/,
+                message: '需形如 /apps/<小写 slug>',
+              },
+            ]}
+          >
+            <Input placeholder="/apps/attendance" />
+          </Form.Item>
+          <Form.Item
+            name="apiPathPrefix"
+            label="API 前缀"
+            style={{ width: 260 }}
+            extra="形如 /api/v1/attendance；停用时命中该前缀的请求返回 403"
+            rules={[
+              {
+                pattern: /^$|^\/api\/v1\/[a-z0-9][a-z0-9._/-]*$/,
+                message: '需以 /api/v1/ 开头',
+              },
+            ]}
+          >
+            <Input placeholder="/api/v1/attendance" />
+          </Form.Item>
+        </Space>
       </Form>
     </Modal>
 

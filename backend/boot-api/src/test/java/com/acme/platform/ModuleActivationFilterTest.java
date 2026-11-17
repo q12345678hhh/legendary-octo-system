@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.acme.platform.appcatalog.ModuleActivationService;
 import jakarta.servlet.FilterChain;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -46,6 +47,24 @@ class ModuleActivationFilterTest {
         MockHttpServletResponse jobs = new MockHttpServletResponse();
         filter.doFilter(request("/api/v1/system/jobs"), jobs, chain);
         assertThat(jobs.getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void customModuleApiPrefixFollowsActivation() throws Exception {
+        when(service.moduleForPath("/api/v1/attendance/check-ins"))
+                .thenReturn(Optional.of("hr.attendance"));
+        when(service.enabledModuleCodes()).thenReturn(Set.of("hr.attendance"));
+        ModuleActivationFilter filter = new ModuleActivationFilter(service, true);
+
+        MockHttpServletResponse enabled = new MockHttpServletResponse();
+        filter.doFilter(request("/api/v1/attendance/check-ins"), enabled, chain);
+        assertThat(enabled.getStatus()).isEqualTo(200);
+
+        when(service.enabledModuleCodes()).thenReturn(Set.of());
+        MockHttpServletResponse disabled = new MockHttpServletResponse();
+        filter.doFilter(request("/api/v1/attendance/check-ins"), disabled, chain);
+        assertThat(disabled.getStatus()).isEqualTo(403);
+        assertThat(disabled.getContentAsString()).contains("MODULE_DISABLED");
     }
 
     @Test

@@ -73,6 +73,7 @@ export type {
   ModuleActivation,
   ModuleActivationInput,
   ModuleActivationStatus,
+  ModuleRoute,
   ModuleSuggestion,
   ModuleSuggestionAction,
   ModuleSuggestionDetail,
