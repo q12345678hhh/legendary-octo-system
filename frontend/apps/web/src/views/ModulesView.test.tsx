@@ -101,7 +101,7 @@ describe('ModulesView', () => {
     fireEvent.change(screen.getByLabelText('模块名称'), { target: { value: '重复模块' } });
     fireEvent.click(screen.getByRole('button', { name: '保 存' }));
 
-    expect(await screen.findByText('模块登记失败', {}, { timeout: 10000 })).toBeTruthy();
+    expect(await screen.findByText('模块保存失败', {}, { timeout: 10000 })).toBeTruthy();
     expect(await screen.findByText(/模块编码已存在/, {}, { timeout: 10000 })).toBeTruthy();
     expect(screen.getByText('登记模块')).toBeTruthy();
   }, 30000);
@@ -129,5 +129,65 @@ describe('ModulesView', () => {
       ),
     ).toBeTruthy();
     expect(client.createAppModule).not.toHaveBeenCalled();
+  }, 30000);
+
+  it('edits an existing module and keeps its code read-only', async () => {
+    const client = fakeClient();
+    vi.mocked(client.updateAppModule).mockResolvedValue({ ...MODULE, name: '考勤管理 Pro' });
+    render(
+      <ModulesView
+        apiClient={client}
+        permissions={new Set(['appcatalog.module.read', 'appcatalog.module.manage'])}
+      />,
+    );
+
+    expect(await screen.findByText('考勤管理', {}, { timeout: 10000 })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '编 辑' }));
+
+    expect(await screen.findByText('编辑模块', {}, { timeout: 10000 })).toBeTruthy();
+    expect((screen.getByLabelText('模块编码') as HTMLInputElement).disabled).toBe(true);
+
+    fireEvent.change(screen.getByLabelText('模块名称'), { target: { value: '考勤管理 Pro' } });
+    fireEvent.click(screen.getByRole('button', { name: '保 存' }));
+
+    await vi.waitFor(
+      () =>
+        expect(client.updateAppModule).toHaveBeenCalledWith(
+          MODULE.id,
+          expect.objectContaining({
+            code: 'hr.attendance',
+            name: '考勤管理 Pro',
+            installStatus: 'not_installed',
+          }),
+        ),
+      { timeout: 10000 },
+    );
+    expect(client.createAppModule).not.toHaveBeenCalled();
+  }, 30000);
+
+  it('marks a module as installed and reloads the catalog', async () => {
+    const client = fakeClient();
+    const installed = { ...MODULE, installStatus: 'installed' as const };
+    let updated = false;
+    vi.mocked(client.listAppModules).mockImplementation(async () => (updated ? [installed] : [MODULE]));
+    vi.mocked(client.updateAppModule).mockImplementation(async () => {
+      updated = true;
+      return installed;
+    });
+    render(
+      <ModulesView
+        apiClient={client}
+        permissions={new Set(['appcatalog.module.read', 'appcatalog.module.manage'])}
+      />,
+    );
+
+    expect(await screen.findByText('考勤管理', {}, { timeout: 10000 })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '标记已安装' }));
+
+    expect(await screen.findByText('已安装', {}, { timeout: 10000 })).toBeTruthy();
+    expect(client.updateAppModule).toHaveBeenCalledWith(
+      MODULE.id,
+      expect.objectContaining({ code: 'hr.attendance', installStatus: 'installed' }),
+    );
   }, 30000);
 });
