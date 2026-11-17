@@ -109,6 +109,30 @@ public class GoalService {
         });
     }
 
+    /** 团队目标只改属性与状态；进度始终由关键结果派生，忽略客户端传入的 progress。 */
+    public GoalView updateTeam(UUID goalId, UUID orgUnitId, GoalInput input,
+                               Long expectedVersion) {
+        String requestedTitle = input.title() == null ? null : requireTitle(input.title());
+        String status = status(input.status());
+        return transactions.inTenant(context -> {
+            GoalStore.GoalRow row = requireTeamGoal(goalId, orgUnitId);
+            if (expectedVersion != null && expectedVersion != row.version()) {
+                throw versionConflict();
+            }
+            String title = requestedTitle == null ? row.title() : requestedTitle;
+            String description = input.description() == null
+                    ? row.description() : text(input.description());
+            String period = input.period() == null ? row.period() : period(input.period());
+            String targetStatus = status == null ? row.status() : status;
+            if (!store.update(goalId, title, description, period,
+                    input.dueDate() == null ? row.dueDate() : input.dueDate(),
+                    row.progress(), targetStatus, row.version())) {
+                throw versionConflict();
+            }
+            return view(require(goalId), keyResults(goalId));
+        });
+    }
+
     public KeyResultView addKeyResult(UUID goalId, UUID orgUnitId, KeyResultInput input) {
         String title = requireKeyResultTitle(input.title());
         BigDecimal target = requireTarget(input.targetValue());
@@ -140,6 +164,52 @@ public class GoalService {
                 throw keyResultVersionConflict();
             }
             return keyResultView(requireKeyResult(keyResultId));
+        });
+    }
+
+    public void deleteKeyResult(UUID goalId, UUID keyResultId, UUID orgUnitId) {
+        transactions.inTenant(context -> {
+            requireTeamGoal(goalId, orgUnitId);
+            GoalStore.KeyResultRow row = requireKeyResult(keyResultId);
+            if (!row.goalId().equals(goalId)) {
+                throw ApiException.notFound("KEY_RESULT_NOT_FOUND", "关键结果不存在");
+            }
+            if (!store.deleteKeyResult(keyResultId)) {
+                throw ApiException.notFound("KEY_RESULT_NOT_FOUND", "关键结果不存在");
+            }
+            return null;
+        });
+    }
+
+    /** 上移/下移一位：先把目标内所有 KR 归一到 0..n-1，再交换相邻两项。 */
+    public List<KeyResultView> moveKeyResult(UUID goalId, UUID keyResultId, UUID orgUnitId,
+                                             String direction) {
+        String move = moveDirection(direction);
+        return transactions.inTenant(context -> {
+            requireTeamGoal(goalId, orgUnitId);
+            List<GoalStore.KeyResultRow> rows = store.listKeyResults(goalId);
+            int index = -1;
+            for (int i = 0; i < rows.size(); i++) {
+                if (rows.get(i).id().equals(keyResultId)) {
+                    index = i;
+                    break;
+                }
+            }
+            if (index < 0) {
+                throw ApiException.notFound("KEY_RESULT_NOT_FOUND", "关键结果不存在");
+            }
+            int target = "up".equals(move) ? index - 1 : index + 1;
+            if (target >= 0 && target < rows.size()) {
+                List<GoalStore.KeyResultRow> reordered = new java.util.ArrayList<>(rows);
+                reordered.set(index, rows.get(target));
+                reordered.set(target, rows.get(index));
+                for (int i = 0; i < reordered.size(); i++) {
+                    if (reordered.get(i).sortOrder() != i) {
+                        store.updateKeyResultOrder(reordered.get(i).id(), i);
+                    }
+                }
+            }
+            return store.listKeyResults(goalId).stream().map(this::keyResultView).toList();
         });
     }
 
@@ -239,6 +309,15 @@ public class GoalService {
             throw ApiException.badRequest("KEY_RESULT_SORT_INVALID", "排序值必须在 0-999 之间");
         }
         return value;
+    }
+
+    private static String moveDirection(String value) {
+        String direction = text(value).toLowerCase(java.util.Locale.ROOT);
+        if (!"up".equals(direction) && !"down".equals(direction)) {
+            throw ApiException.badRequest("KEY_RESULT_DIRECTION_INVALID",
+                    "移动方向只能是 up 或 down");
+        }
+        return direction;
     }
 
     private static String text(String value) {

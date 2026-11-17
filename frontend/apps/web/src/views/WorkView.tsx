@@ -5,7 +5,7 @@ import {
   type WorkPage,
   type WorkPageSection,
 } from '@platform/api-client';
-import { Alert, Button, Card, Descriptions, Form, Input, InputNumber, Modal, Progress, Select, Space, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Card, Descriptions, Divider, Form, Input, InputNumber, Modal, Progress, Select, Space, Table, Tag, Typography } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 import { AsyncState, type AsyncPhase } from '../components/AsyncState';
 import { describeError, formatDateTime } from '../utils/format';
@@ -137,6 +137,7 @@ function GoalsSection({ apiClient, self, data, onChanged }: {
   onChanged: () => void;
 }) {
   const items = Array.isArray(data.items) ? data.items.map(asRecord) : [];
+  const teamItems = Array.isArray(data.teamGoals) ? data.teamGoals.map(asRecord) : [];
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Record<string, unknown> | null>(null);
   const [saving, setSaving] = useState(false);
@@ -220,6 +221,35 @@ function GoalsSection({ apiClient, self, data, onChanged }: {
         <Button size="small" type="dashed" onClick={openCreate}>
           新建目标
         </Button>
+      ) : null}
+
+      {teamItems.length > 0 ? (
+        <>
+          <Divider style={{ margin: '8px 0' }} />
+          <Text type="secondary">
+            {'部门团队目标 '}
+            {typeof data.teamActive === 'number' ? `· 进行中 ${data.teamActive} 个` : ''}
+            {' · '}
+            {typeof data.teamAverageProgress === 'number'
+              ? `平均进度 ${data.teamAverageProgress}%`
+              : '—'}
+          </Text>
+          {teamItems.map((item) => (
+            <Space key={String(item.id)} direction="vertical" size={2} style={{ width: '100%' }}>
+              <Space wrap>
+                <Text strong>{typeof item.title === 'string' ? item.title : '—'}</Text>
+                {typeof item.period === 'string' && item.period ? <Tag>{item.period}</Tag> : null}
+                {typeof item.dueDate === 'string' && item.dueDate ? (
+                  <Text type="secondary">截止 {item.dueDate}</Text>
+                ) : null}
+                {typeof item.keyResultCount === 'number' ? (
+                  <Text type="secondary">{item.keyResultCount} 个关键结果</Text>
+                ) : null}
+              </Space>
+              <Progress percent={typeof item.progress === 'number' ? item.progress : 0} size="small" />
+            </Space>
+          ))}
+        </>
       ) : null}
 
       <Modal

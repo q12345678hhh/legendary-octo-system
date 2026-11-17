@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -92,6 +95,17 @@ class GoalController {
                 actorId());
     }
 
+    @PutMapping("/team/{goalId}")
+    GoalService.GoalView updateTeam(@PathVariable UUID goalId,
+                                    @RequestParam UUID orgUnitId,
+                                    @RequestBody GoalRequest request) {
+        requireTeam("work.goal.team.manage", orgUnitId);
+        return goalService.updateTeam(goalId, orgUnitId,
+                new GoalService.GoalInput(request.title(), request.description(),
+                        request.period(), request.dueDate(), request.progress(), request.status()),
+                request.expectedVersion());
+    }
+
     @PostMapping("/{goalId}/key-results")
     GoalService.KeyResultView addKeyResult(@PathVariable UUID goalId,
                                            @RequestParam UUID orgUnitId,
@@ -110,6 +124,24 @@ class GoalController {
         requireTeam("work.goal.team.manage", orgUnitId);
         return goalService.updateKeyResult(goalId, keyResultId, orgUnitId,
                 request.currentValue(), request.expectedVersion());
+    }
+
+    @DeleteMapping("/{goalId}/key-results/{keyResultId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void deleteKeyResult(@PathVariable UUID goalId,
+                         @PathVariable UUID keyResultId,
+                         @RequestParam UUID orgUnitId) {
+        requireTeam("work.goal.team.manage", orgUnitId);
+        goalService.deleteKeyResult(goalId, keyResultId, orgUnitId);
+    }
+
+    @PostMapping("/{goalId}/key-results/{keyResultId}/move")
+    List<GoalService.KeyResultView> moveKeyResult(@PathVariable UUID goalId,
+                                                  @PathVariable UUID keyResultId,
+                                                  @RequestParam UUID orgUnitId,
+                                                  @RequestParam String direction) {
+        requireTeam("work.goal.team.manage", orgUnitId);
+        return goalService.moveKeyResult(goalId, keyResultId, orgUnitId, direction);
     }
 
     private void requireTeam(String permission, UUID orgUnitId) {
