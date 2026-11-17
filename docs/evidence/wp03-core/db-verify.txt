@@ -1,0 +1,61 @@
+WP03 核心包数据库验证记录（2026-11-13）
+==========================================
+
+迁移版本：V13 / V14 / V15 已加入，空库与 V2→最新升级均成功应用，校验和：
+  13|-836032864
+  14|-874332257
+  15|1915665089
+
+一、新增 SQL 断言（platform_app 身份，platform_verify_upgrade 库）
+--------------------------------------------------------------
+$ Get-Content tests/db/95-department.sql | wsl -d pglab docker exec -i \
+    -e PGPASSWORD=dev_only_change_me_app platform-pg-dev \
+    psql -U platform_app -d platform_verify_upgrade -v ON_ERROR_STOP=1
+DO
+BEGIN
+INSERT 0 1
+INSERT 0 3
+COMMIT
+DO
+BEGIN ... UPDATE 1 ... COMMIT
+DO
+DO
+BEGIN (tenant b) ... COMMIT
+DO
+DO
+WP03-01 部门工作区数据库断言通过
+
+$ Get-Content tests/db/96-worklog.sql | wsl -d pglab docker exec -i \
+    -e PGPASSWORD=dev_only_change_me_app platform-pg-dev \
+    psql -U platform_app -d platform_verify_upgrade -v ON_ERROR_STOP=1
+DO
+BEGIN ... DELETE 2 ... INSERT 0 2 ... COMMIT
+DO
+BEGIN ... INSERT 0 1 ... COMMIT
+DO
+BEGIN ... UPDATE 1 ... COMMIT
+DO
+BEGIN ... INSERT 0 1 ... COMMIT
+DO
+DO
+BEGIN (tenant b) ... INSERT 0 1 ... COMMIT
+DO
+WP03-05 工时与周报数据库断言通过
+
+覆盖内容：
+- 组织单元插入/改名/归档自动同步部门空间，历史行不删除；
+- 部门设置默认值、星期约束、跨租户隔离；
+- 工时单条时长、未知来源、客户端幂等键约束；
+- 日快照不可改删，审核状态可更新；
+- 周报草稿可改、提交后内容冻结且不可删除；
+- 洞察阈值下限 5、租户只能提高；
+- 回收站与留置数据类扩展到 worklog_entry / worklog_weekly_report；
+- 70 张 FORCE RLS 租户表的策略数量与跨租户 UUID 猜测矩阵。
+
+二、完整 db-verify 脚本状态
+--------------------------------------------------------------
+2026-11-13 运行到 5f 全部通过（生命周期、身份、组织、授权、SoD）；
+5g 起 WSL 内 dockerd 被运行环境回收（docker.sock 消失），
+导致后续 Java 跨租户用例连接超时、5j/5k 段落无法由脚本执行。
+该失败与代码无关；5j/5k 的 SQL 断言已在上节单独对同一迁移库执行并通过。
+重跑完整脚本前需保证 WSL dockerd 在整个运行期间不被回收。
