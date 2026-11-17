@@ -45,6 +45,8 @@ $OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $composeDir = Join-Path $repoRoot 'deploy\compose'
 $casesDir = Join-Path $repoRoot 'tests\db'
+$migrationDir = [IO.Path]::Combine($repoRoot, 'backend', 'db', 'src', 'main', 'resources', 'db', 'migration')
+$expectedMigrationCount = @(Get-ChildItem -Path $migrationDir -Filter 'V*.sql' -File).Count
 $pinnedJavaHome = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot'
 $emptyDb = 'platform_verify_empty'
 $upgradeDb = 'platform_verify_upgrade'
@@ -226,7 +228,7 @@ try {
     $emptyChecksums = Get-Checksums $emptyDb
     Write-Host '  校验和（空库）：'
     $emptyChecksums | ForEach-Object { Write-Host "    $_" }
-    Assert-True ($emptyChecksums.Count -eq 12) "空库应安装 12 个版本，实际 $($emptyChecksums.Count)"
+    Assert-True ($emptyChecksums.Count -eq $expectedMigrationCount) "空库应安装 $expectedMigrationCount 个版本，实际 $($emptyChecksums.Count)"
 
     # ---------------------------------------------------------------- 2 RLS
     Write-Step '2 RLS 正向与负例（platform_app 身份）'
@@ -340,7 +342,7 @@ COMMIT;
         Assert-True ($emptyChecksums -contains $line) "上一版本校验和与空库不一致（历史文件被改？）：$line"
         Assert-True ($afterChecksums -contains $line) "升级后校验和变化：$line"
     }
-    Assert-True ($afterChecksums.Count -eq 12) "升级后应有 12 个版本，实际 $($afterChecksums.Count)"
+    Assert-True ($afterChecksums.Count -eq $expectedMigrationCount) "升级后应有 $expectedMigrationCount 个版本，实际 $($afterChecksums.Count)"
     # V6 在授权之后创建新表，重新授权确保平台应用账号可读写租户生命周期表
     Grant-AppRole $upgradeDb
 

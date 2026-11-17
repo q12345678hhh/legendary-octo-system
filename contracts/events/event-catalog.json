@@ -34,6 +34,14 @@
       "producer": "boot-worker",
       "consumers": ["platform"],
       "introducedIn": "WP01-04"
+    },
+    {
+      "name": "workflow.task.created.v1",
+      "version": 1,
+      "schema": "workflow.task.created.v1.json",
+      "producer": "workflow",
+      "consumers": ["boot-worker"],
+      "introducedIn": "WP03-06"
     }
   ]
 }
