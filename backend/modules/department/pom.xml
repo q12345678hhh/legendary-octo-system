@@ -22,5 +22,10 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
     </dependency>
+    <!-- 租户事务与请求上下文：部门空间读写必须在同一 RLS 事务内完成 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>platform</artifactId>
+    </dependency>
   </dependencies>
 </project>
