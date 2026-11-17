@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。"
   },
   "servers": [
@@ -10663,6 +10663,377 @@
           "403": {
             "$ref": "#/components/responses/Problem"
           }
+        }
+      }
+    },
+    "/api/v1/workflow/definitions": {
+      "get": {
+        "operationId": "listWorkflowDefinitions",
+        "summary": "工作流定义列表",
+        "description": "返回当前租户全部定义版本；只有草稿可修改。",
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      },
+      "post": {
+        "operationId": "createWorkflowDefinition",
+        "summary": "创建工作流草稿",
+        "description": "校验节点枚举、边引用、可达性与审批人配置后创建草稿。",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "key": { "type": "string" },
+                  "name": { "type": "string" },
+                  "schema": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/definitions/{definitionId}": {
+      "put": {
+        "operationId": "updateWorkflowDefinition",
+        "summary": "修改工作流草稿",
+        "description": "只有 draft 可修改；已发布定义的 schema/version/key 由数据库触发器冻结。",
+        "parameters": [
+          {
+            "name": "definitionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "schema": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/definitions/{definitionId}/publish": {
+      "post": {
+        "operationId": "publishWorkflowDefinition",
+        "summary": "发布工作流定义",
+        "description": "发布后不可修改；同 key 旧的 published 版本自动退役。",
+        "parameters": [
+          {
+            "name": "definitionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "成功" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/definitions/{definitionId}/retire": {
+      "post": {
+        "operationId": "retireWorkflowDefinition",
+        "summary": "退役工作流定义",
+        "description": "退役后不能再发起新实例，运行中实例不受影响。",
+        "parameters": [
+          {
+            "name": "definitionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/instances": {
+      "post": {
+        "operationId": "startWorkflowInstance",
+        "summary": "发起流程实例",
+        "description": "实例固定定义版本；business_key 相同的请求幂等返回同一实例。",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "definitionKey": { "type": "string" },
+                  "businessType": { "type": "string" },
+                  "businessId": { "type": "string", "format": "uuid" },
+                  "businessKey": { "type": "string" },
+                  "variables": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/instances/{instanceId}": {
+      "get": {
+        "operationId": "getWorkflowInstance",
+        "summary": "流程实例详情",
+        "description": "返回实例、令牌、任务与只追加的状态流转日志；仅参与人或管理员可见。",
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "404": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/instances/{instanceId}/withdraw": {
+      "post": {
+        "operationId": "withdrawWorkflowInstance",
+        "summary": "撤回流程实例",
+        "description": "仅发起人且尚无审批通过时可撤回；撤回是终态。",
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/instances/{instanceId}/cancel": {
+      "post": {
+        "operationId": "cancelWorkflowInstance",
+        "summary": "取消流程实例",
+        "description": "需要 workflow.instance.admin；取消会对已成功的服务任务发起补偿。",
+        "parameters": [
+          {
+            "name": "instanceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/tasks": {
+      "get": {
+        "operationId": "listWorkflowTasks",
+        "summary": "审批箱",
+        "description": "scope=mine 只返回本人任务；scope=all 需要管理员或数据范围覆盖。",
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["mine", "all"],
+              "default": "mine"
+            }
+          }
+        ],
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/tasks/{taskId}/claim": {
+      "post": {
+        "operationId": "claimWorkflowTask",
+        "summary": "认领审批任务",
+        "description": "只能认领分配给自己的待办；未分配任务仅管理员可认领。",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/tasks/{taskId}/complete": {
+      "post": {
+        "operationId": "completeWorkflowTask",
+        "summary": "完成审批任务",
+        "description": "approve/return；退回必须填写原因；重复提交由状态条件更新拦截。",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": { "type": "string", "enum": ["approve", "return"] },
+                  "comment": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" },
+          "409": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/tasks/{taskId}/transfer": {
+      "post": {
+        "operationId": "transferWorkflowTask",
+        "summary": "转交审批任务",
+        "description": "生成新任务并关闭原任务；目标必须是当前在职人员。",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "targetPersonId": { "type": "string", "format": "uuid" },
+                  "comment": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/exceptions": {
+      "get": {
+        "operationId": "listWorkflowExceptions",
+        "summary": "工作流异常队列",
+        "description": "需要 workflow.instance.admin；按打开时间倒序。",
+        "responses": {
+          "200": { "description": "成功" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
+        }
+      }
+    },
+    "/api/v1/workflow/exceptions/{exceptionId}/resolve": {
+      "post": {
+        "operationId": "resolveWorkflowException",
+        "summary": "处置工作流异常",
+        "description": "retry/reassign/compensate/close；任何处置都不会自动批准流程。",
+        "parameters": [
+          {
+            "name": "exceptionId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": ["retry", "reassign", "compensate", "close"]
+                  },
+                  "assigneePersonId": { "type": "string", "format": "uuid" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "成功" },
+          "400": { "$ref": "#/components/responses/Problem" },
+          "401": { "$ref": "#/components/responses/Problem" },
+          "403": { "$ref": "#/components/responses/Problem" }
         }
       }
     }

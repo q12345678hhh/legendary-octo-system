@@ -31,7 +31,7 @@ public class DerivedGrantResolver {
         if (scope == null) {
             return grants;
         }
-        grants.add(RoleGrant.derived(SystemRoleCatalog.EMPLOYEE, ScopeType.SELF,
+        grants.add(RoleGrant.derived(SystemRoleCatalog.EMPLOYEE_SELF, ScopeType.SELF,
                 scope.personId(), "EMPLOYEE_SELF"));
         if (scope.primaryOrgUnitId() != null) {
             grants.add(RoleGrant.derived(SystemRoleCatalog.EMPLOYEE, ScopeType.ORG_UNIT,
@@ -42,6 +42,10 @@ public class DerivedGrantResolver {
                     null, "MANAGER"));
             grants.add(RoleGrant.derived(SystemRoleCatalog.MANAGER, ScopeType.REPORTING_CHAIN,
                     null, "MANAGER"));
+            if (scope.primaryOrgUnitId() != null) {
+                grants.add(RoleGrant.derived(SystemRoleCatalog.MANAGER_UNIT,
+                        ScopeType.ORG_UNIT_SUBTREE, scope.primaryOrgUnitId(), "MANAGER_UNIT"));
+            }
         }
         if (scope.isBoss()) {
             grants.add(RoleGrant.derived(SystemRoleCatalog.BUSINESS_OWNER, ScopeType.TENANT, null,
