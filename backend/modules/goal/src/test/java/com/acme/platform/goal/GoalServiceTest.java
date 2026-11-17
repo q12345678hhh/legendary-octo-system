@@ -169,12 +169,64 @@ class GoalServiceTest {
                         BigDecimal.ONE, "家", 0, 3L)));
 
         assertThatThrownBy(() -> service.updateKeyResult(GOAL, KEY_RESULT, UNIT,
-                BigDecimal.valueOf(2), 2L))
+                null, BigDecimal.valueOf(2), 2L))
                 .isInstanceOfSatisfying(ApiException.class, error -> {
                     assertThat(error.status()).isEqualTo(409);
                     assertThat(error.code()).isEqualTo("KEY_RESULT_VERSION_CONFLICT");
                 });
-        verify(store, never()).updateKeyResultCurrent(any(), any(), anyLong());
+        verify(store, never()).updateKeyResultDetails(any(), anyString(), any(), anyLong());
+    }
+
+    @Test
+    void updateKeyResultChangesTitleAndKeepsCurrentValue() {
+        when(store.find(GOAL)).thenReturn(Optional.of(teamGoal(UNIT, 1L, 0)));
+        when(store.findKeyResult(KEY_RESULT)).thenReturn(
+                Optional.of(keyResult(KEY_RESULT, "旧标题", BigDecimal.ONE, 1L)),
+                Optional.of(keyResult(KEY_RESULT, "新标题", BigDecimal.ONE, 2L)));
+        when(store.updateKeyResultDetails(KEY_RESULT, "新标题", BigDecimal.ONE, 1L))
+                .thenReturn(true);
+
+        GoalService.KeyResultView view = service.updateKeyResult(GOAL, KEY_RESULT, UNIT,
+                " 新标题 ", null, 1L);
+
+        assertThat(view.title()).isEqualTo("新标题");
+        assertThat(view.currentValue()).isEqualByComparingTo(BigDecimal.ONE);
+    }
+
+    @Test
+    void updateKeyResultChangesCurrentValueAndKeepsTitle() {
+        when(store.find(GOAL)).thenReturn(Optional.of(teamGoal(UNIT, 1L, 0)));
+        when(store.findKeyResult(KEY_RESULT)).thenReturn(
+                Optional.of(keyResult(KEY_RESULT, "签约客户", BigDecimal.ONE, 1L)),
+                Optional.of(keyResult(KEY_RESULT, "签约客户", BigDecimal.TEN, 2L)));
+        when(store.updateKeyResultDetails(KEY_RESULT, "签约客户", BigDecimal.TEN, 1L))
+                .thenReturn(true);
+
+        GoalService.KeyResultView view = service.updateKeyResult(GOAL, KEY_RESULT, UNIT,
+                null, BigDecimal.TEN, 1L);
+
+        assertThat(view.currentValue()).isEqualByComparingTo(BigDecimal.TEN);
+    }
+
+    @Test
+    void updateKeyResultRejectsBlankTitle() {
+        assertThatThrownBy(() -> service.updateKeyResult(GOAL, KEY_RESULT, UNIT,
+                "  ", null, 1L))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status()).isEqualTo(400);
+                    assertThat(error.code()).isEqualTo("KEY_RESULT_TITLE_INVALID");
+                });
+        verify(store, never()).updateKeyResultDetails(any(), anyString(), any(), anyLong());
+    }
+
+    @Test
+    void updateKeyResultRequiresAtLeastOneField() {
+        assertThatThrownBy(() -> service.updateKeyResult(GOAL, KEY_RESULT, UNIT, null, null, 1L))
+                .isInstanceOfSatisfying(ApiException.class, error -> {
+                    assertThat(error.status()).isEqualTo(400);
+                    assertThat(error.code()).isEqualTo("KEY_RESULT_UPDATE_EMPTY");
+                });
+        verify(store, never()).updateKeyResultDetails(any(), anyString(), any(), anyLong());
     }
 
     @Test
@@ -312,5 +364,11 @@ class GoalServiceTest {
     private static GoalStore.KeyResultRow keyResult(UUID id, int sortOrder) {
         return new GoalStore.KeyResultRow(id, GOAL, "关键结果", BigDecimal.TEN, BigDecimal.ONE,
                 "", sortOrder, 1L);
+    }
+
+    private static GoalStore.KeyResultRow keyResult(UUID id, String title, BigDecimal current,
+                                                    long version) {
+        return new GoalStore.KeyResultRow(id, GOAL, title, BigDecimal.TEN, current, "家", 0,
+                version);
     }
 }

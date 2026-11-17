@@ -157,13 +157,14 @@ public class GoalStore {
                 """, UUID.class, goalId, title, targetValue, currentValue, unit, sortOrder);
     }
 
-    /** 乐观锁更新当前值；返回 false 表示版本已被并发修改。 */
-    public boolean updateKeyResultCurrent(UUID id, BigDecimal currentValue, long expectedVersion) {
+    /** 乐观锁更新标题与当前值；返回 false 表示版本已被并发修改。 */
+    public boolean updateKeyResultDetails(UUID id, String title, BigDecimal currentValue,
+                                         long expectedVersion) {
         return jdbcTemplate.update("""
                 UPDATE work_goal_key_result
-                   SET current_value = ?, version = version + 1, updated_at = now()
+                   SET title = ?, current_value = ?, version = version + 1, updated_at = now()
                  WHERE id = ? AND version = ?
-                """, currentValue, id, expectedVersion) == 1;
+                """, title, currentValue, id, expectedVersion) == 1;
     }
 
     public boolean deleteKeyResult(UUID id) {
