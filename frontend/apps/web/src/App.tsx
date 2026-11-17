@@ -224,7 +224,11 @@ export function App({ apiClient }: AppProps) {
         {route === 'home' && <HomeView apiClient={apiClient} session={session} />}
         {route === 'departments' && <DepartmentsView apiClient={apiClient} />}
         {route === 'department' && params.orgUnitId && (
-          <DepartmentWorkspaceView apiClient={apiClient} orgUnitId={params.orgUnitId} />
+          <DepartmentWorkspaceView
+            apiClient={apiClient}
+            orgUnitId={params.orgUnitId}
+            permissions={permissions}
+          />
         )}
         {route === 'myWork' && <WorkView apiClient={apiClient} />}
         {route === 'work' && params.personId && (
