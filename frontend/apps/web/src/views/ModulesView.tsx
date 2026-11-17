@@ -173,6 +173,7 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
   const [health, setHealth] = useState<string | undefined>(undefined);
   const [moduleOpen, setModuleOpen] = useState(false);
   const [savingModule, setSavingModule] = useState(false);
+  const [moduleError, setModuleError] = useState<string | null>(null);
   const [moduleForm] = Form.useForm();
 
   const loadCatalog = useCallback(() => {
@@ -258,6 +259,7 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
 
   function submitModule(values: Record<string, string>): void {
     setSavingModule(true);
+    setModuleError(null);
     apiClient
       .createAppModule({
         code: values.code ?? '',
@@ -266,16 +268,18 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
         description: values.description,
         version: values.version,
         dependencies: values.dependencies,
+        ownerPersonId: values.ownerPersonId || null,
         applicableScope: (values.applicableScope as AppModule['applicableScope']) ?? 'tenant',
         healthStatus: (values.healthStatus as AppModuleHealth) ?? 'unknown',
         installStatus: 'not_installed',
       })
       .then(() => {
         setModuleOpen(false);
+        setModuleError(null);
         moduleForm.resetFields();
         loadCatalog();
       })
-      .catch((cause: unknown) => setCatalogError(describeError(cause)))
+      .catch((cause: unknown) => setModuleError(describeError(cause)))
       .finally(() => setSavingModule(false));
   }
 
@@ -382,7 +386,13 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                     }))}
                   />
                   {canManage && (
-                    <Button type="primary" onClick={() => setModuleOpen(true)}>
+                    <Button
+                      type="primary"
+                      onClick={() => {
+                        setModuleError(null);
+                        setModuleOpen(true);
+                      }}
+                    >
                       新增模块
                     </Button>
                   )}
@@ -566,16 +576,42 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
     <Modal
       title="登记模块"
       open={moduleOpen}
-      onCancel={() => setModuleOpen(false)}
+      onCancel={() => {
+        setModuleOpen(false);
+        setModuleError(null);
+      }}
       confirmLoading={savingModule}
       okText="保存"
       cancelText="取消"
       onOk={() => {
-        void moduleForm.validateFields().then((values) => submitModule(values));
+        void moduleForm
+          .validateFields()
+          .then((values) => submitModule(values))
+          .catch(() => undefined);
       }}
     >
+      {moduleError && (
+        <Alert
+          type="error"
+          showIcon
+          message="模块登记失败"
+          description={moduleError}
+          style={{ marginBottom: 12 }}
+        />
+      )}
       <Form form={moduleForm} layout="vertical" initialValues={{ version: '1.0.0' }}>
-        <Form.Item name="code" label="模块编码" rules={[{ required: true, message: '请输入模块编码' }]}>
+        <Form.Item
+          name="code"
+          label="模块编码"
+          extra="小写字母开头，可含数字、点、下划线与连字符，3-64 位"
+          rules={[
+            { required: true, message: '请输入模块编码' },
+            {
+              pattern: /^[a-z][a-z0-9._-]{2,63}$/,
+              message: '需以小写字母开头，只含小写字母、数字、点、下划线或连字符',
+            },
+          ]}
+        >
           <Input placeholder="例如 hr.attendance" />
         </Form.Item>
         <Form.Item name="name" label="模块名称" rules={[{ required: true, message: '请输入模块名称' }]}>
@@ -623,7 +659,10 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
       cancelText="取消"
       width={640}
       onOk={() => {
-        void suggestionForm.validateFields().then((values) => submitSuggestion(values));
+        void suggestionForm
+          .validateFields()
+          .then((values) => submitSuggestion(values))
+          .catch(() => undefined);
       }}
     >
       <Form form={suggestionForm} layout="vertical">
@@ -786,7 +825,8 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
               values.comment ?? '',
               values.configOwnerPersonId as string | undefined,
             ),
-          );
+          )
+          .catch(() => undefined);
       }}
     >
       <Form form={actionForm} layout="vertical">
