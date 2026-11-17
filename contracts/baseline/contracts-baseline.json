@@ -1,9 +1,9 @@
 {
-  "frozenAt": "2026-11-16T10:32:52.238Z",
+  "frozenAt": "2026-11-16T11:11:36.754Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "a95b32e45d73c84fca2ad2c3c6ef2b83e8d42b76f7ab614ab3ae9006d04c9870",
+      "sha256": "8f8b0e527ef89a3232417aa56b7c570a390eb8949a9ca87cd201c43e41fe16d5",
       "tokens": {
         "operation:GET /api/v1/app-catalog/modules": {
           "requestBodyRequired": false
@@ -3821,6 +3821,131 @@
         "parameter:POST /api/v1/expense/holds/{holdId}/release:path:holdId": {
           "required": true,
           "type": "string"
+        },
+        "operation:GET /api/v1/privacy/data-classes": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/privacy/data-classes:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/privacy/data-classes:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/privacy/settings": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/privacy/settings:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/privacy/settings:403": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/privacy/settings": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/privacy/settings:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/privacy/settings:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/privacy/settings:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/privacy/my-data": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/privacy/my-data:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/privacy/my-data:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/privacy/my-data:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/privacy/my-data/export": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/privacy/my-data/export:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/privacy/my-data/export:401": {
+          "defined": true
+        },
+        "operation:POST /api/v1/privacy/my-data/delete": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/privacy/my-data/delete:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/privacy/my-data/delete:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/privacy/my-data/delete:404": {
+          "defined": true
+        },
+        "schema:PrivacySettings.dataResidency": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "cn",
+            "eu",
+            "sg",
+            "us"
+          ]
+        },
+        "schema:PrivacySettings.trainingOptOut": {
+          "type": "boolean",
+          "required": true
+        },
+        "schema:PrivacySettings.voiceTranscriptRetentionDays": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:PrivacySettings.expenseOcrRetentionDays": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:PrivacySettings.updatedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PrivacySettings.updatedAt": {
+          "type": "object",
+          "required": false
+        },
+        "schema:PrivacySettings.suppliers": {
+          "type": "array",
+          "required": true
+        },
+        "schema:PrivacyMyData.personId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PrivacyMyData.voiceCaptures": {
+          "type": "array",
+          "required": true
+        },
+        "schema:PrivacyMyData.expenseDocuments": {
+          "type": "array",
+          "required": true
+        },
+        "schema:PrivacyDataExport.personId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PrivacyDataExport.generatedAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:PrivacyDataExport.voiceCaptures": {
+          "type": "array",
+          "required": true
+        },
+        "schema:PrivacyDataExport.expenseDocuments": {
+          "type": "array",
+          "required": true
         },
         "schema:PlatformLoginRequest.email": {
           "type": "string",

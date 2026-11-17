@@ -262,7 +262,7 @@ try {
     $emptyChecksums = Get-Checksums $emptyDb
     Write-Host '  校验和（空库）：'
     $emptyChecksums | ForEach-Object { Write-Host "    $_" }
-    Assert-True ($emptyChecksums.Count -eq 22) "空库应安装 22 个版本，实际 $($emptyChecksums.Count)"
+    Assert-True ($emptyChecksums.Count -eq 23) "空库应安装 23 个版本，实际 $($emptyChecksums.Count)"
 
     # ---------------------------------------------------------------- 2 RLS
     Write-Step '2 RLS 正向与负例（platform_app 身份）'
@@ -382,7 +382,7 @@ COMMIT;
         Assert-True ($emptyChecksums -contains $line) "上一版本校验和与空库不一致（历史文件被改？）：$line"
         Assert-True ($afterChecksums -contains $line) "升级后校验和变化：$line"
     }
-    Assert-True ($afterChecksums.Count -eq 22) "升级后应有 22 个版本，实际 $($afterChecksums.Count)"
+    Assert-True ($afterChecksums.Count -eq 23) "升级后应有 23 个版本，实际 $($afterChecksums.Count)"
     # V6 在授权之后创建新表，重新授权确保平台应用账号可读写租户生命周期表
     Grant-AppRole $upgradeDb
 
@@ -714,6 +714,12 @@ COMMIT;
     $expenseSql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '99-expense.sql'
     Write-Host $expenseSql.Output
     Assert-True ($expenseSql.Output -match 'WP04-03 单据预审数据库断言通过') '单据预审 SQL 断言未通过'
+
+    # ---------------------------------------------------------------- 5o 隐私与删除
+    Write-Step '5o 隐私与删除：设置 RLS、新数据类回收、匿名化开关'
+    $privacySql = Invoke-SqlFile -Database $upgradeDb -User $AppUser -Password $AppPassword -FileName '9a-privacy.sql'
+    Write-Host $privacySql.Output
+    Assert-True ($privacySql.Output -match 'WP04-05 隐私保留与删除数据库断言通过') '隐私保留 SQL 断言未通过'
 
     # ---------------------------------------------------------------- 6 校验和门禁
     Write-Step '6 校验和门禁：篡改历史 checksum 后 validate 必须失败'

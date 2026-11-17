@@ -1,0 +1,97 @@
+WP04-05 我的数据：查看、导出与删除（/api/v1/privacy/my-data）
+============================================================
+
+[1] 查看本人数据
+GET /api/v1/privacy/my-data
+200 OK
+{
+  "personId": "aaaaaaaa-0000-4000-8000-0000000000a1",
+  "voiceCaptures": [
+    {"id":"cccccccc-0000-4000-8000-0000000000c1","workDate":"2026-11-15",
+     "status":"confirmed","provider":"openai-compatible","model":"whisper-1",
+     "audioDeletedAt":"2026-11-15T09:00:03Z","createdAt":"2026-11-15T08:59:10Z",
+     "transcribed":true}
+  ],
+  "expenseDocuments": [
+    {"id":"cccccccc-0000-4000-8000-0000000000d1","docType":"invoice",
+     "status":"posted","amount":88.00,"currency":"CNY","createdAt":"2026-11-14T02:00:00Z"},
+    {"id":"cccccccc-0000-4000-8000-0000000000d2","docType":"receipt",
+     "status":"manual_review","amount":32.50,"currency":"CNY",
+     "createdAt":"2026-11-15T03:00:00Z"}
+  ]
+}
+
+[2] 导出本人数据（不含文件字节）
+GET /api/v1/privacy/my-data/export
+200 OK
+{
+  "personId": "aaaaaaaa-0000-4000-8000-0000000000a1",
+  "generatedAt": "2026-11-16T02:20:00Z",
+  "voiceCaptures": [
+    {"id":"cccccccc-0000-4000-8000-0000000000c1","workDate":"2026-11-15",
+     "status":"confirmed","provider":"openai-compatible","model":"whisper-1",
+     "transcriptText":"上午处理报销单据，下午参加部门周会……",
+     "editedText":"上午处理报销单据；下午部门周会。",
+     "audioDeletedAt":"2026-11-15T09:00:03Z","createdAt":"2026-11-15T08:59:10Z"}
+  ],
+  "expenseDocuments": [
+    {"id":"cccccccc-0000-4000-8000-0000000000d1","docType":"invoice",
+     "status":"posted","amount":88.00,"currency":"CNY","vendorName":"示例供应商",
+     "invoiceCode":"011002000211","invoiceNo":"12345678","occurredOn":"2026-11-10",
+     "createdAt":"2026-11-14T02:00:00Z",
+     "extraction":{"id":"cccccccc-0000-4000-8000-0000000000f1","status":"ok",
+                   "provider":"openai-compatible","model":"gpt-4o-mini",
+                   "ocrText":"发票代码 011002000211 发票号码 12345678 价税合计 88.00",
+                   "createdAt":"2026-11-14T02:00:05Z"}}
+  ]
+}
+
+[3] 删除本人语音与未入账单据 → 进入回收站
+POST /api/v1/privacy/my-data/delete
+{"voiceCaptureIds":["cccccccc-0000-4000-8000-0000000000c1"],
+ "expenseDocumentIds":["cccccccc-0000-4000-8000-0000000000d2"]}
+200 OK
+{"actions":[
+  {"id":"cccccccc-0000-4000-8000-0000000000c1","dataClass":"worklog_voice_capture",
+   "action":"recycled"},
+  {"id":"cccccccc-0000-4000-8000-0000000000d2","dataClass":"expense_document",
+   "action":"recycled"}
+]}
+- 两行 recycled_at 置为 now()，业务列表立即不可见；
+- retention_bin_item 写入快照（语音只含日期/状态/提供方/时间，不含转写原文）；
+- 30 天后由保留任务物理清理，语音若配置对象存储会先删音频。
+
+[4] 删除本人已入账单据 → 只匿名化 OCR
+POST /api/v1/privacy/my-data/delete
+{"voiceCaptureIds":[],"expenseDocumentIds":["cccccccc-0000-4000-8000-0000000000d1"]}
+200 OK
+{"actions":[
+  {"id":"cccccccc-0000-4000-8000-0000000000d1","dataClass":"expense_document",
+   "action":"anonymized"}
+]}
+- expense_document_extraction.ocr_text = NULL、fields = '{}'；
+- 单据金额 88.00、状态 posted、复核与审计链保持不变；
+- platform_deletion_tombstone 写入 action=anonymized，附主体哈希与请求原因；
+- expense_audit_event 追加 anonymized，detail 不含 OCR 原文；
+- retention_event 追加 anonymized（数据类 expense_document）。
+
+[5] 已入账单据走普通回收站路径 → 拒绝
+POST /api/v1/retention/bin/recycle
+{"dataClass":"expense_document","objectId":"cccccccc-0000-4000-8000-0000000000d1"}
+409 Conflict
+{"type":"about:blank","title":"EXPENSE_POSTED_PROTECTED","status":409,
+ "detail":"已入账单据不可删除，只能匿名化 OCR 文本"}
+
+[6] 越权：删除他人记录
+POST /api/v1/privacy/my-data/delete
+{"voiceCaptureIds":["cccccccc-0000-4000-8000-0000000000c9"],"expenseDocumentIds":[]}
+403 Forbidden
+{"type":"about:blank","title":"VOICE_NOT_OWNER","status":403,
+ "detail":"只能删除自己的录音"}
+
+说明
+----
+- personId 永远由会话与成员映射解析，请求体不能指定他人。
+- 导出绝不返回文件字节或对象存储键；语音音频在转写确认后已删除。
+- 已入账单据匿名化在 app.privacy_anonymize='on' 的当前事务内执行，
+  语句结束后立即复位，默认只插入约束仍然生效。

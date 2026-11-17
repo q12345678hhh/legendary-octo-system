@@ -453,6 +453,118 @@ export interface ExpenseLineItem {
   amount?: number | null;
 }
 
+export type PrivacyDataClass =
+  | 'file'
+  | 'worklog_entry'
+  | 'worklog_weekly_report'
+  | 'worklog_voice_capture'
+  | 'expense_document'
+  | 'expense_extraction'
+  | 'audit';
+
+export interface PrivacyDataClassInfo {
+  dataClass: PrivacyDataClass;
+  purpose: string;
+  retentionDays: number;
+  retentionNote: string;
+  accessRoles: string[];
+}
+
+export type PrivacyResidency = 'cn' | 'eu' | 'us' | 'sg';
+
+export interface PrivacySupplier {
+  surface: string;
+  provider: string;
+  model: string;
+  configured: boolean;
+}
+
+export interface PrivacySettings {
+  dataResidency: PrivacyResidency;
+  trainingOptOut: boolean;
+  voiceTranscriptRetentionDays: number;
+  expenseOcrRetentionDays: number;
+  updatedBy?: string | null;
+  updatedAt?: string | null;
+  suppliers: PrivacySupplier[];
+}
+
+export interface PrivacySettingsInput {
+  dataResidency: PrivacyResidency;
+  trainingOptOut: boolean;
+  voiceTranscriptRetentionDays: number;
+  expenseOcrRetentionDays: number;
+}
+
+export interface PrivacyVoiceData {
+  id: string;
+  workDate: string;
+  status: string;
+  provider?: string | null;
+  model?: string | null;
+  audioDeletedAt?: string | null;
+  createdAt?: string | null;
+  transcribed: boolean;
+}
+
+export interface PrivacyExpenseData {
+  id: string;
+  docType: string;
+  status: string;
+  amount?: number | null;
+  currency?: string | null;
+  createdAt?: string | null;
+}
+
+export interface PrivacyMyData {
+  personId: string;
+  voiceCaptures: PrivacyVoiceData[];
+  expenseDocuments: PrivacyExpenseData[];
+}
+
+export interface PrivacyVoiceExport extends PrivacyVoiceData {
+  transcriptText?: string | null;
+  editedText?: string | null;
+}
+
+export interface PrivacyExpenseExport extends PrivacyExpenseData {
+  vendorName?: string | null;
+  invoiceCode?: string | null;
+  invoiceNo?: string | null;
+  occurredOn?: string | null;
+  extraction?: {
+    id: string;
+    status: string;
+    provider?: string | null;
+    model?: string | null;
+    errorCode?: string | null;
+    ocrText?: string | null;
+    createdAt?: string | null;
+  } | null;
+}
+
+export interface PrivacyDataExport {
+  personId: string;
+  generatedAt: string;
+  voiceCaptures: PrivacyVoiceExport[];
+  expenseDocuments: PrivacyExpenseExport[];
+}
+
+export interface PrivacyDeleteInput {
+  voiceCaptureIds?: string[];
+  expenseDocumentIds?: string[];
+}
+
+export interface PrivacyDeleteAction {
+  id: string;
+  dataClass: 'worklog_voice_capture' | 'expense_document';
+  action: 'recycled' | 'anonymized';
+}
+
+export interface PrivacyDeleteResult {
+  actions: PrivacyDeleteAction[];
+}
+
 export interface ExpenseManualFields {
   amount?: number | null;
   currency?: string | null;
@@ -1042,6 +1154,18 @@ export interface ApiClient {
     input: { note: string },
     options?: RequestOptions,
   ): Promise<ExpenseBatchHold>;
+  listPrivacyDataClasses(options?: RequestOptions): Promise<PrivacyDataClassInfo[]>;
+  getPrivacySettings(options?: RequestOptions): Promise<PrivacySettings>;
+  updatePrivacySettings(
+    input: PrivacySettingsInput,
+    options?: RequestOptions,
+  ): Promise<PrivacySettings>;
+  getMyPrivacyData(): Promise<PrivacyMyData>;
+  exportMyPrivacyData(): Promise<PrivacyDataExport>;
+  deleteMyPrivacyData(
+    input: PrivacyDeleteInput,
+    options?: RequestOptions,
+  ): Promise<PrivacyDeleteResult>;
   listCollabChannels(limit?: number): Promise<CollabChannel[]>;
   createCollabChannel(
     input: { orgUnitId: string; scope: string; name: string; topic: string },
@@ -1535,6 +1659,19 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       postJson<ExpenseBatchHold>(
         `/api/v1/expense/holds/${encodeURIComponent(holdId)}/release`,
         input, requestOptions),
+    listPrivacyDataClasses: (requestOptions) =>
+      request<PrivacyDataClassInfo[]>('/api/v1/privacy/data-classes', {}, requestOptions),
+    getPrivacySettings: (requestOptions) =>
+      request<PrivacySettings>('/api/v1/privacy/settings', {}, requestOptions),
+    updatePrivacySettings: (input, requestOptions) =>
+      request<PrivacySettings>(
+        '/api/v1/privacy/settings',
+        { method: 'PUT', body: JSON.stringify(input) },
+        requestOptions ?? {}),
+    getMyPrivacyData: () => request<PrivacyMyData>('/api/v1/privacy/my-data'),
+    exportMyPrivacyData: () => request<PrivacyDataExport>('/api/v1/privacy/my-data/export'),
+    deleteMyPrivacyData: (input, requestOptions) =>
+      postJson<PrivacyDeleteResult>('/api/v1/privacy/my-data/delete', input, requestOptions),
     listCollabChannels: (limit) => {
       const query = limit === undefined ? '' : `?limit=${encodeURIComponent(String(limit))}`;
       return request<CollabChannel[]>(`/api/v1/collaboration/channels${query}`);

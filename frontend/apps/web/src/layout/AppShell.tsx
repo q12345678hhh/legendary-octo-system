@@ -14,7 +14,7 @@ interface NavGroup {
 
 const NAV_GROUPS: readonly NavGroup[] = [
   { label: '工作台', items: ['myWork', 'home', 'departments', 'worklog', 'expense', 'collaboration', 'workflowInbox'] },
-  { label: '管理', items: ['insights', 'modules', 'jobs', 'files'] },
+  { label: '管理', items: ['insights', 'modules', 'jobs', 'files', 'privacy'] },
 ];
 
 /** 子页面高亮所属的一级菜单。 */
