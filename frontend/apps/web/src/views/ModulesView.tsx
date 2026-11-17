@@ -527,6 +527,7 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
                     size="small"
                     rowKey="id"
                     pagination={false}
+                    scroll={{ x: 'max-content' }}
                     dataSource={modules}
                     columns={[
                       {
@@ -758,6 +759,7 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
       confirmLoading={savingModule}
       okText="保存"
       cancelText="取消"
+      width={640}
       onOk={() => {
         void moduleForm
           .validateFields()
@@ -825,36 +827,32 @@ export function ModulesView({ apiClient, permissions, onActivationChanged }: Mod
         <Form.Item name="dependencies" label="依赖（JSON 数组）" initialValue="[]">
           <Input.TextArea rows={2} placeholder='["org.structure"]' />
         </Form.Item>
-        <Space style={{ width: '100%' }} size="middle">
-          <Form.Item
-            name="routePath"
-            label="菜单路由"
-            style={{ width: 260 }}
-            extra="形如 /apps/attendance；留空表示不注册菜单"
-            rules={[
-              {
-                pattern: /^$|^\/apps\/[a-z0-9][a-z0-9._-]*$/,
-                message: '需形如 /apps/<小写 slug>',
-              },
-            ]}
-          >
-            <Input placeholder="/apps/attendance" />
-          </Form.Item>
-          <Form.Item
-            name="apiPathPrefix"
-            label="API 前缀"
-            style={{ width: 260 }}
-            extra="形如 /api/v1/attendance；停用时命中该前缀的请求返回 403"
-            rules={[
-              {
-                pattern: /^$|^\/api\/v1\/[a-z0-9][a-z0-9._/-]*$/,
-                message: '需以 /api/v1/ 开头',
-              },
-            ]}
-          >
-            <Input placeholder="/api/v1/attendance" />
-          </Form.Item>
-        </Space>
+        <Form.Item
+          name="routePath"
+          label="菜单路由（可选）"
+          extra="填写后启用时自动出现在左侧「应用」；格式 /apps/<小写 slug>，如 /apps/attendance"
+          rules={[
+            {
+              pattern: /^$|^\/apps\/[a-z0-9][a-z0-9._-]*$/,
+              message: '需形如 /apps/attendance',
+            },
+          ]}
+        >
+          <Input placeholder="/apps/attendance" />
+        </Form.Item>
+        <Form.Item
+          name="apiPathPrefix"
+          label="API 前缀（可选）"
+          extra="用于停用后拦截该模块接口；格式 /api/v1/<小写路径>，如 /api/v1/attendance"
+          rules={[
+            {
+              pattern: /^$|^\/api\/v1\/[a-z0-9][a-z0-9._/-]*$/,
+              message: '需以 /api/v1/ 开头',
+            },
+          ]}
+        >
+          <Input placeholder="/api/v1/attendance" />
+        </Form.Item>
       </Form>
     </Modal>
 
