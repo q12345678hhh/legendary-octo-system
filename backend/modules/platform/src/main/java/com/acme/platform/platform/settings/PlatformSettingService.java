@@ -84,7 +84,15 @@ public class PlatformSettingService {
                     throw ApiException.badRequest("SETTING_VALUE_INVALID", "该设置必须是整数");
                 }
                 int number = value.asInt();
-                if (number < definition.min() || number > definition.max()) {
+                if (number < definition.min()) {
+                    if (definition.key().startsWith("retention.")) {
+                        throw ApiException.unprocessable("RETENTION_BELOW_MINIMUM",
+                                "低于合规下限：" + definition.min() + " 天，请求值 " + number + " 天");
+                    }
+                    throw ApiException.badRequest("SETTING_VALUE_OUT_OF_RANGE",
+                            "取值必须在 " + definition.min() + "–" + definition.max() + " 之间");
+                }
+                if (number > definition.max()) {
                     throw ApiException.badRequest("SETTING_VALUE_OUT_OF_RANGE",
                             "取值必须在 " + definition.min() + "–" + definition.max() + " 之间");
                 }

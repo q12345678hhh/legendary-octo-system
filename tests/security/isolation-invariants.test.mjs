@@ -19,6 +19,8 @@ const authorizationDir = join(repoRoot, 'backend', 'modules', 'authorization', '
   'com', 'acme', 'platform', 'authorization');
 const platformModuleDir = join(repoRoot, 'backend', 'modules', 'platform', 'src', 'main', 'java',
   'com', 'acme', 'platform', 'platform');
+const worklogModuleDir = join(repoRoot, 'backend', 'modules', 'worklog', 'src', 'main', 'java',
+  'com', 'acme', 'platform', 'worklog');
 
 function javaFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -137,6 +139,63 @@ test('平台运营数据面不得查询租户业务正文', () => {
         `${file} 读取了租户业务表，平台运营端只能读元数据与聚合`);
     }
   }
+});
+
+test('回收站与数据主体请求只使用服务端租户上下文', () => {
+  for (const name of ['RetentionController.java', 'PrivacyRequestController.java']) {
+    const source = readFileSync(join(bootApiDir, name), 'utf8');
+    assert.doesNotMatch(source, /getHeader\(/, `${name} 不得从请求头读取租户或主体`);
+  }
+  const privacy = readFileSync(join(bootApiDir, 'PrivacyRequestController.java'), 'utf8');
+  assert.match(privacy, /RequestContextHolder\.current\(\)/,
+    '数据主体请求必须绑定服务端租户上下文');
+
+  const service = readFileSync(
+    join(repoRoot, 'backend', 'modules', 'tenancy', 'src', 'main', 'java', 'com', 'acme', 'platform',
+      'tenancy', 'retention', 'RetentionService.java'), 'utf8');
+  assert.match(service, /transactions\.inTenant\(/, '回收站读写必须落在租户事务内');
+  assert.doesNotMatch(service, /tenantId\s*=\s*[^;]*(?:Param|Header)/,
+    '回收站服务不得从请求参数或请求头取租户');
+});
+
+test('平台侧删除判定与执行必须叠加 MFA 的管理权限', () => {
+  const source = readFileSync(join(bootApiDir, 'PlatformRetentionController.java'), 'utf8');
+  const writes = source.split(/@(?:Post|Put)Mapping/).slice(1);
+  assert.ok(writes.length >= 5, `平台保留写接口过少：${writes.length}`);
+  for (const block of writes) {
+    const body = block.slice(0, block.indexOf('\n    }'));
+    assert.match(body, /PlatformActors\.requireManage\(/,
+      '平台保留策略与删除执行的写操作必须要求 manage 权限（叠加 MFA）');
+  }
+  assert.match(source, /SECURITY_MANAGE/, '删除判定/执行必须复用安全运营权限码');
+});
+
+test('保留事件与删除墓碑在数据库层只允许追加', () => {
+  const sql = readFileSync(join(migrationDir, 'V12__retention_and_dsr.sql'), 'utf8');
+  for (const table of ['retention_event', 'platform_deletion_tombstone']) {
+    assert.match(sql,
+      new RegExp(`CREATE TRIGGER ${table}_immutable_trigger\\s+BEFORE UPDATE OR DELETE ON ${table}`),
+      `${table} 缺少不可变触发器`);
+  }
+  for (const table of ['retention_bin_item', 'retention_legal_hold', 'retention_event']) {
+    assert.match(sql, new RegExp(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY`),
+      `${table} 未强制 RLS`);
+  }
+});
+
+test('恢复回收站条目不得重建授权或身份', () => {
+  const targets = [
+    join(platformModuleDir, 'file', 'FileRetentionTarget.java'),
+    join(worklogModuleDir, 'device', 'SegmentRetentionTarget.java'),
+  ];
+  for (const file of targets) {
+    const source = readFileSync(file, 'utf8');
+    assert.doesNotMatch(source, /INSERT INTO authorization_/i, `${file} 在恢复流程里重建了授权`);
+    assert.doesNotMatch(source, /INSERT INTO identity_/i, `${file} 在恢复流程里重建了身份`);
+  }
+  const fileTarget = readFileSync(targets[0], 'utf8');
+  assert.match(fileTarget, /UPDATE platform_file SET status = 'available'/,
+    '文件恢复只允许还原状态位');
 });
 
 test('隐私引擎仍强制排除社交软件', () => {

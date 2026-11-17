@@ -1,0 +1,26 @@
+mvn -B -ntp -f backend/pom.xml clean install
+
+[INFO] BUILD SUCCESS
+[INFO] Total time:  01:36 min
+（20 个模块全部成功）
+
+模块汇总（Tests run: X, Failures: 0, Errors: 0, Skipped: N）：
+  platform          5    (0)
+  tenancy           14   (4)  真实库用例未传 -Dplatform.db.url 时跳过，由 db-verify 执行
+  identity          17   (1)
+  organization      24   (1)
+  authorization     10   (2)
+  worklog           5    (0)
+  boot-api          72   (3)
+  boot-worker       4    (0)
+  test-support      3    (0)
+
+关键用例：
+  Tests run: 6,  Failures: 0, Errors: 0, Skipped: 0  -- com.acme.platform.RetentionAuthzTest
+  Tests run: 2,  Failures: 0, Errors: 0, Skipped: 0  -- com.acme.platform.FileAccessApiTest
+  Tests run: 2,  Failures: 0, Errors: 0, Skipped: 0  -- com.acme.platform.ModuleStructureTest
+  Tests run: 11, Failures: 0, Errors: 0, Skipped: 0  -- com.acme.platform.TenantApiBoundaryTest
+
+db-verify 中真实库用例结果：
+  Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- RetentionDbTest
+  Tests run: 1, Failures: 0, Errors: 0, Skipped: 0 -- DeletionAnonymizeDbTest

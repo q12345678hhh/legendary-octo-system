@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -66,10 +67,13 @@ class FileController {
 
     private final FileService service;
     private final AuthorizationGuard authorization;
+    private final com.acme.platform.tenancy.retention.RetentionService retention;
 
-    FileController(FileService service, AuthorizationGuard authorization) {
+    FileController(FileService service, AuthorizationGuard authorization,
+                   com.acme.platform.tenancy.retention.RetentionService retention) {
         this.service = service;
         this.authorization = authorization;
+        this.retention = retention;
     }
 
     @PostMapping("/uploads")
@@ -97,6 +101,13 @@ class FileController {
         authorise(fileId);
         FileService.DownloadGrant grant = service.authorizeDownload(fileId);
         return new DownloadResponse(grant.fileId(), grant.url(), grant.expiresAt());
+    }
+
+    /** 普通删除：进回收站，默认保留 30 天；被留置或属于受保护数据类时返回 409 与原因。 */
+    @DeleteMapping("/{fileId}")
+    RetentionController.BinItemView delete(@PathVariable UUID fileId) {
+        authorise(fileId);
+        return RetentionController.BinItemView.from(retention.recycle("file", fileId));
     }
 
     /** 文件与人员共用同一决策：资源归属交给范围解析，未授权统一 403。 */

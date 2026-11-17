@@ -1,10 +1,276 @@
 {
-  "frozenAt": "2026-11-12T10:44:12.577Z",
+  "frozenAt": "2026-11-13T02:57:21.022Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "706b11227743ad47ac71365f493bccc5678c5526b28bf91b668578fbd8b05274",
+      "sha256": "60ed2c6ecb2f0f1b382d52407829efbc0c6c7ef51a2f319b46b595602f6f112a",
       "tokens": {
+        "operation:GET /api/v1/retention/bin": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/retention/bin:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/retention/bin:401": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/retention/bin:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /api/v1/retention/bin/{id}/restore": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/retention/bin/{id}/restore:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/retention/bin/{id}/restore:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/retention/bin/{id}/restore:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/retention/bin/{id}/restore:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/retention/bin/{id}/restore:path:id": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:DELETE /api/v1/retention/bin/{id}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/retention/bin/{id}:200": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/retention/bin/{id}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/retention/bin/{id}:404": {
+          "defined": true
+        },
+        "parameter:DELETE /api/v1/retention/bin/{id}:path:id": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/retention/holds": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/retention/holds:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/retention/holds:401": {
+          "defined": true
+        },
+        "operation:GET /api/v1/privacy/requests": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/privacy/requests:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/privacy/requests:401": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/privacy/requests:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /api/v1/privacy/requests": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/privacy/requests:201": {
+          "defined": true
+        },
+        "response:POST /api/v1/privacy/requests:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/privacy/requests:401": {
+          "defined": true
+        },
+        "operation:GET /api/v1/privacy/requests/{id}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/privacy/requests/{id}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/privacy/requests/{id}:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/privacy/requests/{id}:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/privacy/requests/{id}:path:id": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:DELETE /api/v1/privacy/requests/{id}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/privacy/requests/{id}:200": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/privacy/requests/{id}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/privacy/requests/{id}:404": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/privacy/requests/{id}:409": {
+          "defined": true
+        },
+        "parameter:DELETE /api/v1/privacy/requests/{id}:path:id": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:DELETE /api/v1/system/files/{fileId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/system/files/{fileId}:200": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/system/files/{fileId}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/system/files/{fileId}:403": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/system/files/{fileId}:404": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/system/files/{fileId}:409": {
+          "defined": true
+        },
+        "parameter:DELETE /api/v1/system/files/{fileId}:path:fileId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:DELETE /api/v1/work-assistant/segments/{segmentId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/work-assistant/segments/{segmentId}:200": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/work-assistant/segments/{segmentId}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/work-assistant/segments/{segmentId}:404": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/work-assistant/segments/{segmentId}:409": {
+          "defined": true
+        },
+        "parameter:DELETE /api/v1/work-assistant/segments/{segmentId}:path:segmentId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /platform/api/v1/retention/policy": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/retention/policy:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/retention/policy:401": {
+          "defined": true
+        },
+        "operation:PUT /platform/api/v1/retention/policy": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /platform/api/v1/retention/policy:200": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/retention/policy:400": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/retention/policy:403": {
+          "defined": true
+        },
+        "response:PUT /platform/api/v1/retention/policy:422": {
+          "defined": true
+        },
+        "operation:GET /platform/api/v1/privacy/requests": {
+          "requestBodyRequired": false
+        },
+        "response:GET /platform/api/v1/privacy/requests:200": {
+          "defined": true
+        },
+        "response:GET /platform/api/v1/privacy/requests:401": {
+          "defined": true
+        },
+        "parameter:GET /platform/api/v1/privacy/requests:query:status": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /platform/api/v1/privacy/requests:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
+        "operation:POST /platform/api/v1/privacy/requests/{id}/approve": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/approve:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/approve:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/approve:404": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/approve:409": {
+          "defined": true
+        },
+        "parameter:POST /platform/api/v1/privacy/requests/{id}/approve:path:id": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /platform/api/v1/privacy/requests/{id}/reject": {
+          "requestBodyRequired": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/reject:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/reject:400": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/reject:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/reject:409": {
+          "defined": true
+        },
+        "parameter:POST /platform/api/v1/privacy/requests/{id}/reject:path:id": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /platform/api/v1/privacy/requests/{id}/execute": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/execute:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/execute:403": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/privacy/requests/{id}/execute:409": {
+          "defined": true
+        },
+        "parameter:POST /platform/api/v1/privacy/requests/{id}/execute:path:id": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /platform/api/v1/retention/tombstones/replay": {
+          "requestBodyRequired": false
+        },
+        "response:POST /platform/api/v1/retention/tombstones/replay:200": {
+          "defined": true
+        },
+        "response:POST /platform/api/v1/retention/tombstones/replay:403": {
+          "defined": true
+        },
+        "parameter:POST /platform/api/v1/retention/tombstones/replay:query:limit": {
+          "required": false,
+          "type": "integer"
+        },
         "operation:GET /api/v1/system/health": {
           "requestBodyRequired": false
         },

@@ -1,0 +1,28 @@
+﻿PASS openapi/platform-api.v1.json
+PASS events/employee.hired.v1.json
+PASS events/platform.file.scanned.v1.json
+PASS events/platform.file.uploaded.v1.json
+PASS events/platform.job.requested.v1.json
+PASS plugins/plugin-manifest.v1.json
+PASS events/event-catalog.json
+
+契约门禁通过：7 份契约，3 类覆盖完整
+▶ contract-check
+  ✔ 通过当契约与基线一致 (109.9975ms)
+  ✔ 阻断 OpenAPI 删除必填字段 (110.2032ms)
+  ✔ 放行 OpenAPI 新增可选字段 (117.0127ms)
+  ✔ 阻断领域事件字段类型变更 (111.9554ms)
+  ✔ 阻断插件协议删除限额字段 (108.5203ms)
+  ✔ 阻断事件目录与 schema 不同步 (87.2689ms)
+  ✔ 缺任一类契约直接失败 (92.9549ms)
+  ✔ 已批准且未到期的破坏性变更放行并给出告警 (116.2858ms)
+  ✔ 过期的审批不能放行破坏性变更 (125.0591ms)
+✔ contract-check (980.88ms)
+ℹ tests 9
+ℹ suites 1
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1075.0544
