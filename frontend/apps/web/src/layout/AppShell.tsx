@@ -1,7 +1,15 @@
+import type { ModuleRoute } from '@platform/api-client';
 import { Breadcrumb, Button, Layout, Menu, Space } from 'antd';
 import type { MenuProps } from 'antd';
 import type { ReactNode, RefObject } from 'react';
-import { navigate, routePermission, routeTitle, routes, type RouteName } from '../router';
+import {
+  matchRoute,
+  navigate,
+  routePermission,
+  routeTitle,
+  routes,
+  type RouteName,
+} from '../router';
 import type { Session } from '../session';
 import { isModuleEnabled } from '../modules/manifest';
 import { shortId } from '../utils/format';
@@ -31,6 +39,8 @@ export interface AppShellProps {
   permissions: Set<string> | null;
   /** 已启用模块；null 表示尚未拿到，不做模块过滤。 */
   enabledModules: Set<string> | null;
+  /** 已启用且登记了路由的模块；用于「应用」分组。 */
+  moduleRoutes: ModuleRoute[] | null;
   onSignOut: () => void;
   mainRef: RefObject<HTMLElement>;
   children: ReactNode;
@@ -42,6 +52,7 @@ export function AppShell({
   route,
   permissions,
   enabledModules,
+  moduleRoutes,
   onSignOut,
   mainRef,
   children,
@@ -67,12 +78,32 @@ export function AppShell({
       items.push({ type: 'group', label: group.label, children });
     }
   }
+  if (moduleRoutes && moduleRoutes.length > 0) {
+    items.push({
+      type: 'group',
+      label: '应用',
+      children: moduleRoutes.map((item) => ({
+        key: `mod:${item.code}`,
+        label: item.name,
+      })),
+    });
+  }
 
-  const selectedKey = PARENT_ROUTE[route] ?? route;
+  const matchedHash = matchRoute(globalThis.location.hash);
+  const activeModule =
+    route === 'moduleApp' && matchedHash
+      ? (moduleRoutes ?? []).find(
+          (item) => item.routePath === `/apps/${matchedHash.params.moduleCode}`,
+        )
+      : undefined;
+  const activeModuleKey = activeModule ? `mod:${activeModule.code}` : null;
+  const title = activeModule?.name ?? routeTitle(route);
+
+  const selectedKey = activeModuleKey ?? PARENT_ROUTE[route] ?? route;
   const breadcrumbItems =
     route === 'home'
       ? [{ title: '首页' }]
-      : [{ title: '首页' }, { title: routeTitle(PARENT_ROUTE[route] ?? route) }];
+      : [{ title: '首页' }, { title: activeModule?.name ?? routeTitle(PARENT_ROUTE[route] ?? route) }];
 
   return (
     <Layout className="app-shell">
@@ -113,6 +144,15 @@ export function AppShell({
               items={items}
               selectedKeys={[selectedKey]}
               onClick={({ key }) => {
+                if (key.startsWith('mod:')) {
+                  const target = (moduleRoutes ?? []).find((item) => `mod:${item.code}` === key);
+                  if (target) {
+                    navigate('moduleApp', {
+                      moduleCode: target.routePath.replace(/^\/apps\//, ''),
+                    });
+                  }
+                  return;
+                }
                 if (routes.some((item) => item.name === key)) {
                   navigate(key as RouteName);
                 }
@@ -124,7 +164,7 @@ export function AppShell({
         <Content className="app-shell-main">
           <main id="main-content" ref={mainRef} tabIndex={-1} className="skip-target">
             <Breadcrumb className="app-shell-breadcrumb" items={breadcrumbItems} />
-            <h1 className="app-shell-title">{routeTitle(route)}</h1>
+            <h1 className="app-shell-title">{title}</h1>
             {children}
           </main>
         </Content>

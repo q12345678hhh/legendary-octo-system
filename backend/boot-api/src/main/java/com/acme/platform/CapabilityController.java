@@ -29,6 +29,7 @@ class CapabilityController {
     Map<String, Object> capabilities() {
         return Map.of(
                 "permissions", authorization.heldPermissions(),
-                "enabledModules", moduleActivationService.enabledModuleCodes());
+                "enabledModules", moduleActivationService.enabledModuleCodes(),
+                "moduleRoutes", moduleActivationService.enabledModuleRoutes());
     }
 }

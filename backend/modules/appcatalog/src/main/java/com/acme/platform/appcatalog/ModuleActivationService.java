@@ -7,6 +7,7 @@ import com.acme.platform.platform.TenantTransactions;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +47,17 @@ public class ModuleActivationService {
                                  OffsetDateTime updatedAt, boolean explicit) {
     }
 
-    private record CacheEntry(Set<String> codes, Instant expiresAt) {
+    private record ApiPrefix(String code, String prefix) {
+    }
+
+    private record Snapshot(Set<String> codes, List<ApiPrefix> prefixes) {
+    }
+
+    private record CacheEntry(Snapshot snapshot, Instant expiresAt) {
+    }
+
+    /** 动态注册菜单用的模块路由。 */
+    public record ModuleRouteView(String code, String name, String routePath) {
     }
 
     public ActivationView get(UUID moduleId) {
@@ -97,22 +108,65 @@ public class ModuleActivationService {
         });
     }
 
-    /** 当前租户实际启用的模块 code：全部目录模块减去显式停用。 */
+    /**
+     * 当前租户实际启用的模块 code：所有已登记模块 + 目录模块减去显式停用。
+     *
+     * <p>记录缺失一律视为启用，因此存量租户即使目录里没有基础模块记录，也不会因为
+     * 能力清单缺项而被前端隐藏或后端拦截。只有显式 disabled 才真正关闭。
+     */
     public Set<String> enabledModuleCodes() {
+        return snapshot().codes();
+    }
+
+    /** 请求路径命中的自定义模块 code（模块登记了 api_path_prefix 才参与）。 */
+    public Optional<String> moduleForPath(String path) {
+        if (path == null || path.isEmpty()) {
+            return Optional.empty();
+        }
+        String matchedCode = null;
+        int matchedLength = -1;
+        for (ApiPrefix prefix : snapshot().prefixes()) {
+            String value = prefix.prefix();
+            if (path.startsWith(value) && (path.length() == value.length()
+                    || path.charAt(value.length()) == '/') && value.length() > matchedLength) {
+                matchedCode = prefix.code();
+                matchedLength = value.length();
+            }
+        }
+        return Optional.ofNullable(matchedCode);
+    }
+
+    /** 已启用且登记了前端路由的模块，供能力清单动态注册菜单。 */
+    public List<ModuleRouteView> enabledModuleRoutes() {
+        return transactions.inTenant(context -> {
+            Set<String> disabled = activationStore.disabledCodes();
+            return catalogStore.modulesWithRoute().stream()
+                    .filter(row -> !disabled.contains(row.code()))
+                    .map(row -> new ModuleRouteView(row.code(), row.name(), row.path()))
+                    .toList();
+        });
+    }
+
+    /** 目录中的模块路由/前缀变化后立即失效本机缓存。 */
+    public void invalidateCurrentTenant() {
+        RequestContextHolder.find().map(RequestContext::tenantId).ifPresent(this::invalidate);
+    }
+
+    private Snapshot snapshot() {
         RequestContext context = RequestContextHolder.find().orElse(null);
         if (context == null || context.tenantId() == null) {
             // 没有租户上下文时不能误拦截；调用方（过滤器）在认证之后才调用本方法。
-            return Set.copyOf(ModuleRegistry.codes());
+            return new Snapshot(Set.copyOf(ModuleRegistry.codes()), List.of());
         }
         UUID tenantId = context.tenantId();
         CacheEntry entry = cache.get(tenantId);
         Instant now = Instant.now();
         if (entry != null && entry.expiresAt().isAfter(now)) {
-            return entry.codes();
+            return entry.snapshot();
         }
-        Set<String> codes = transactions.inTenant(ctx -> computeEnabled());
-        cache.put(tenantId, new CacheEntry(codes, now.plus(CACHE_TTL)));
-        return codes;
+        Snapshot snapshot = transactions.inTenant(ctx -> computeSnapshot());
+        cache.put(tenantId, new CacheEntry(snapshot, now.plus(CACHE_TTL)));
+        return snapshot;
     }
 
     /** 供目录服务判断：受管租户新增模块默认停用。 */
@@ -142,11 +196,20 @@ public class ModuleActivationService {
         invalidate(tenantId);
     }
 
-    private Set<String> computeEnabled() {
-        List<String> all = activationStore.moduleCodes();
-        Set<String> disabled = activationStore.disabledCodes();
-        return all.stream().filter(code -> !disabled.contains(code))
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    /**
+     * 已实现模块默认启用，再叠加目录里显式启用的模块，最后剔除显式停用。
+     *
+     * <p>存量租户的目录里可能没有基础模块记录（迁移只回填了既有行），
+     * 因此不能只按目录求差集，否则基础模块会被前端误判为停用而整片消失。
+     */
+    private Snapshot computeSnapshot() {
+        Set<String> enabled = new LinkedHashSet<>(ModuleRegistry.codes());
+        enabled.addAll(activationStore.moduleCodes());
+        enabled.removeAll(activationStore.disabledCodes());
+        List<ApiPrefix> prefixes = catalogStore.modulesWithApiPrefix().stream()
+                .map(row -> new ApiPrefix(row.code(), row.path()))
+                .toList();
+        return new Snapshot(Set.copyOf(enabled), prefixes);
     }
 
     private AppCatalogStore.ModuleRow requireModule(UUID moduleId) {

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.14.0",
+    "version": "1.15.0",
     "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。 单据域覆盖报销单/发票/账单上传、AI 预审、人工复核、入账与撤销，OCR 不可用时一律转人工。 模块中心支持租户级启停：记录缺失视为启用，显式停用由后端过滤器强制拦截。"
   },
   "servers": [
@@ -25,7 +25,8 @@
                   "type": "object",
                   "required": [
                     "permissions",
-                    "enabledModules"
+                    "enabledModules",
+                    "moduleRoutes"
                   ],
                   "properties": {
                     "permissions": {
@@ -38,6 +39,28 @@
                       "type": "array",
                       "items": {
                         "type": "string"
+                      }
+                    },
+                    "moduleRoutes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "code",
+                          "name",
+                          "routePath"
+                        ],
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "routePath": {
+                            "type": "string"
+                          }
+                        }
                       }
                     }
                   }
@@ -159,6 +182,20 @@
                           "disabled"
                         ]
                       },
+                      "routePath": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "description": "前端菜单路由，如 /apps/attendance；为空表示不注册菜单"
+                      },
+                      "apiPathPrefix": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "description": "后端 API 前缀；停用时命中返回 403 MODULE_DISABLED"
+                      },
                       "createdAt": {
                         "type": "string",
                         "format": "date-time"
@@ -255,6 +292,20 @@
                       "installed",
                       "disabled"
                     ]
+                  },
+                  "routePath": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "形如 /apps/attendance"
+                  },
+                  "apiPathPrefix": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "形如 /api/v1/attendance"
                   }
                 }
               }

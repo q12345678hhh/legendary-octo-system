@@ -1,4 +1,4 @@
-import type { ApiClient } from '@platform/api-client';
+import type { ApiClient, ModuleRoute } from '@platform/api-client';
 import { tokens } from '@platform/design-system';
 import { Alert, Layout, message } from 'antd';
 import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
@@ -22,6 +22,7 @@ import { InsightsView } from './views/InsightsView';
 import { PrivacyView } from './views/PrivacyView';
 import { JobsView } from './views/JobsView';
 import { LoginView } from './views/LoginView';
+import { ModuleLandingView } from './views/ModuleLandingView';
 import { ModulesView } from './views/ModulesView';
 import { WorkView } from './views/WorkView';
 import { WorkflowInboxView } from './views/WorkflowInboxView';
@@ -77,12 +78,17 @@ export function App({ apiClient }: AppProps) {
   const [session, setSession] = useState<Session | null>(() => readSession());
   const [permissions, setPermissions] = useState<Set<string> | null>(null);
   const [enabledModules, setEnabledModules] = useState<Set<string> | null>(null);
+  const [moduleRoutes, setModuleRoutes] = useState<ModuleRoute[] | null>(null);
   const [capabilityReload, setCapabilityReload] = useState(0);
   const [route, setRoute] = useState<RouteName>(() =>
     resolveRoute(parseHash(globalThis.location.hash), readSession()),
   );
   const mainRef = useRef<HTMLElement>(null);
   const params = matchRoute(globalThis.location.hash)?.params ?? {};
+  const activeModuleRoute =
+    route === 'moduleApp' && moduleRoutes !== null
+      ? moduleRoutes.find((item) => item.routePath === `/apps/${params.moduleCode}`)
+      : undefined;
 
   useEffect(() => subscribeToRoute(setRoute), []);
 
@@ -94,6 +100,7 @@ export function App({ apiClient }: AppProps) {
     if (!session) {
       setPermissions(null);
       setEnabledModules(null);
+      setModuleRoutes(null);
       return undefined;
     }
     let active = true;
@@ -105,6 +112,7 @@ export function App({ apiClient }: AppProps) {
           setEnabledModules(
             capabilities.enabledModules ? new Set(capabilities.enabledModules) : null,
           );
+          setModuleRoutes(capabilities.moduleRoutes ?? null);
         }
       })
       .catch(() => {
@@ -112,6 +120,7 @@ export function App({ apiClient }: AppProps) {
         if (active) {
           setPermissions(null);
           setEnabledModules(null);
+          setModuleRoutes(null);
         }
       });
     return () => {
@@ -138,6 +147,17 @@ export function App({ apiClient }: AppProps) {
       navigate('home');
     }
   }, [route, session, enabledModules]);
+
+  useEffect(() => {
+    // 动态模块路由必须仍出现在能力清单里，否则视为已停用/已撤销登记。
+    if (!session || route !== 'moduleApp' || moduleRoutes === null) {
+      return;
+    }
+    if (!activeModuleRoute) {
+      message.warning('该应用未启用或未登记路由，请联系管理员');
+      navigate('home');
+    }
+  }, [route, session, moduleRoutes, activeModuleRoute]);
 
   // 路由切换后把焦点移到主区域，键盘与读屏用户能立即感知内容变化。
   useEffect(() => {
@@ -191,6 +211,7 @@ export function App({ apiClient }: AppProps) {
       route={route}
       permissions={permissions}
       enabledModules={enabledModules}
+      moduleRoutes={moduleRoutes}
       onSignOut={handleSignOut}
       mainRef={mainRef}
     >
@@ -230,6 +251,9 @@ export function App({ apiClient }: AppProps) {
         )}
         {route === 'jobs' && <JobsView apiClient={apiClient} />}
         {route === 'files' && <FilesView apiClient={apiClient} />}
+        {route === 'moduleApp' && activeModuleRoute && (
+          <ModuleLandingView module={activeModuleRoute} />
+        )}
       </ContentErrorBoundary>
     </AppShell>
   );

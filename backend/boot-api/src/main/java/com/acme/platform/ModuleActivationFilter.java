@@ -54,25 +54,26 @@ class ModuleActivationFilter extends OncePerRequestFilter {
             chain.doFilter(request, response);
             return;
         }
-        Optional<String> moduleCode = ModuleRegistry.moduleForPath(path);
-        if (moduleCode.isEmpty()) {
-            chain.doFilter(request, response);
-            return;
-        }
-        Set<String> enabled;
         try {
-            enabled = activationService.enabledModuleCodes();
+            Optional<String> moduleCode = ModuleRegistry.moduleForPath(path);
+            if (moduleCode.isEmpty()) {
+                moduleCode = activationService.moduleForPath(path);
+            }
+            if (moduleCode.isEmpty()) {
+                chain.doFilter(request, response);
+                return;
+            }
+            Set<String> enabled = activationService.enabledModuleCodes();
+            if (enabled.contains(moduleCode.get())) {
+                chain.doFilter(request, response);
+                return;
+            }
+            FilterProblemWriter.write(response, 403, "MODULE_DISABLED",
+                    "模块 " + moduleCode.get() + " 已被管理员停用");
         } catch (RuntimeException unavailable) {
             log.warn("模块激活状态读取失败，放行请求 {}：{}", path, unavailable.getMessage());
             chain.doFilter(request, response);
-            return;
         }
-        if (enabled.contains(moduleCode.get())) {
-            chain.doFilter(request, response);
-            return;
-        }
-        FilterProblemWriter.write(response, 403, "MODULE_DISABLED",
-                "模块 " + moduleCode.get() + " 已被管理员停用");
     }
 
     private static boolean isExempt(String path) {

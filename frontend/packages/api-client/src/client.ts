@@ -145,6 +145,14 @@ export interface Capabilities {
   permissions: string[];
   /** 当前租户已启用的模块 code；旧后端可能缺省，缺失时前端不过滤模块。 */
   enabledModules?: string[];
+  /** 已启用且登记了前端路由的模块；用于动态注册菜单。 */
+  moduleRoutes?: ModuleRoute[];
+}
+
+export interface ModuleRoute {
+  code: string;
+  name: string;
+  routePath: string;
 }
 
 export interface DepartmentSummary {
@@ -962,6 +970,10 @@ export interface AppModule {
   applicableScope: AppModuleScope;
   healthStatus: AppModuleHealth;
   installStatus: AppModuleInstallStatus;
+  /** 前端菜单路由，如 /apps/attendance；为空表示不注册菜单。 */
+  routePath?: string | null;
+  /** 后端 API 前缀；模块停用时命中该前缀的请求返回 403。 */
+  apiPathPrefix?: string | null;
   /** 无激活记录时为 enabled。 */
   activationStatus: ModuleActivationStatus;
   activationVersion: number;
@@ -1002,6 +1014,8 @@ export interface AppModuleInput {
   applicableScope?: AppModuleScope | undefined;
   healthStatus?: AppModuleHealth | undefined;
   installStatus?: AppModuleInstallStatus | undefined;
+  routePath?: string | null | undefined;
+  apiPathPrefix?: string | null | undefined;
 }
 
 export type ModuleSuggestionStatus =
