@@ -18,12 +18,14 @@ import tools.jackson.databind.ObjectMapper;
 public class AppCatalogService {
 
     private final AppCatalogStore store;
+    private final ModuleActivationStore activationStore;
     private final TenantTransactions transactions;
     private final ObjectMapper objectMapper;
 
-    public AppCatalogService(AppCatalogStore store, TenantTransactions transactions,
-                             ObjectMapper objectMapper) {
+    public AppCatalogService(AppCatalogStore store, ModuleActivationStore activationStore,
+                             TenantTransactions transactions, ObjectMapper objectMapper) {
         this.store = store;
+        this.activationStore = activationStore;
         this.transactions = transactions;
         this.objectMapper = objectMapper;
     }
@@ -56,7 +58,7 @@ public class AppCatalogService {
                 .orElseThrow(() -> ApiException.notFound("APP_MODULE_NOT_FOUND", "模块不存在")));
     }
 
-    public AppCatalogViews.ModuleView createModule(ModuleInput input) {
+    public AppCatalogViews.ModuleView createModule(ModuleInput input, String actor) {
         validateModule(input);
         String dependencies = normalizeDependencies(input.dependencies());
         return transactions.inTenant(context -> {
@@ -70,6 +72,10 @@ public class AppCatalogService {
                     defaulted(input.applicableScope(), "tenant"),
                     defaulted(input.healthStatus(), "unknown"),
                     defaulted(input.installStatus(), "not_installed"));
+            // 受管租户（已存在激活记录）新增模块默认停用；未受管租户保持「无行=启用」。
+            if (activationStore.tenantManaged()) {
+                activationStore.insertDefaultDisabled(id, actor == null ? "" : actor);
+            }
             return store.module(id).map(AppCatalogViews::module).orElseThrow();
         });
     }
