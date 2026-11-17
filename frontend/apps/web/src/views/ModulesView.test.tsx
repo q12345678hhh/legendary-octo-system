@@ -1,5 +1,5 @@
 import type { ApiClient, AppModule, ModuleSuggestion } from '@platform/api-client';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ModulesView } from './ModulesView';
 
@@ -16,6 +16,8 @@ const MODULE: AppModule = {
   applicableScope: 'tenant',
   healthStatus: 'healthy',
   installStatus: 'not_installed',
+  activationStatus: 'enabled',
+  activationVersion: 1,
   createdAt: '2026-11-13T09:00:00Z',
   updatedAt: '2026-11-13T09:00:00Z',
 };
@@ -45,6 +47,8 @@ function fakeClient(): ApiClient {
     getModuleSuggestion: vi.fn(),
     createAppModule: vi.fn(),
     updateAppModule: vi.fn(),
+    getModuleActivation: vi.fn(),
+    setModuleActivation: vi.fn(),
     createModuleSuggestion: vi.fn(),
     actOnModuleSuggestion: vi.fn(),
   } as unknown as ApiClient;
@@ -188,6 +192,47 @@ describe('ModulesView', () => {
     expect(client.updateAppModule).toHaveBeenCalledWith(
       MODULE.id,
       expect.objectContaining({ code: 'hr.attendance', installStatus: 'installed' }),
+    );
+  }, 30000);
+
+  it('disables an enabled module after confirmation and sends the expected version', async () => {
+    const client = fakeClient();
+    const installed = {
+      ...MODULE,
+      installStatus: 'installed' as const,
+      activationStatus: 'enabled' as const,
+      activationVersion: 4,
+    };
+    vi.mocked(client.listAppModules).mockResolvedValue([installed]);
+    vi.mocked(client.setModuleActivation).mockResolvedValue({
+      moduleId: MODULE.id,
+      code: MODULE.code,
+      status: 'disabled',
+      version: 5,
+      config: '{}',
+      explicit: true,
+    });
+    render(
+      <ModulesView
+        apiClient={client}
+        permissions={new Set(['appcatalog.module.read', 'appcatalog.module.manage'])}
+      />,
+    );
+
+    expect(await screen.findByText('考勤管理', {}, { timeout: 10000 })).toBeTruthy();
+    expect(screen.getByText('已启用')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /停\s*用/ }));
+
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: /停\s*用/ }));
+
+    await vi.waitFor(
+      () =>
+        expect(client.setModuleActivation).toHaveBeenCalledWith(MODULE.id, {
+          status: 'disabled',
+          expectedVersion: 4,
+        }),
+      { timeout: 10000 },
     );
   }, 30000);
 });

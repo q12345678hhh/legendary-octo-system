@@ -1,5 +1,5 @@
 import type { ApiClient, Job } from '@platform/api-client';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { clearSession, saveSession } from './session';
@@ -208,5 +208,21 @@ describe('App shell', () => {
     expect(await screen.findByText('登录平台')).toBeTruthy();
     expect(signOut).toHaveBeenCalled();
     expect(globalThis.sessionStorage.getItem('platform.session.v1')).toBeNull();
+  });
+
+  it('hides disabled modules and redirects direct links to home', async () => {
+    saveSession({ tenantId: TENANT_ID, subjectId: SUBJECT_ID });
+    globalThis.location.hash = '#/expense';
+    const client = fakeClient({
+      getCapabilities: vi.fn(async () => ({
+        permissions: ['expense.document.read'],
+        enabledModules: ['platform.workbench'],
+      })),
+    });
+
+    render(<App apiClient={client} />);
+
+    await waitFor(() => expect(globalThis.location.hash).toBe('#/home'));
+    expect(screen.queryByRole('menuitem', { name: '单据预审' })).toBeNull();
   });
 });

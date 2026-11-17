@@ -2,6 +2,7 @@ import type {
   ApiClient,
   AppModule,
   AppModuleHealth,
+  ModuleActivationStatus,
   ModuleSuggestion,
   ModuleSuggestionDetail,
   ModuleSuggestionStatus,
@@ -34,6 +35,8 @@ export interface ModulesViewProps {
   apiClient: ApiClient;
   /** 能力清单；null 表示尚未拿到，按「全部可见」渲染，后端仍逐请求鉴权。 */
   permissions: Set<string> | null;
+  /** 启停成功后通知外层刷新能力清单，让菜单与路由立即生效。 */
+  onActivationChanged?: () => void;
 }
 
 const STATUS_LABEL: Record<ModuleSuggestionStatus, string> = {
@@ -150,7 +153,7 @@ const SCOPE_LABEL: Record<string, string> = {
 type TabKey = 'catalog' | 'suggestions';
 
 /** 模块中心：目录检索 + 模块建议与状态流转。 */
-export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
+export function ModulesView({ apiClient, permissions, onActivationChanged }: ModulesViewProps) {
   const canReadCatalog = permissions === null || permissions.has('appcatalog.module.read');
   const canManage = permissions === null || permissions.has('appcatalog.module.manage');
   const canReview = permissions?.has('appcatalog.suggestion.review') ?? false;
@@ -177,6 +180,8 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
   const [editingModule, setEditingModule] = useState<AppModule | null>(null);
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [installError, setInstallError] = useState<string | null>(null);
+  const [activationBusyId, setActivationBusyId] = useState<string | null>(null);
+  const [activationError, setActivationError] = useState<string | null>(null);
   const [moduleForm] = Form.useForm();
 
   const loadCatalog = useCallback(() => {
@@ -338,6 +343,40 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
       .finally(() => setMarkingId(null));
   }
 
+  function applyActivation(record: AppModule, status: ModuleActivationStatus): void {
+    setActivationBusyId(record.id);
+    setActivationError(null);
+    apiClient
+      .setModuleActivation(record.id, {
+        status,
+        expectedVersion: record.activationVersion,
+      })
+      .then(() => {
+        loadCatalog();
+        onActivationChanged?.();
+      })
+      .catch((cause: unknown) => setActivationError(describeError(cause)))
+      .finally(() => setActivationBusyId(null));
+  }
+
+  function toggleActivation(record: AppModule): void {
+    if (record.activationStatus === 'enabled') {
+      Modal.confirm({
+        title: `停用「${record.name}」？`,
+        content: '停用后该模块的接口会立即对全租户返回 403，直到管理员重新启用。',
+        okText: '停用',
+        okButtonProps: { danger: true },
+        cancelText: '取消',
+        onOk: () => applyActivation(record, 'disabled'),
+      });
+      return;
+    }
+    if (record.installStatus !== 'installed') {
+      return;
+    }
+    applyActivation(record, 'enabled');
+  }
+
   function submitSuggestion(values: Record<string, string>): void {
     setSavingSuggestion(true);
     apiClient
@@ -460,6 +499,15 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                   style={{ marginBottom: 12 }}
                 />
               )}
+              {activationError && (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="模块启停失败"
+                  description={activationError}
+                  style={{ marginBottom: 12 }}
+                />
+              )}
               {canReadCatalog ? (
                 <AsyncState
                   phase={catalogPhase}
@@ -517,12 +565,22 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                         width: 90,
                         render: (value: string) => INSTALL_LABEL[value] ?? value,
                       },
+                      {
+                        title: '启用',
+                        dataIndex: 'activationStatus',
+                        width: 90,
+                        render: (value: ModuleActivationStatus) => (
+                          <Tag color={value === 'enabled' ? 'green' : 'default'}>
+                            {value === 'enabled' ? '已启用' : '已停用'}
+                          </Tag>
+                        ),
+                      },
                       ...(canManage
                         ? [
                             {
                               title: '操作',
                               key: 'actions',
-                              width: 190,
+                              width: 250,
                               render: (_value: unknown, record: AppModule) => (
                                 <Space size={4}>
                                   <Button size="small" onClick={() => openEditModule(record)}>
@@ -538,6 +596,25 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                                       标记已安装
                                     </Button>
                                   )}
+                                  <Button
+                                    size="small"
+                                    type={record.activationStatus === 'enabled' ? 'default' : 'primary'}
+                                    danger={record.activationStatus === 'enabled'}
+                                    disabled={
+                                      record.activationStatus !== 'enabled' &&
+                                      record.installStatus !== 'installed'
+                                    }
+                                    loading={activationBusyId === record.id}
+                                    title={
+                                      record.activationStatus !== 'enabled' &&
+                                      record.installStatus !== 'installed'
+                                        ? '先标记已安装后才能启用'
+                                        : undefined
+                                    }
+                                    onClick={() => toggleActivation(record)}
+                                  >
+                                    {record.activationStatus === 'enabled' ? '停用' : '启用'}
+                                  </Button>
                                 </Space>
                               ),
                             },

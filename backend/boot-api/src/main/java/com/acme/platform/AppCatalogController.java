@@ -2,6 +2,7 @@ package com.acme.platform;
 
 import com.acme.platform.appcatalog.AppCatalogService;
 import com.acme.platform.appcatalog.AppCatalogViews;
+import com.acme.platform.appcatalog.ModuleActivationService;
 import com.acme.platform.appcatalog.ModuleSuggestionStateMachine;
 import com.acme.platform.authorization.AccessDecision;
 import com.acme.platform.authorization.AuthorizationGuard;
@@ -34,12 +35,14 @@ import org.springframework.web.bind.annotation.RestController;
 class AppCatalogController {
 
     private final AppCatalogService service;
+    private final ModuleActivationService activationService;
     private final AuthorizationGuard authorization;
     private final MemberStore memberStore;
 
-    AppCatalogController(AppCatalogService service, AuthorizationGuard authorization,
-                         MemberStore memberStore) {
+    AppCatalogController(AppCatalogService service, ModuleActivationService activationService,
+                         AuthorizationGuard authorization, MemberStore memberStore) {
         this.service = service;
+        this.activationService = activationService;
         this.authorization = authorization;
         this.memberStore = memberStore;
     }
@@ -74,6 +77,9 @@ class AppCatalogController {
         }
     }
 
+    record ActivationRequest(String status, Long expectedVersion, String comment) {
+    }
+
     // ------------------------------------------------------------------ 目录
 
     @GetMapping("/modules")
@@ -94,7 +100,7 @@ class AppCatalogController {
     @PostMapping("/modules")
     AppCatalogViews.ModuleView createModule(@RequestBody ModuleRequest request) {
         require("appcatalog.module.manage", "appcatalog.module", null, Map.of());
-        return service.createModule(request.toInput());
+        return service.createModule(request.toInput(), actorId());
     }
 
     @RequestMapping(value = "/modules/{moduleId}", method = RequestMethod.PUT)
@@ -102,6 +108,21 @@ class AppCatalogController {
                                             @RequestBody ModuleRequest request) {
         require("appcatalog.module.manage", "appcatalog.module", null, Map.of());
         return service.updateModule(moduleId, request.toInput());
+    }
+
+    @GetMapping("/modules/{moduleId}/activation")
+    ModuleActivationService.ActivationView moduleActivation(@PathVariable UUID moduleId) {
+        // 启用状态是租户级配置，不做资源级数据范围判定；与模块编辑保持一致。
+        require("appcatalog.module.read", "appcatalog.module", null, Map.of());
+        return activationService.get(moduleId);
+    }
+
+    @RequestMapping(value = "/modules/{moduleId}/activation", method = RequestMethod.PUT)
+    ModuleActivationService.ActivationView updateModuleActivation(
+            @PathVariable UUID moduleId, @RequestBody ActivationRequest request) {
+        require("appcatalog.module.manage", "appcatalog.module", null, Map.of());
+        return activationService.set(moduleId, request.status(), request.expectedVersion(),
+                request.comment(), actorId());
     }
 
     // ------------------------------------------------------------------ 建议
@@ -166,6 +187,11 @@ class AppCatalogController {
     private AccessDecision require(String permission, String resourceType, UUID resourceId,
                                    Map<String, Object> attributes) {
         return authorization.require(permission, resourceType, resourceId, attributes);
+    }
+
+    private String actorId() {
+        ActorContext actor = authorization.actor();
+        return actor == null || actor.actorId() == null ? "" : actor.actorId().toString();
     }
 
     /** 受理/启用等决定必须由租户级复核人执行；无复核人时 403，不自动通过。 */

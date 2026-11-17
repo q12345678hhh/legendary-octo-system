@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "企业应用管理平台 API",
-    "version": "1.13.0",
-    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。 单据域覆盖报销单/发票/账单上传、AI 预审、人工复核、入账与撤销，OCR 不可用时一律转人工。"
+    "version": "1.14.0",
+    "description": "平台契约：存活检查、统一错误、异步作业、文件、死信回放、租户生命周期、支持访问、身份与会话、组织结构与生效日期、统一授权决策（角色、数据范围、显式拒绝、字段与条件策略、临时授权、委托、解释器与模拟器、缓存版本、职责分离、权限申请与季度访问复核），以及平台运营端（独立运营账号、独立 Cookie、总览、目录、安全、作业与设置）。租户域认证主体只来自 plt_session 会话 Cookie 或 Bearer 令牌；平台域认证主体只来自 plt_ops_session 会话 Cookie，两者路径与名称互斥。 单据域覆盖报销单/发票/账单上传、AI 预审、人工复核、入账与撤销，OCR 不可用时一律转人工。 模块中心支持租户级启停：记录缺失视为启用，显式停用由后端过滤器强制拦截。"
   },
   "servers": [
     {
@@ -11,6 +11,46 @@
     }
   ],
   "paths": {
+    "/api/v1/me/capabilities": {
+      "get": {
+        "operationId": "getCapabilities",
+        "summary": "当前主体能力清单",
+        "description": "返回权限码与当前租户已启用的模块 code；前端隐藏仅是体验优化，模块停用由后端强制拦截。",
+        "responses": {
+          "200": {
+            "description": "能力清单",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "permissions",
+                    "enabledModules"
+                  ],
+                  "properties": {
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "enabledModules": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
     "/api/v1/app-catalog/modules": {
       "get": {
         "operationId": "listAppModules",
@@ -307,6 +347,104 @@
             "$ref": "#/components/responses/Problem"
           },
           "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/app-catalog/modules/{moduleId}/activation": {
+      "get": {
+        "operationId": "getModuleActivation",
+        "summary": "查询模块启用状态",
+        "description": "无激活记录时返回 enabled、version=0、explicit=false。",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "模块启用状态"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateModuleActivation",
+        "summary": "启用或停用模块",
+        "description": "租户级启停；仅 installed 模块可启用；重复设置同状态幂等；expectedVersion 不一致返回 409。",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "enabled",
+                      "disabled"
+                    ]
+                  },
+                  "expectedVersion": {
+                    "type": "integer",
+                    "format": "int64",
+                    "minimum": 0
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "更新后的启用状态"
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
             "$ref": "#/components/responses/Problem"
           }
         }
