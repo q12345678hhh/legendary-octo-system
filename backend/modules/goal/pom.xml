@@ -33,5 +33,16 @@
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <!-- 真实 PostgreSQL 用例：仅在 -Dplatform.db.url 存在时执行 -->
+    <dependency>
+      <groupId>com.acme.platform</groupId>
+      <artifactId>tenancy</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
