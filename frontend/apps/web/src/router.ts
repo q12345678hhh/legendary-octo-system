@@ -19,7 +19,8 @@ export type RouteName =
   | 'collaboration'
   | 'collaborationChannel'
   | 'workflowInbox'
-  | 'workflowInstance';
+  | 'workflowInstance'
+  | 'moduleApp';
 
 export interface RouteDefinition {
   name: RouteName;
@@ -143,6 +144,12 @@ export const routes: readonly RouteDefinition[] = [
   },
   { name: 'jobs', path: '#/jobs', title: '异步作业', requiresSession: true },
   { name: 'files', path: '#/files', title: '文件', requiresSession: true },
+  {
+    name: 'moduleApp',
+    path: '#/apps/:moduleCode',
+    title: '应用',
+    requiresSession: true,
+  },
 ];
 
 type RouteListener = (name: RouteName) => void;

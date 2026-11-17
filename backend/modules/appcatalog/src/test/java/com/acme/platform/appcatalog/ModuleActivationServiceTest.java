@@ -13,11 +13,15 @@ import static org.mockito.Mockito.when;
 
 import com.acme.platform.platform.ApiException;
 import com.acme.platform.platform.RequestContext;
+import com.acme.platform.platform.RequestContextHolder;
 import com.acme.platform.platform.TenantTransactions;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +44,24 @@ class ModuleActivationServiceTest {
             return work.apply(new RequestContext(TENANT, "actor", "corr", "trace"));
         });
         service = new ModuleActivationService(activationStore, catalogStore, transactions);
+    }
+
+    @AfterEach
+    void clearContext() {
+        RequestContextHolder.clear();
+    }
+
+    @Test
+    void baseModulesStayEnabledWithoutCatalogRecords() {
+        // 存量租户的目录里可能没有基础模块记录：缺失必须视为启用，不能被前端隐藏或被过滤器拦截。
+        RequestContextHolder.set(new RequestContext(TENANT, null, "corr", "trace"));
+        when(activationStore.moduleCodes()).thenReturn(List.of("a001", "expense"));
+        when(activationStore.disabledCodes()).thenReturn(Set.of("expense"));
+
+        Set<String> enabled = service.enabledModuleCodes();
+
+        assertThat(enabled).contains("platform.workbench", "organization", "worklog", "a001");
+        assertThat(enabled).doesNotContain("expense");
     }
 
     @Test
@@ -144,9 +166,25 @@ class ModuleActivationServiceTest {
         verify(activationStore).insert(moduleId, "disabled", "actor", "停用");
     }
 
+    @Test
+    void enabledModulesIncludeImplementedModulesMissingFromCatalog() {
+        when(activationStore.moduleCodes()).thenReturn(java.util.List.of("a001"));
+        when(activationStore.disabledCodes()).thenReturn(Set.of("expense"));
+        RequestContextHolder.set(new RequestContext(TENANT, "actor", "corr", "trace"));
+        try {
+            Set<String> enabled = service.enabledModuleCodes();
+
+            // 存量租户目录里没有基础模块记录，也不能因此把基础模块判为停用。
+            assertThat(enabled).contains("platform.workbench", "worklog", "a001");
+            assertThat(enabled).doesNotContain("expense");
+        } finally {
+            RequestContextHolder.clear();
+        }
+    }
+
     private static AppCatalogStore.ModuleRow module(UUID id, String installStatus) {
         return new AppCatalogStore.ModuleRow(id, "worklog", "工时", "基础", "", null, null,
-                "1.0.0", "[]", "tenant", "healthy", installStatus, "enabled", 0L,
-                OffsetDateTime.now(), OffsetDateTime.now());
+                "1.0.0", "[]", "tenant", "healthy", installStatus, null, null,
+                "enabled", 0L, OffsetDateTime.now(), OffsetDateTime.now());
     }
 }

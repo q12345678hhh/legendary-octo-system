@@ -19,13 +19,16 @@ public class AppCatalogService {
 
     private final AppCatalogStore store;
     private final ModuleActivationStore activationStore;
+    private final ModuleActivationService activationService;
     private final TenantTransactions transactions;
     private final ObjectMapper objectMapper;
 
     public AppCatalogService(AppCatalogStore store, ModuleActivationStore activationStore,
+                             ModuleActivationService activationService,
                              TenantTransactions transactions, ObjectMapper objectMapper) {
         this.store = store;
         this.activationStore = activationStore;
+        this.activationService = activationService;
         this.transactions = transactions;
         this.objectMapper = objectMapper;
     }
@@ -33,7 +36,7 @@ public class AppCatalogService {
     public record ModuleInput(String code, String name, String category, String description,
                               String templateKey, UUID ownerPersonId, String version,
                               String dependencies, String applicableScope, String healthStatus,
-                              String installStatus) {
+                              String installStatus, String routePath, String apiPathPrefix) {
     }
 
     public record SuggestionInput(String title, String businessProblem, String goal, String scope,
@@ -61,21 +64,27 @@ public class AppCatalogService {
     public AppCatalogViews.ModuleView createModule(ModuleInput input, String actor) {
         validateModule(input);
         String dependencies = normalizeDependencies(input.dependencies());
+        String routePath = normalizeRoutePath(input.routePath());
+        String apiPathPrefix = normalizeApiPathPrefix(input.apiPathPrefix());
         return transactions.inTenant(context -> {
             if (store.moduleByCode(input.code()).isPresent()) {
                 throw ApiException.conflict("APP_MODULE_CODE_TAKEN", "模块编码已存在");
             }
+            requireRouteAvailable(routePath, null);
+            requireApiPrefixAvailable(apiPathPrefix, null);
             UUID id = store.insertModule(input.code().trim(), input.name().trim(),
                     defaulted(input.category(), "通用"), defaulted(input.description(), ""),
                     blankToNull(input.templateKey()), input.ownerPersonId(),
                     defaulted(input.version(), "1.0.0"), dependencies,
                     defaulted(input.applicableScope(), "tenant"),
                     defaulted(input.healthStatus(), "unknown"),
-                    defaulted(input.installStatus(), "not_installed"));
+                    defaulted(input.installStatus(), "not_installed"),
+                    routePath, apiPathPrefix);
             // 受管租户（已存在激活记录）新增模块默认停用；未受管租户保持「无行=启用」。
             if (activationStore.tenantManaged()) {
                 activationStore.insertDefaultDisabled(id, actor == null ? "" : actor);
             }
+            activationService.invalidateCurrentTenant();
             return store.module(id).map(AppCatalogViews::module).orElseThrow();
         });
     }
@@ -83,15 +92,21 @@ public class AppCatalogService {
     public AppCatalogViews.ModuleView updateModule(UUID id, ModuleInput input) {
         validateModule(input);
         String dependencies = normalizeDependencies(input.dependencies());
+        String routePath = normalizeRoutePath(input.routePath());
+        String apiPathPrefix = normalizeApiPathPrefix(input.apiPathPrefix());
         return transactions.inTenant(context -> {
             store.module(id).orElseThrow(() ->
                     ApiException.notFound("APP_MODULE_NOT_FOUND", "模块不存在"));
+            requireRouteAvailable(routePath, id);
+            requireApiPrefixAvailable(apiPathPrefix, id);
             store.updateModule(id, input.name().trim(), defaulted(input.category(), "通用"),
                     defaulted(input.description(), ""), blankToNull(input.templateKey()),
                     input.ownerPersonId(), defaulted(input.version(), "1.0.0"), dependencies,
                     defaulted(input.applicableScope(), "tenant"),
                     defaulted(input.healthStatus(), "unknown"),
-                    defaulted(input.installStatus(), "not_installed"));
+                    defaulted(input.installStatus(), "not_installed"),
+                    routePath, apiPathPrefix);
+            activationService.invalidateCurrentTenant();
             return store.module(id).map(AppCatalogViews::module).orElseThrow();
         });
     }
@@ -206,6 +221,47 @@ public class AppCatalogService {
                 java.util.Set.of("healthy", "degraded", "offline", "unknown"));
         requireEnum(input.installStatus(), "APP_MODULE_INSTALL_INVALID",
                 java.util.Set.of("not_installed", "installed", "disabled"));
+        String routePath = normalizeRoutePath(input.routePath());
+        if (routePath != null && !routePath.matches("^/apps/[a-z0-9][a-z0-9._-]{0,63}$")) {
+            throw ApiException.badRequest("APP_MODULE_ROUTE_INVALID",
+                    "路由路径必须形如 /apps/<小写字母或数字开头的小写 slug>");
+        }
+        String apiPathPrefix = normalizeApiPathPrefix(input.apiPathPrefix());
+        if (apiPathPrefix != null
+                && !apiPathPrefix.matches("^/api/v1/[a-z0-9][a-z0-9._-]*(/[a-z0-9._-]+)*$")) {
+            throw ApiException.badRequest("APP_MODULE_API_PREFIX_INVALID",
+                    "API 前缀必须以 /api/v1/ 开头，只含小写字母、数字、点、下划线与连字符");
+        }
+    }
+
+    private void requireRouteAvailable(String routePath, UUID excludeId) {
+        if (routePath != null && store.routePathTaken(routePath, excludeId)) {
+            throw ApiException.conflict("APP_MODULE_ROUTE_TAKEN", "该路由已被其他模块登记");
+        }
+    }
+
+    private void requireApiPrefixAvailable(String apiPathPrefix, UUID excludeId) {
+        if (apiPathPrefix != null && store.apiPrefixTaken(apiPathPrefix, excludeId)) {
+            throw ApiException.conflict("APP_MODULE_API_PREFIX_TAKEN",
+                    "该 API 前缀已被其他模块登记");
+        }
+    }
+
+    /** 空白转 null，去掉尾部斜杠；保证唯一索引与菜单路径一致。 */
+    private static String normalizeRoutePath(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.length() > 1 ? trimmed.replaceAll("/+$", "") : trimmed;
+    }
+
+    private static String normalizeApiPathPrefix(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.length() > 1 ? trimmed.replaceAll("/+$", "") : trimmed;
     }
 
     private void requireEnum(String value, String code, java.util.Set<String> allowed) {
