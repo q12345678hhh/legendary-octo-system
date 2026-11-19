@@ -1,10 +1,246 @@
 {
-  "frozenAt": "2026-11-19T03:36:16.954Z",
+  "frozenAt": "2026-11-19T06:16:25.095Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "63aba93c76a2b59ede6b3af317dc1c739fef589ddbe42394b8ca75b25b41a3cc",
+      "sha256": "166ed30e9e87a2734825c3d72b6502544f0ad546d4e4a651652a27df015606e1",
       "tokens": {
+        "operation:GET /api/v1/goals": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/goals:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/goals:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/goals:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/goals": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/goals:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals:403": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/goals/{goalId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/goals/{goalId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}:409": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/goals/{goalId}:path:goalId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/goals/team": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/goals/team:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/goals/team:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/goals/team:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/goals/team:query:orgUnitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/goals/team": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/goals/team:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/team:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/team:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/team:403": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/goals/team:query:orgUnitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:PUT /api/v1/goals/team/{goalId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/goals/team/{goalId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/team/{goalId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/team/{goalId}:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/team/{goalId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/team/{goalId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/team/{goalId}:409": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/goals/team/{goalId}:path:goalId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:PUT /api/v1/goals/team/{goalId}:query:orgUnitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/goals/{goalId}/key-results": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results:404": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/goals/{goalId}/key-results:path:goalId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:POST /api/v1/goals/{goalId}/key-results:query:orgUnitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:409": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:path:goalId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:path:keyResultId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:PUT /api/v1/goals/{goalId}/key-results/{keyResultId}:query:orgUnitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:DELETE /api/v1/goals/{goalId}/key-results/{keyResultId}": {
+          "requestBodyRequired": false
+        },
+        "response:DELETE /api/v1/goals/{goalId}/key-results/{keyResultId}:204": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/goals/{goalId}/key-results/{keyResultId}:401": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/goals/{goalId}/key-results/{keyResultId}:403": {
+          "defined": true
+        },
+        "response:DELETE /api/v1/goals/{goalId}/key-results/{keyResultId}:404": {
+          "defined": true
+        },
+        "parameter:DELETE /api/v1/goals/{goalId}/key-results/{keyResultId}:path:goalId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:DELETE /api/v1/goals/{goalId}/key-results/{keyResultId}:path:keyResultId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:DELETE /api/v1/goals/{goalId}/key-results/{keyResultId}:query:orgUnitId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:404": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:path:goalId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:path:keyResultId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:query:orgUnitId": {
+          "required": true,
+          "type": "string"
+        },
+        "parameter:POST /api/v1/goals/{goalId}/key-results/{keyResultId}/move:query:direction": {
+          "required": true,
+          "type": "string"
+        },
         "operation:GET /api/v1/ai/tools": {
           "requestBodyRequired": false
         },
@@ -4036,6 +4272,103 @@
         },
         "response:POST /api/v1/privacy/my-data/delete:404": {
           "defined": true
+        },
+        "schema:Goal.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Goal.ownerPersonId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Goal.scopeType": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "person",
+            "team"
+          ]
+        },
+        "schema:Goal.orgUnitId": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Goal.title": {
+          "type": "string",
+          "required": true
+        },
+        "schema:Goal.description": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Goal.period": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Goal.dueDate": {
+          "type": "object",
+          "required": false
+        },
+        "schema:Goal.progress": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:Goal.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "achieved",
+            "active",
+            "archived"
+          ]
+        },
+        "schema:Goal.keyResults": {
+          "type": "array",
+          "required": false
+        },
+        "schema:Goal.version": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:Goal.createdAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:Goal.updatedAt": {
+          "type": "string",
+          "required": false
+        },
+        "schema:KeyResult.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:KeyResult.goalId": {
+          "type": "string",
+          "required": true
+        },
+        "schema:KeyResult.title": {
+          "type": "string",
+          "required": true
+        },
+        "schema:KeyResult.targetValue": {
+          "type": "number",
+          "required": true
+        },
+        "schema:KeyResult.currentValue": {
+          "type": "number",
+          "required": true
+        },
+        "schema:KeyResult.unit": {
+          "type": "string",
+          "required": true
+        },
+        "schema:KeyResult.sortOrder": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:KeyResult.version": {
+          "type": "integer",
+          "required": true
         },
         "schema:AiTool.id": {
           "type": "string",

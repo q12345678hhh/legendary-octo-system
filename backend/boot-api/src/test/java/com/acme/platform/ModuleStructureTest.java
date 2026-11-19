@@ -25,6 +25,7 @@ class ModuleStructureTest {
             "worklog",
             "expense",
             "collaboration",
+            "goal",
             "integration",
             "plugin",
             "ai",

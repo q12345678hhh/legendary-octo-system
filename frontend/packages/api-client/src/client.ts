@@ -1021,6 +1021,53 @@ export interface AiTool {
   updatedAt: string;
 }
 
+/** 团队目标的关键结果：当前值/目标值派生进度。 */
+export interface KeyResult {
+  id: string;
+  goalId: string;
+  title: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  sortOrder: number;
+  version: number;
+}
+
+export interface KeyResultInput {
+  title: string;
+  targetValue: number;
+  currentValue?: number;
+  unit?: string;
+  sortOrder?: number;
+}
+
+/** 目标：个人目标或部门团队目标；团队目标的进度由 KR 派生。 */
+export interface Goal {
+  id: string;
+  ownerPersonId: string;
+  title: string;
+  description: string;
+  period: string;
+  dueDate?: string | null;
+  progress: number;
+  status: 'active' | 'achieved' | 'archived' | string;
+  scopeType?: 'person' | 'team' | string;
+  orgUnitId?: string | null;
+  keyResults?: KeyResult[];
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoalInput {
+  title?: string;
+  description?: string;
+  period?: string;
+  dueDate?: string | null;
+  progress?: number;
+  status?: string;
+}
+
 export interface RegisterAiToolInput {
   code: string;
   name: string;
@@ -1447,6 +1494,32 @@ export interface ApiClient {
     expectedVersion?: number,
   ): Promise<AiTool>;
   rateAiTool(toolId: string, rating: number, expectedVersion?: number): Promise<AiTool>;
+  listGoals(): Promise<Goal[]>;
+  createGoal(input: GoalInput): Promise<Goal>;
+  updateGoal(goalId: string, input: GoalInput, expectedVersion: number): Promise<Goal>;
+  listTeamGoals(orgUnitId: string): Promise<Goal[]>;
+  createTeamGoal(orgUnitId: string, input: GoalInput): Promise<Goal>;
+  updateTeamGoal(
+    goalId: string,
+    orgUnitId: string,
+    input: GoalInput,
+    expectedVersion: number,
+  ): Promise<Goal>;
+  addKeyResult(goalId: string, orgUnitId: string, input: KeyResultInput): Promise<KeyResult>;
+  updateKeyResult(
+    goalId: string,
+    keyResultId: string,
+    orgUnitId: string,
+    currentValue: number,
+    expectedVersion: number,
+  ): Promise<KeyResult>;
+  deleteKeyResult(goalId: string, keyResultId: string, orgUnitId: string): Promise<void>;
+  moveKeyResult(
+    goalId: string,
+    keyResultId: string,
+    orgUnitId: string,
+    direction: 'up' | 'down',
+  ): Promise<KeyResult[]>;
   listModuleSuggestions(scope?: 'mine' | 'all'): Promise<ModuleSuggestion[]>;
   getModuleSuggestion(suggestionId: string): Promise<ModuleSuggestionDetail>;
   createModuleSuggestion(
@@ -2097,6 +2170,52 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         method: 'PUT',
         body: JSON.stringify({ rating, expectedVersion }),
       }),
+    listGoals: () => request<Goal[]>('/api/v1/goals'),
+    createGoal: (input) =>
+      request<Goal>('/api/v1/goals', { method: 'POST', body: JSON.stringify(input) }),
+    updateGoal: (goalId, input, expectedVersion) =>
+      request<Goal>(`/api/v1/goals/${encodeURIComponent(goalId)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ ...input, expectedVersion }),
+      }),
+    listTeamGoals: (orgUnitId) =>
+      request<Goal[]>(`/api/v1/goals/team${queryString({ orgUnitId })}`),
+    createTeamGoal: (orgUnitId, input) =>
+      request<Goal>(`/api/v1/goals/team${queryString({ orgUnitId })}`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    updateTeamGoal: (goalId, orgUnitId, input, expectedVersion) =>
+      request<Goal>(
+        `/api/v1/goals/team/${encodeURIComponent(goalId)}${queryString({ orgUnitId })}`,
+        { method: 'PUT', body: JSON.stringify({ ...input, expectedVersion }) },
+      ),
+    addKeyResult: (goalId, orgUnitId, input) =>
+      request<KeyResult>(
+        `/api/v1/goals/${encodeURIComponent(goalId)}/key-results${queryString({ orgUnitId })}`,
+        { method: 'POST', body: JSON.stringify(input) },
+      ),
+    updateKeyResult: (goalId, keyResultId, orgUnitId, currentValue, expectedVersion) =>
+      request<KeyResult>(
+        `/api/v1/goals/${encodeURIComponent(goalId)}/key-results/${encodeURIComponent(
+          keyResultId,
+        )}${queryString({ orgUnitId })}`,
+        { method: 'PUT', body: JSON.stringify({ currentValue, expectedVersion }) },
+      ),
+    deleteKeyResult: (goalId, keyResultId, orgUnitId) =>
+      request<void>(
+        `/api/v1/goals/${encodeURIComponent(goalId)}/key-results/${encodeURIComponent(
+          keyResultId,
+        )}${queryString({ orgUnitId })}`,
+        { method: 'DELETE' },
+      ),
+    moveKeyResult: (goalId, keyResultId, orgUnitId, direction) =>
+      request<KeyResult[]>(
+        `/api/v1/goals/${encodeURIComponent(goalId)}/key-results/${encodeURIComponent(
+          keyResultId,
+        )}/move${queryString({ orgUnitId, direction })}`,
+        { method: 'POST' },
+      ),
     listModuleSuggestions: (scope = 'mine') =>
       request<ModuleSuggestion[]>(
         `/api/v1/app-catalog/suggestions${queryString({ scope })}`,
