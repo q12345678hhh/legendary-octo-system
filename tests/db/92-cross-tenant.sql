@@ -213,6 +213,7 @@ DECLARE
     a_ctx constant text := 'a1a1a1a1-0000-4000-8000-000000000001';
     b_ctx constant text := 'b2b2b2b2-0000-4000-8000-000000000002';
     tables integer := 0;
+    expected integer := 0;
     covered integer := 0;
 BEGIN
     SELECT count(DISTINCT p.tablename) INTO tables
@@ -220,9 +221,20 @@ BEGIN
       JOIN pg_class c ON c.relname = p.tablename
       JOIN pg_namespace ns ON ns.oid = c.relnamespace AND ns.nspname = 'public'
      WHERE p.schemaname = 'public' AND c.relforcerowsecurity;
-    -- 97 = V4–V17 的 96 张（40-integrity.sql 口径）+ tenancy_tenant 自身
-    IF tables <> 97 THEN
-        RAISE EXCEPTION '受 FORCE RLS 保护的租户表应为 97 张，实际 %', tables;
+    -- 期望值不硬编码：public 下所有带 tenant_id 的底表都必须 FORCE RLS，
+    -- 外加 tenancy_tenant 自身（租户键是 id）。新增迁移自动纳入口径。
+    SELECT count(*) INTO expected
+      FROM pg_class c
+      JOIN pg_namespace ns ON ns.oid = c.relnamespace
+     WHERE ns.nspname = 'public' AND c.relkind = 'r'
+       AND EXISTS (SELECT 1 FROM pg_attribute a
+                    WHERE a.attrelid = c.oid AND a.attname = 'tenant_id'
+                      AND a.attnum > 0 AND NOT a.attisdropped)
+       AND c.relname <> 'tenancy_tenant';
+    expected := expected + 1;
+    IF tables <> expected THEN
+        RAISE EXCEPTION '受 FORCE RLS 保护的租户表应为 % 张（tenant_id 底表 + tenancy_tenant），实际 %',
+            expected, tables;
     END IF;
 
     FOR t IN
