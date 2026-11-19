@@ -1,10 +1,99 @@
 {
-  "frozenAt": "2026-11-16T11:11:36.754Z",
+  "frozenAt": "2026-11-19T03:36:16.954Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "8f8b0e527ef89a3232417aa56b7c570a390eb8949a9ca87cd201c43e41fe16d5",
+      "sha256": "63aba93c76a2b59ede6b3af317dc1c739fef589ddbe42394b8ca75b25b41a3cc",
       "tokens": {
+        "operation:GET /api/v1/ai/tools": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/ai/tools:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/ai/tools:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/ai/tools:403": {
+          "defined": true
+        },
+        "operation:POST /api/v1/ai/tools": {
+          "requestBodyRequired": true
+        },
+        "response:POST /api/v1/ai/tools:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/ai/tools:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/ai/tools:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/ai/tools:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/ai/tools:409": {
+          "defined": true
+        },
+        "operation:PUT /api/v1/ai/tools/{toolId}/status": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/status:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/status:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/status:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/status:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/status:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/status:409": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/ai/tools/{toolId}/status:path:toolId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:PUT /api/v1/ai/tools/{toolId}/rating": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/rating:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/rating:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/rating:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/rating:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/rating:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/ai/tools/{toolId}/rating:409": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/ai/tools/{toolId}/rating:path:toolId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/me/capabilities": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/me/capabilities:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/me/capabilities:401": {
+          "defined": true
+        },
         "operation:GET /api/v1/app-catalog/modules": {
           "requestBodyRequired": false
         },
@@ -88,6 +177,69 @@
           "defined": true
         },
         "parameter:PUT /api/v1/app-catalog/modules/{moduleId}:path:moduleId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/app-catalog/modules/{moduleId}/activation": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}/activation:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}/activation:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}/activation:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}/activation:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/app-catalog/modules/{moduleId}/activation:path:moduleId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:PUT /api/v1/app-catalog/modules/{moduleId}/activation": {
+          "requestBodyRequired": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}/activation:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}/activation:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}/activation:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}/activation:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}/activation:404": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}/activation:409": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/app-catalog/modules/{moduleId}/activation:path:moduleId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/app-catalog/modules/{moduleId}/activation-events": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}/activation-events:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}/activation-events:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}/activation-events:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}/activation-events:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/app-catalog/modules/{moduleId}/activation-events:path:moduleId": {
           "required": true,
           "type": "string"
         },
@@ -3884,6 +4036,62 @@
         },
         "response:POST /api/v1/privacy/my-data/delete:404": {
           "defined": true
+        },
+        "schema:AiTool.id": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AiTool.code": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AiTool.name": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AiTool.description": {
+          "type": "string",
+          "required": false
+        },
+        "schema:AiTool.endpointUrl": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AiTool.inputSchema": {
+          "type": "string",
+          "required": false
+        },
+        "schema:AiTool.status": {
+          "type": "string",
+          "required": true,
+          "enum": [
+            "disabled",
+            "enabled"
+          ]
+        },
+        "schema:AiTool.rating": {
+          "type": "integer",
+          "required": false
+        },
+        "schema:AiTool.createdBy": {
+          "type": "string",
+          "required": false
+        },
+        "schema:AiTool.ratedBy": {
+          "type": "object",
+          "required": false
+        },
+        "schema:AiTool.version": {
+          "type": "integer",
+          "required": true
+        },
+        "schema:AiTool.createdAt": {
+          "type": "string",
+          "required": true
+        },
+        "schema:AiTool.updatedAt": {
+          "type": "string",
+          "required": true
         },
         "schema:PrivacySettings.dataResidency": {
           "type": "string",

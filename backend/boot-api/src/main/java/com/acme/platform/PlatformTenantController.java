@@ -1,16 +1,20 @@
 package com.acme.platform;
 
+import com.acme.platform.appcatalog.ModuleActivationService;
 import com.acme.platform.identity.operator.PlatformActorContext;
 import com.acme.platform.identity.operator.PlatformPermissionCatalog;
 import com.acme.platform.platform.audit.PlatformAuditStore;
 import com.acme.platform.platform.directory.PlatformDirectoryStore;
 import com.acme.platform.tenancy.TenantLifecycleService;
 import com.acme.platform.tenancy.TenantQuota;
+import com.acme.platform.tenancy.TenantRecord;
 import com.acme.platform.tenancy.TenantSupportAccess;
 import com.acme.platform.tenancy.TenantSupportAccessService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,19 +36,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/platform/api/v1/tenants")
 public class PlatformTenantController {
 
+    private static final Logger log = LoggerFactory.getLogger(PlatformTenantController.class);
+
     private final TenantLifecycleService lifecycleService;
     private final TenantSupportAccessService supportAccessService;
     private final PlatformDirectoryStore directoryStore;
     private final PlatformAuditStore auditStore;
+    private final ModuleActivationService moduleActivationService;
 
     public PlatformTenantController(TenantLifecycleService lifecycleService,
                                     TenantSupportAccessService supportAccessService,
                                     PlatformDirectoryStore directoryStore,
-                                    PlatformAuditStore auditStore) {
+                                    PlatformAuditStore auditStore,
+                                    ModuleActivationService moduleActivationService) {
         this.lifecycleService = lifecycleService;
         this.supportAccessService = supportAccessService;
         this.directoryStore = directoryStore;
         this.auditStore = auditStore;
+        this.moduleActivationService = moduleActivationService;
     }
 
     @GetMapping
@@ -66,12 +75,27 @@ public class PlatformTenantController {
     public Object create(@RequestBody CreateTenantRequest request) {
         PlatformActorContext actor = PlatformActors.requireManage(
                 PlatformPermissionCatalog.TENANT_MANAGE);
-        Object created = lifecycleService.create(new TenantLifecycleService.CreateTenantCommand(
-                request.tenantId(), request.slug(), request.name(), request.planCode(),
-                request.brandName(), request.brandColor(), request.locale(), request.timezone(),
-                request.primaryDomain(), request.domains(), request.features()), actor.email());
+        TenantRecord created = lifecycleService.create(
+                new TenantLifecycleService.CreateTenantCommand(
+                        request.tenantId(), request.slug(), request.name(), request.planCode(),
+                        request.brandName(), request.brandColor(), request.locale(),
+                        request.timezone(), request.primaryDomain(), request.domains(),
+                        request.features()), actor.email());
         audit(actor, "tenant.create", String.valueOf(request.tenantId()));
+        provisionBaseModules(created.id(), actor.email());
         return created;
+    }
+
+    /**
+     * 新租户只默认启用基础模块：写入目录记录与启用行，其余模块由管理员按需启用。
+     * 失败只告警不回滚租户：缺行时按「无行=启用」仍可使用，避免创建流程被附带能力阻断。
+     */
+    private void provisionBaseModules(UUID tenantId, String actor) {
+        try {
+            moduleActivationService.provisionBaseModules(tenantId, actor);
+        } catch (RuntimeException failure) {
+            log.warn("租户 {} 基础模块初始化失败：{}", tenantId, failure.getMessage());
+        }
     }
 
     @PostMapping("/{tenantId}/initialize")

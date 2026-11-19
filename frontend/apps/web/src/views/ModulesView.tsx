@@ -2,6 +2,8 @@ import type {
   ApiClient,
   AppModule,
   AppModuleHealth,
+  ModuleActivationEvent,
+  ModuleActivationStatus,
   ModuleSuggestion,
   ModuleSuggestionDetail,
   ModuleSuggestionStatus,
@@ -34,6 +36,10 @@ export interface ModulesViewProps {
   apiClient: ApiClient;
   /** 能力清单；null 表示尚未拿到，按「全部可见」渲染，后端仍逐请求鉴权。 */
   permissions: Set<string> | null;
+  /** 启停成功后通知外层刷新能力清单，让菜单与路由立即生效。 */
+  onActivationChanged?: () => void;
+  /** false 表示后端停用拦截处于灰度关闭，仅隐藏菜单、不拦截接口。 */
+  moduleEnforcement?: boolean | null;
 }
 
 const STATUS_LABEL: Record<ModuleSuggestionStatus, string> = {
@@ -150,7 +156,8 @@ const SCOPE_LABEL: Record<string, string> = {
 type TabKey = 'catalog' | 'suggestions';
 
 /** 模块中心：目录检索 + 模块建议与状态流转。 */
-export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
+export function ModulesView({ apiClient, permissions, onActivationChanged,
+  moduleEnforcement }: ModulesViewProps) {
   const canReadCatalog = permissions === null || permissions.has('appcatalog.module.read');
   const canManage = permissions === null || permissions.has('appcatalog.module.manage');
   const canReview = permissions?.has('appcatalog.suggestion.review') ?? false;
@@ -173,6 +180,16 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
   const [health, setHealth] = useState<string | undefined>(undefined);
   const [moduleOpen, setModuleOpen] = useState(false);
   const [savingModule, setSavingModule] = useState(false);
+  const [moduleError, setModuleError] = useState<string | null>(null);
+  const [editingModule, setEditingModule] = useState<AppModule | null>(null);
+  const [markingId, setMarkingId] = useState<string | null>(null);
+  const [installError, setInstallError] = useState<string | null>(null);
+  const [activationBusyId, setActivationBusyId] = useState<string | null>(null);
+  const [activationError, setActivationError] = useState<string | null>(null);
+  const [historyModule, setHistoryModule] = useState<AppModule | null>(null);
+  const [historyEvents, setHistoryEvents] = useState<ModuleActivationEvent[]>([]);
+  const [historyPhase, setHistoryPhase] = useState<AsyncPhase>('loading');
+  const [historyError, setHistoryError] = useState<string | null>(null);
   const [moduleForm] = Form.useForm();
 
   const loadCatalog = useCallback(() => {
@@ -256,27 +273,140 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
       .finally(() => setDetailLoading(false));
   }
 
+  function openCreateModule(): void {
+    setEditingModule(null);
+    setModuleError(null);
+    moduleForm.resetFields();
+    setModuleOpen(true);
+  }
+
+  function openEditModule(record: AppModule): void {
+    setEditingModule(record);
+    setModuleError(null);
+    moduleForm.setFieldsValue({
+      code: record.code,
+      name: record.name,
+      category: record.category,
+      description: record.description,
+      version: record.version,
+      dependencies: record.dependencies,
+      ownerPersonId: record.ownerPersonId ?? '',
+      applicableScope: record.applicableScope,
+      healthStatus: record.healthStatus,
+      routePath: record.routePath ?? '',
+      apiPathPrefix: record.apiPathPrefix ?? '',
+    });
+    setModuleOpen(true);
+  }
+
   function submitModule(values: Record<string, string>): void {
     setSavingModule(true);
-    apiClient
-      .createAppModule({
-        code: values.code ?? '',
-        name: values.name ?? '',
-        category: values.category,
-        description: values.description,
-        version: values.version,
-        dependencies: values.dependencies,
-        applicableScope: (values.applicableScope as AppModule['applicableScope']) ?? 'tenant',
-        healthStatus: (values.healthStatus as AppModuleHealth) ?? 'unknown',
-        installStatus: 'not_installed',
-      })
+    setModuleError(null);
+    const input = {
+      code: values.code ?? '',
+      name: values.name ?? '',
+      category: values.category,
+      description: values.description,
+      version: values.version,
+      dependencies: values.dependencies,
+      ownerPersonId: values.ownerPersonId || null,
+      applicableScope: (values.applicableScope as AppModule['applicableScope']) ?? 'tenant',
+      healthStatus: (values.healthStatus as AppModuleHealth) ?? 'unknown',
+      routePath: values.routePath || null,
+      apiPathPrefix: values.apiPathPrefix || null,
+    };
+    const request = editingModule
+      ? apiClient.updateAppModule(editingModule.id, {
+          ...input,
+          installStatus: editingModule.installStatus,
+        })
+      : apiClient.createAppModule({ ...input, installStatus: 'not_installed' });
+    request
       .then(() => {
         setModuleOpen(false);
+        setEditingModule(null);
+        setModuleError(null);
         moduleForm.resetFields();
         loadCatalog();
+        onActivationChanged?.();
       })
-      .catch((cause: unknown) => setCatalogError(describeError(cause)))
+      .catch((cause: unknown) => setModuleError(describeError(cause)))
       .finally(() => setSavingModule(false));
+  }
+
+  function markInstalled(record: AppModule): void {
+    setMarkingId(record.id);
+    setInstallError(null);
+    apiClient
+      .updateAppModule(record.id, {
+        code: record.code,
+        name: record.name,
+        category: record.category,
+        description: record.description,
+        templateKey: record.templateKey,
+        ownerPersonId: record.ownerPersonId,
+        version: record.version,
+        dependencies: record.dependencies,
+        applicableScope: record.applicableScope,
+        healthStatus: record.healthStatus,
+        routePath: record.routePath ?? null,
+        apiPathPrefix: record.apiPathPrefix ?? null,
+        installStatus: 'installed',
+      })
+      .then(() => loadCatalog())
+      .catch((cause: unknown) => setInstallError(describeError(cause)))
+      .finally(() => setMarkingId(null));
+  }
+
+  function applyActivation(record: AppModule, status: ModuleActivationStatus): void {
+    setActivationBusyId(record.id);
+    setActivationError(null);
+    apiClient
+      .setModuleActivation(record.id, {
+        status,
+        expectedVersion: record.activationVersion,
+      })
+      .then(() => {
+        loadCatalog();
+        onActivationChanged?.();
+      })
+      .catch((cause: unknown) => setActivationError(describeError(cause)))
+      .finally(() => setActivationBusyId(null));
+  }
+
+  function toggleActivation(record: AppModule): void {
+    if (record.activationStatus === 'enabled') {
+      Modal.confirm({
+        title: `停用「${record.name}」？`,
+        content: '停用后该模块的接口会立即对全租户返回 403，直到管理员重新启用。',
+        okText: '停用',
+        okButtonProps: { danger: true },
+        cancelText: '取消',
+        onOk: () => applyActivation(record, 'disabled'),
+      });
+      return;
+    }
+    if (record.installStatus !== 'installed') {
+      return;
+    }
+    applyActivation(record, 'enabled');
+  }
+
+  function openHistory(record: AppModule): void {
+    setHistoryModule(record);
+    setHistoryEvents([]);
+    setHistoryError(null);
+    setHistoryPhase('loading');
+    apiClient
+      .listModuleActivationEvents(record.id)
+      .then((events) => {
+        setHistoryEvents(events);
+        setHistoryPhase(events.length === 0 ? 'empty' : 'ready');
+      })
+      .catch((error: unknown) => {
+        setHistoryError(describeError(error));
+        setHistoryPhase('error');
+      });
   }
 
   function submitSuggestion(values: Record<string, string>): void {
@@ -382,7 +512,7 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                     }))}
                   />
                   {canManage && (
-                    <Button type="primary" onClick={() => setModuleOpen(true)}>
+                    <Button type="primary" onClick={openCreateModule}>
                       新增模块
                     </Button>
                   )}
@@ -390,8 +520,35 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
               }
             >
               <Paragraph type="secondary">
-                目录只登记模块的负责人、版本、依赖、适用范围与健康状态；安装动作在本阶段仅保留占位。
+                目录登记模块的负责人、版本、依赖、适用范围与健康状态；「标记已安装」只更新台账状态，不代表已完成部署。
               </Paragraph>
+              {installError && (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="标记已安装失败"
+                  description={installError}
+                  style={{ marginBottom: 12 }}
+                />
+              )}
+              {activationError && (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="模块启停失败"
+                  description={activationError}
+                  style={{ marginBottom: 12 }}
+                />
+              )}
+              {moduleEnforcement === false && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  message="模块停用拦截处于灰度关闭"
+                  description="当前只隐藏菜单与能力清单，停用模块的接口仍可访问；需要强制拦截请开启 platform.module.activation.enforce。"
+                  style={{ marginBottom: 12 }}
+                />
+              )}
               {canReadCatalog ? (
                 <AsyncState
                   phase={catalogPhase}
@@ -404,6 +561,7 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                     size="small"
                     rowKey="id"
                     pagination={false}
+                    scroll={{ x: 'max-content' }}
                     dataSource={modules}
                     columns={[
                       {
@@ -415,6 +573,11 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                             <Text type="secondary" style={{ fontSize: 12 }}>
                               {record.code} · {record.description || '暂无说明'}
                             </Text>
+                            {record.routePath && (
+                              <Text type="secondary" style={{ fontSize: 12 }}>
+                                菜单 {record.routePath}
+                              </Text>
+                            )}
                           </Space>
                         ),
                       },
@@ -449,6 +612,64 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                         width: 90,
                         render: (value: string) => INSTALL_LABEL[value] ?? value,
                       },
+                      {
+                        title: '启用',
+                        dataIndex: 'activationStatus',
+                        width: 90,
+                        render: (value: ModuleActivationStatus) => (
+                          <Tag color={value === 'enabled' ? 'green' : 'default'}>
+                            {value === 'enabled' ? '已启用' : '已停用'}
+                          </Tag>
+                        ),
+                      },
+                      ...(canManage
+                        ? [
+                            {
+                              title: '操作',
+                              key: 'actions',
+                              width: 330,
+                              render: (_value: unknown, record: AppModule) => (
+                                <Space size={4}>
+                                  <Button size="small" onClick={() => openEditModule(record)}>
+                                    编辑
+                                  </Button>
+                                  {record.installStatus !== 'installed' && (
+                                    <Button
+                                      size="small"
+                                      type="primary"
+                                      loading={markingId === record.id}
+                                      onClick={() => markInstalled(record)}
+                                    >
+                                      标记已安装
+                                    </Button>
+                                  )}
+                                  <Button
+                                    size="small"
+                                    type={record.activationStatus === 'enabled' ? 'default' : 'primary'}
+                                    danger={record.activationStatus === 'enabled'}
+                                    disabled={
+                                      record.activationStatus !== 'enabled' &&
+                                      record.installStatus !== 'installed'
+                                    }
+                                    loading={activationBusyId === record.id}
+                                    title={
+                                      record.activationStatus !== 'enabled' &&
+                                      record.installStatus !== 'installed'
+                                        ? '先标记已安装后才能启用'
+                                        : undefined
+                                    }
+                                    onClick={() => toggleActivation(record)}
+                                  >
+                                    {record.activationStatus === 'enabled' ? '停用' : '启用'}
+                                  </Button>
+                                  <Button size="small" onClick={() => openHistory(record)}>
+                                    历史
+                                  </Button>
+                                </Space>
+                              ),
+                            },
+                          ]
+                        : []),
                     ]}
                   />
                 </AsyncState>
@@ -460,6 +681,43 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
                   description="你仍可在「模块建议」中发起建议并跟踪处理进度。"
                 />
               )}
+              <Drawer
+                title={historyModule ? `启停历史 · ${historyModule.name}` : '启停历史'}
+                width={460}
+                open={historyModule !== null}
+                onClose={() => setHistoryModule(null)}
+              >
+                <AsyncState
+                  phase={historyPhase}
+                  emptyText="暂无启停记录"
+                  errorTitle="启停历史加载失败"
+                  {...(historyError ? { errorMessage: historyError } : {})}
+                >
+                  <Timeline
+                    items={historyEvents.map((event) => ({
+                      color: event.action === 'enable' ? 'green' : 'red',
+                      children: (
+                        <Space direction="vertical" size={2}>
+                          <Text strong>
+                            {event.action === 'enable' ? '启用' : '停用'}
+                            <Text type="secondary" style={{ fontWeight: 'normal' }}>
+                              {' '}
+                              {formatDateTime(event.occurredAt)}
+                            </Text>
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            操作人：{event.actor || '系统'}
+                            {event.fromStatus && event.toStatus
+                              ? `　${event.fromStatus} → ${event.toStatus}`
+                              : ''}
+                          </Text>
+                          {event.comment && <Text>{event.comment}</Text>}
+                        </Space>
+                      ),
+                    }))}
+                  />
+                </AsyncState>
+              </Drawer>
             </Card>
           ),
         },
@@ -564,19 +822,52 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
 
       {/* 新增模块 */}
     <Modal
-      title="登记模块"
+      title={editingModule ? '编辑模块' : '登记模块'}
       open={moduleOpen}
-      onCancel={() => setModuleOpen(false)}
+      forceRender
+      onCancel={() => {
+        setModuleOpen(false);
+        setEditingModule(null);
+        setModuleError(null);
+      }}
       confirmLoading={savingModule}
       okText="保存"
       cancelText="取消"
+      width={640}
       onOk={() => {
-        void moduleForm.validateFields().then((values) => submitModule(values));
+        void moduleForm
+          .validateFields()
+          .then((values) => submitModule(values))
+          .catch(() => undefined);
       }}
     >
+      {moduleError && (
+        <Alert
+          type="error"
+          showIcon
+          message="模块保存失败"
+          description={moduleError}
+          style={{ marginBottom: 12 }}
+        />
+      )}
       <Form form={moduleForm} layout="vertical" initialValues={{ version: '1.0.0' }}>
-        <Form.Item name="code" label="模块编码" rules={[{ required: true, message: '请输入模块编码' }]}>
-          <Input placeholder="例如 hr.attendance" />
+        <Form.Item
+          name="code"
+          label="模块编码"
+          extra={
+            editingModule
+              ? '编码创建后不可修改'
+              : '小写字母开头，可含数字、点、下划线与连字符，3-64 位'
+          }
+          rules={[
+            { required: true, message: '请输入模块编码' },
+            {
+              pattern: /^[a-z][a-z0-9._-]{2,63}$/,
+              message: '需以小写字母开头，只含小写字母、数字、点、下划线或连字符',
+            },
+          ]}
+        >
+          <Input placeholder="例如 hr.attendance" disabled={editingModule !== null} />
         </Form.Item>
         <Form.Item name="name" label="模块名称" rules={[{ required: true, message: '请输入模块名称' }]}>
           <Input />
@@ -610,6 +901,32 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
         <Form.Item name="dependencies" label="依赖（JSON 数组）" initialValue="[]">
           <Input.TextArea rows={2} placeholder='["org.structure"]' />
         </Form.Item>
+        <Form.Item
+          name="routePath"
+          label="菜单路由（可选）"
+          extra="填写后启用时自动出现在左侧「应用」；格式 /apps/<小写 slug>，如 /apps/attendance"
+          rules={[
+            {
+              pattern: /^$|^\/apps\/[a-z0-9][a-z0-9._-]*$/,
+              message: '需形如 /apps/attendance',
+            },
+          ]}
+        >
+          <Input placeholder="/apps/attendance" />
+        </Form.Item>
+        <Form.Item
+          name="apiPathPrefix"
+          label="API 前缀（可选）"
+          extra="用于停用后拦截该模块接口；格式 /api/v1/<小写路径>，如 /api/v1/attendance"
+          rules={[
+            {
+              pattern: /^$|^\/api\/v1\/[a-z0-9][a-z0-9._/-]*$/,
+              message: '需以 /api/v1/ 开头',
+            },
+          ]}
+        >
+          <Input placeholder="/api/v1/attendance" />
+        </Form.Item>
       </Form>
     </Modal>
 
@@ -623,7 +940,10 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
       cancelText="取消"
       width={640}
       onOk={() => {
-        void suggestionForm.validateFields().then((values) => submitSuggestion(values));
+        void suggestionForm
+          .validateFields()
+          .then((values) => submitSuggestion(values))
+          .catch(() => undefined);
       }}
     >
       <Form form={suggestionForm} layout="vertical">
@@ -786,7 +1106,8 @@ export function ModulesView({ apiClient, permissions }: ModulesViewProps) {
               values.comment ?? '',
               values.configOwnerPersonId as string | undefined,
             ),
-          );
+          )
+          .catch(() => undefined);
       }}
     >
       <Form form={actionForm} layout="vertical">

@@ -25,8 +25,12 @@ public class AppCatalogStore {
     public record ModuleRow(UUID id, String code, String name, String category, String description,
                             String templateKey, UUID ownerPersonId, String version,
                             String dependencies, String applicableScope, String healthStatus,
-                            String installStatus, OffsetDateTime createdAt,
-                            OffsetDateTime updatedAt) {
+                            String installStatus, String routePath, String apiPathPrefix,
+                            String activationStatus, long activationVersion,
+                            OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+    }
+
+    public record RouteRow(String code, String name, String path) {
     }
 
     public record SuggestionRow(UUID id, String title, UUID requesterPersonId,
@@ -44,10 +48,20 @@ public class AppCatalogStore {
 
     // ------------------------------------------------------------------ 模块目录
 
+    /** 目录列统一带 m 前缀，并左连激活表；记录缺失时按「启用」返回。 */
     private static final String MODULE_COLUMNS = """
-            id, code, name, category, description, template_key, owner_person_id, version,
-            dependencies::text AS dependencies, applicable_scope, health_status, install_status,
-            created_at, updated_at
+            m.id, m.code, m.name, m.category, m.description, m.template_key, m.owner_person_id,
+            m.version, m.dependencies::text AS dependencies, m.applicable_scope,
+            m.health_status, m.install_status, m.route_path, m.api_path_prefix,
+            COALESCE(a.status, 'enabled') AS activation_status,
+            COALESCE(a.version, 0) AS activation_version,
+            m.created_at, m.updated_at
+            """;
+
+    private static final String MODULE_FROM = """
+              FROM app_module m
+              LEFT JOIN app_module_activation a
+                ON a.module_id = m.id AND a.tenant_id = m.tenant_id
             """;
 
     private static ModuleRow module(java.sql.ResultSet rs) throws java.sql.SQLException {
@@ -56,20 +70,22 @@ public class AppCatalogStore {
                 rs.getString("template_key"), rs.getObject("owner_person_id", UUID.class),
                 rs.getString("version"), rs.getString("dependencies"),
                 rs.getString("applicable_scope"), rs.getString("health_status"),
-                rs.getString("install_status"), rs.getObject("created_at", OffsetDateTime.class),
+                rs.getString("install_status"), rs.getString("route_path"),
+                rs.getString("api_path_prefix"), rs.getString("activation_status"),
+                rs.getLong("activation_version"),
+                rs.getObject("created_at", OffsetDateTime.class),
                 rs.getObject("updated_at", OffsetDateTime.class));
     }
 
     public List<ModuleRow> modules(String keyword, String category, String health) {
         String like = keyword == null || keyword.isBlank()
                 ? null : "%" + keyword.trim().toLowerCase() + "%";
-        return jdbcTemplate.query("SELECT " + MODULE_COLUMNS + """
-                  FROM app_module
-                 WHERE (?::text IS NULL OR lower(code) LIKE ? OR lower(name) LIKE ?
-                        OR lower(category) LIKE ?)
-                   AND (?::text IS NULL OR category = ?)
-                   AND (?::text IS NULL OR health_status = ?)
-                 ORDER BY category, name
+        return jdbcTemplate.query("SELECT " + MODULE_COLUMNS + MODULE_FROM + """
+                 WHERE (?::text IS NULL OR lower(m.code) LIKE ? OR lower(m.name) LIKE ?
+                        OR lower(m.category) LIKE ?)
+                   AND (?::text IS NULL OR m.category = ?)
+                   AND (?::text IS NULL OR m.health_status = ?)
+                 ORDER BY m.category, m.name
                 """, (rs, rowNum) -> module(rs),
                 like, like, like, like,
                 blankToNull(category), blankToNull(category),
@@ -77,45 +93,100 @@ public class AppCatalogStore {
     }
 
     public Optional<ModuleRow> module(UUID id) {
-        return jdbcTemplate.query("SELECT " + MODULE_COLUMNS + """
-                  FROM app_module WHERE id = ?
+        return jdbcTemplate.query("SELECT " + MODULE_COLUMNS + MODULE_FROM + """
+                 WHERE m.id = ?
                 """, (rs, rowNum) -> module(rs), id).stream().findFirst();
     }
 
     public Optional<ModuleRow> moduleByCode(String code) {
-        return jdbcTemplate.query("SELECT " + MODULE_COLUMNS + """
-                  FROM app_module WHERE code = ?
+        return jdbcTemplate.query("SELECT " + MODULE_COLUMNS + MODULE_FROM + """
+                 WHERE m.code = ?
                 """, (rs, rowNum) -> module(rs), code).stream().findFirst();
     }
 
     public UUID insertModule(String code, String name, String category, String description,
                              String templateKey, UUID ownerPersonId, String version,
                              String dependencies, String applicableScope, String healthStatus,
-                             String installStatus) {
+                             String installStatus, String routePath, String apiPathPrefix) {
         return jdbcTemplate.queryForObject("""
                 INSERT INTO app_module
                     (tenant_id, code, name, category, description, template_key, owner_person_id,
-                     version, dependencies, applicable_scope, health_status, install_status)
+                     version, dependencies, applicable_scope, health_status, install_status,
+                     route_path, api_path_prefix)
                 VALUES (nullif(current_setting('app.tenant_id', true), '')::uuid,
-                        ?, ?, ?, ?, ?, ?, ?, CAST(? AS jsonb), ?, ?, ?)
+                        ?, ?, ?, ?, ?, ?, ?, CAST(? AS jsonb), ?, ?, ?, ?, ?)
                 RETURNING id
                 """, UUID.class, code, name, category, description, templateKey, ownerPersonId,
-                version, dependencies, applicableScope, healthStatus, installStatus);
+                version, dependencies, applicableScope, healthStatus, installStatus, routePath,
+                apiPathPrefix);
     }
 
     public void updateModule(UUID id, String name, String category, String description,
                              String templateKey, UUID ownerPersonId, String version,
                              String dependencies, String applicableScope, String healthStatus,
-                             String installStatus) {
+                             String installStatus, String routePath, String apiPathPrefix) {
         jdbcTemplate.update("""
                 UPDATE app_module
                    SET name = ?, category = ?, description = ?, template_key = ?,
                        owner_person_id = ?, version = ?, dependencies = CAST(? AS jsonb),
                        applicable_scope = ?, health_status = ?, install_status = ?,
-                       updated_at = now()
+                       route_path = ?, api_path_prefix = ?, updated_at = now()
                  WHERE id = ?
                 """, name, category, description, templateKey, ownerPersonId, version, dependencies,
-                applicableScope, healthStatus, installStatus, id);
+                applicableScope, healthStatus, installStatus, routePath, apiPathPrefix, id);
+    }
+
+    /** 已登记前端路由的模块；用于能力清单动态注册菜单。 */
+    public List<RouteRow> modulesWithRoute() {
+        return jdbcTemplate.query("""
+                SELECT code, name, route_path
+                  FROM app_module
+                 WHERE route_path IS NOT NULL
+                 ORDER BY name
+                """, (rs, rowNum) -> new RouteRow(rs.getString("code"), rs.getString("name"),
+                rs.getString("route_path")));
+    }
+
+    /** 已登记 API 前缀的模块；用于运行时停用拦截。 */
+    public List<RouteRow> modulesWithApiPrefix() {
+        return jdbcTemplate.query("""
+                SELECT code, name, api_path_prefix
+                  FROM app_module
+                 WHERE api_path_prefix IS NOT NULL
+                """, (rs, rowNum) -> new RouteRow(rs.getString("code"), rs.getString("name"),
+                rs.getString("api_path_prefix")));
+    }
+
+    /** 租户内路由是否已被其他模块占用。 */
+    public boolean routePathTaken(String routePath, UUID excludeId) {
+        Boolean exists = jdbcTemplate.queryForObject("""
+                SELECT EXISTS (
+                    SELECT 1 FROM app_module
+                     WHERE route_path = ? AND (?::uuid IS NULL OR id <> ?::uuid))
+                """, Boolean.class, routePath, excludeId, excludeId);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    /** 租户内 API 前缀是否已被其他模块占用。 */
+    public boolean apiPrefixTaken(String apiPathPrefix, UUID excludeId) {
+        Boolean exists = jdbcTemplate.queryForObject("""
+                SELECT EXISTS (
+                    SELECT 1 FROM app_module
+                     WHERE api_path_prefix = ? AND (?::uuid IS NULL OR id <> ?::uuid))
+                """, Boolean.class, apiPathPrefix, excludeId, excludeId);
+        return Boolean.TRUE.equals(exists);
+    }
+
+    /** 给定请求路径命中的自定义模块 API 前缀（最长优先）。 */
+    public Optional<String> moduleCodeForApiPath(String path) {
+        return jdbcTemplate.query("""
+                SELECT code
+                  FROM app_module
+                 WHERE api_path_prefix IS NOT NULL
+                   AND (? = api_path_prefix OR ? LIKE api_path_prefix || '/%')
+                 ORDER BY length(api_path_prefix) DESC
+                 LIMIT 1
+                """, (rs, rowNum) -> rs.getString("code"), path, path).stream().findFirst();
     }
 
     // ------------------------------------------------------------------ 建议

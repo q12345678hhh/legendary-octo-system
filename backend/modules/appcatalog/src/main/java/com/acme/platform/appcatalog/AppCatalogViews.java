@@ -14,6 +14,8 @@ public final class AppCatalogViews {
                              String description, String templateKey, UUID ownerPersonId,
                              String version, String dependencies, String applicableScope,
                              String healthStatus, String installStatus,
+                             String routePath, String apiPathPrefix,
+                             String activationStatus, long activationVersion,
                              OffsetDateTime createdAt, OffsetDateTime updatedAt) {
     }
 
@@ -36,7 +38,9 @@ public final class AppCatalogViews {
     static ModuleView module(AppCatalogStore.ModuleRow row) {
         return new ModuleView(row.id(), row.code(), row.name(), row.category(), row.description(),
                 row.templateKey(), row.ownerPersonId(), row.version(), row.dependencies(),
-                row.applicableScope(), row.healthStatus(), row.installStatus(), row.createdAt(),
+                row.applicableScope(), row.healthStatus(), row.installStatus(),
+                row.routePath(), row.apiPathPrefix(),
+                row.activationStatus(), row.activationVersion(), row.createdAt(),
                 row.updatedAt());
     }
 

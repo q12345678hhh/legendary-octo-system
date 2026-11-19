@@ -16,10 +16,12 @@ export type RouteName =
   | 'privacy'
   | 'insights'
   | 'modules'
+  | 'aiTools'
   | 'collaboration'
   | 'collaborationChannel'
   | 'workflowInbox'
-  | 'workflowInstance';
+  | 'workflowInstance'
+  | 'moduleApp';
 
 export interface RouteDefinition {
   name: RouteName;
@@ -28,6 +30,8 @@ export interface RouteDefinition {
   requiresSession: boolean;
   /** 导航所需权限码；后端仍会对直接访问重新鉴权。 */
   permission?: string;
+  /** 所属模块 code；模块停用时后端拦截、前端隐藏并重定向。 */
+  module?: string;
 }
 
 export interface RouteMatch {
@@ -37,13 +41,14 @@ export interface RouteMatch {
 
 export const routes: readonly RouteDefinition[] = [
   { name: 'login', path: '#/login', title: '登录', requiresSession: false },
-  { name: 'home', path: '#/home', title: '总览', requiresSession: true },
+  { name: 'home', path: '#/home', title: '总览', requiresSession: true, module: 'platform.workbench' },
   {
     name: 'departments',
     path: '#/departments',
     title: '部门',
     requiresSession: true,
     permission: 'department.workspace.read',
+    module: 'organization',
   },
   {
     name: 'department',
@@ -51,12 +56,14 @@ export const routes: readonly RouteDefinition[] = [
     title: '部门工作区',
     requiresSession: true,
     permission: 'department.workspace.read',
+    module: 'organization',
   },
   {
     name: 'myWork',
     path: '#/my-work',
     title: '我的工作',
     requiresSession: true,
+    module: 'platform.workbench',
   },
   {
     name: 'work',
@@ -64,6 +71,7 @@ export const routes: readonly RouteDefinition[] = [
     title: '个人工作页',
     requiresSession: true,
     permission: 'business.work.read',
+    module: 'platform.workbench',
   },
   {
     name: 'worklog',
@@ -71,6 +79,7 @@ export const routes: readonly RouteDefinition[] = [
     title: '工时与周报',
     requiresSession: true,
     permission: 'worklog.time.write',
+    module: 'worklog',
   },
   {
     name: 'expense',
@@ -78,12 +87,14 @@ export const routes: readonly RouteDefinition[] = [
     title: '单据预审',
     requiresSession: true,
     permission: 'expense.document.read',
+    module: 'expense',
   },
   {
     name: 'privacy',
     path: '#/privacy',
     title: '隐私与数据',
     requiresSession: true,
+    module: 'privacy',
   },
   {
     name: 'insights',
@@ -91,12 +102,21 @@ export const routes: readonly RouteDefinition[] = [
     title: '管理洞察',
     requiresSession: true,
     permission: 'insight.work.read',
+    module: 'insights',
   },
   {
     name: 'modules',
     path: '#/modules',
     title: '模块中心',
     requiresSession: true,
+    module: 'appcatalog',
+  },
+  {
+    name: 'aiTools',
+    path: '#/ai/tools',
+    title: 'AI 工具',
+    requiresSession: true,
+    permission: 'ai.context.read',
   },
   {
     name: 'collaboration',
@@ -104,6 +124,7 @@ export const routes: readonly RouteDefinition[] = [
     title: '协作',
     requiresSession: true,
     permission: 'collaboration.channel.read',
+    module: 'collaboration',
   },
   {
     name: 'collaborationChannel',
@@ -111,6 +132,7 @@ export const routes: readonly RouteDefinition[] = [
     title: '频道',
     requiresSession: true,
     permission: 'collaboration.channel.read',
+    module: 'collaboration',
   },
   {
     name: 'workflowInbox',
@@ -118,6 +140,7 @@ export const routes: readonly RouteDefinition[] = [
     title: '审批箱',
     requiresSession: true,
     permission: 'workflow.task.act',
+    module: 'workflow',
   },
   {
     name: 'workflowInstance',
@@ -125,9 +148,16 @@ export const routes: readonly RouteDefinition[] = [
     title: '流程实例',
     requiresSession: true,
     permission: 'workflow.task.act',
+    module: 'workflow',
   },
   { name: 'jobs', path: '#/jobs', title: '异步作业', requiresSession: true },
   { name: 'files', path: '#/files', title: '文件', requiresSession: true },
+  {
+    name: 'moduleApp',
+    path: '#/apps/:moduleCode',
+    title: '应用',
+    requiresSession: true,
+  },
 ];
 
 type RouteListener = (name: RouteName) => void;
@@ -198,6 +228,10 @@ export function requiresSession(name: RouteName): boolean {
 
 export function routePermission(name: RouteName): string | undefined {
   return routes.find((route) => route.name === name)?.permission;
+}
+
+export function routeModule(name: RouteName): string | undefined {
+  return routes.find((route) => route.name === name)?.module;
 }
 
 function notify(name: RouteName): void {

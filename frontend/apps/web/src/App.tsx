@@ -1,16 +1,18 @@
-import type { ApiClient } from '@platform/api-client';
+import type { ApiClient, ModuleRoute } from '@platform/api-client';
 import { tokens } from '@platform/design-system';
-import { Alert, Layout } from 'antd';
-import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Alert, Layout, message } from 'antd';
+import { Component, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppShell } from './layout/AppShell';
 import {
   matchRoute,
   navigate,
   parseHash,
+  routeModule,
   subscribeToRoute,
   type RouteName,
 } from './router';
 import { clearSession, readSession, type Session } from './session';
+import { AiToolsView } from './views/AiToolsView';
 import { CollaborationView } from './views/CollaborationView';
 import { DepartmentWorkspaceView } from './views/DepartmentWorkspaceView';
 import { DepartmentsView } from './views/DepartmentsView';
@@ -21,6 +23,7 @@ import { InsightsView } from './views/InsightsView';
 import { PrivacyView } from './views/PrivacyView';
 import { JobsView } from './views/JobsView';
 import { LoginView } from './views/LoginView';
+import { ModuleLandingView } from './views/ModuleLandingView';
 import { ModulesView } from './views/ModulesView';
 import { WorkView } from './views/WorkView';
 import { WorkflowInboxView } from './views/WorkflowInboxView';
@@ -75,17 +78,32 @@ function resolveRoute(current: RouteName | null, session: Session | null): Route
 export function App({ apiClient }: AppProps) {
   const [session, setSession] = useState<Session | null>(() => readSession());
   const [permissions, setPermissions] = useState<Set<string> | null>(null);
+  const [enabledModules, setEnabledModules] = useState<Set<string> | null>(null);
+  const [moduleRoutes, setModuleRoutes] = useState<ModuleRoute[] | null>(null);
+  const [moduleEnforcement, setModuleEnforcement] = useState<boolean | null>(null);
+  const [capabilityReload, setCapabilityReload] = useState(0);
   const [route, setRoute] = useState<RouteName>(() =>
     resolveRoute(parseHash(globalThis.location.hash), readSession()),
   );
   const mainRef = useRef<HTMLElement>(null);
   const params = matchRoute(globalThis.location.hash)?.params ?? {};
+  const activeModuleRoute =
+    route === 'moduleApp' && moduleRoutes !== null
+      ? moduleRoutes.find((item) => item.routePath === `/apps/${params.moduleCode}`)
+      : undefined;
 
   useEffect(() => subscribeToRoute(setRoute), []);
+
+  const refreshCapabilities = useCallback(() => {
+    setCapabilityReload((value) => value + 1);
+  }, []);
 
   useEffect(() => {
     if (!session) {
       setPermissions(null);
+      setEnabledModules(null);
+      setModuleRoutes(null);
+      setModuleEnforcement(null);
       return undefined;
     }
     let active = true;
@@ -94,18 +112,25 @@ export function App({ apiClient }: AppProps) {
       .then((capabilities) => {
         if (active) {
           setPermissions(new Set(capabilities.permissions));
+          setEnabledModules(
+            capabilities.enabledModules ? new Set(capabilities.enabledModules) : null,
+          );
+          setModuleRoutes(capabilities.moduleRoutes ?? null);
+          setModuleEnforcement(capabilities.moduleEnforcement ?? null);
         }
       })
       .catch(() => {
-        // 能力清单失败时保留全部导航；直接访问仍由后端逐请求鉴权。
+        // 能力清单失败时保留全部导航；直接访问仍由后端逐请求鉴权与模块拦截。
         if (active) {
           setPermissions(null);
+          setEnabledModules(null);
+          setModuleRoutes(null);
         }
       });
     return () => {
       active = false;
     };
-  }, [apiClient, session]);
+  }, [apiClient, session, capabilityReload]);
 
   useEffect(() => {
     const target = resolveRoute(route, session);
@@ -114,6 +139,29 @@ export function App({ apiClient }: AppProps) {
       navigate(target);
     }
   }, [route, session]);
+
+  useEffect(() => {
+    // 首页不参与模块重定向，避免基础模块被停用时形成回环。
+    if (!session || enabledModules === null || route === 'home') {
+      return;
+    }
+    const moduleCode = routeModule(route);
+    if (moduleCode && !enabledModules.has(moduleCode)) {
+      message.warning('该模块当前已停用，请联系管理员启用');
+      navigate('home');
+    }
+  }, [route, session, enabledModules]);
+
+  useEffect(() => {
+    // 动态模块路由必须仍出现在能力清单里，否则视为已停用/已撤销登记。
+    if (!session || route !== 'moduleApp' || moduleRoutes === null) {
+      return;
+    }
+    if (!activeModuleRoute) {
+      message.warning('该应用未启用或未登记路由，请联系管理员');
+      navigate('home');
+    }
+  }, [route, session, moduleRoutes, activeModuleRoute]);
 
   // 路由切换后把焦点移到主区域，键盘与读屏用户能立即感知内容变化。
   useEffect(() => {
@@ -166,6 +214,8 @@ export function App({ apiClient }: AppProps) {
       session={session}
       route={route}
       permissions={permissions}
+      enabledModules={enabledModules}
+      moduleRoutes={moduleRoutes}
       onSignOut={handleSignOut}
       mainRef={mainRef}
     >
@@ -188,7 +238,17 @@ export function App({ apiClient }: AppProps) {
           <PrivacyView apiClient={apiClient} permissions={permissions} />
         )}
         {route === 'insights' && <InsightsView apiClient={apiClient} />}
-        {route === 'modules' && <ModulesView apiClient={apiClient} permissions={permissions} />}
+        {route === 'modules' && (
+          <ModulesView
+            apiClient={apiClient}
+            permissions={permissions}
+            moduleEnforcement={moduleEnforcement}
+            onActivationChanged={refreshCapabilities}
+          />
+        )}
+        {route === 'aiTools' && (
+          <AiToolsView apiClient={apiClient} permissions={permissions} />
+        )}
         {route === 'collaboration' && <CollaborationView apiClient={apiClient} />}
         {route === 'collaborationChannel' && params.channelId && (
           <CollaborationView apiClient={apiClient} channelId={params.channelId} />
@@ -199,6 +259,9 @@ export function App({ apiClient }: AppProps) {
         )}
         {route === 'jobs' && <JobsView apiClient={apiClient} />}
         {route === 'files' && <FilesView apiClient={apiClient} />}
+        {route === 'moduleApp' && activeModuleRoute && (
+          <ModuleLandingView module={activeModuleRoute} />
+        )}
       </ContentErrorBoundary>
     </AppShell>
   );

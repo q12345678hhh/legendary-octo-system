@@ -143,6 +143,18 @@ export interface RequestOptions {
 /** 当前主体持有的权限码，仅用于隐藏导航，不作为前端放行依据。 */
 export interface Capabilities {
   permissions: string[];
+  /** 当前租户已启用的模块 code；旧后端可能缺省，缺失时前端不过滤模块。 */
+  enabledModules?: string[];
+  /** 已启用且登记了前端路由的模块；用于动态注册菜单。 */
+  moduleRoutes?: ModuleRoute[];
+  /** false 表示后端停用拦截处于灰度关闭，仅影响菜单与能力清单。 */
+  moduleEnforcement?: boolean;
+}
+
+export interface ModuleRoute {
+  code: string;
+  name: string;
+  routePath: string;
 }
 
 export interface DepartmentSummary {
@@ -945,6 +957,7 @@ export interface WorkflowException {
 export type AppModuleHealth = 'healthy' | 'degraded' | 'offline' | 'unknown';
 export type AppModuleInstallStatus = 'not_installed' | 'installed' | 'disabled';
 export type AppModuleScope = 'tenant' | 'department' | 'project' | 'person';
+export type ModuleActivationStatus = 'enabled' | 'disabled';
 
 export interface AppModule {
   id: string;
@@ -959,8 +972,72 @@ export interface AppModule {
   applicableScope: AppModuleScope;
   healthStatus: AppModuleHealth;
   installStatus: AppModuleInstallStatus;
+  /** 前端菜单路由，如 /apps/attendance；为空表示不注册菜单。 */
+  routePath?: string | null;
+  /** 后端 API 前缀；模块停用时命中该前缀的请求返回 403。 */
+  apiPathPrefix?: string | null;
+  /** 无激活记录时为 enabled。 */
+  activationStatus: ModuleActivationStatus;
+  activationVersion: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ModuleActivation {
+  moduleId: string;
+  code: string;
+  status: ModuleActivationStatus;
+  version: number;
+  config: string;
+  enabledAt?: string | null;
+  enabledBy?: string | null;
+  disabledAt?: string | null;
+  disabledBy?: string | null;
+  updatedAt?: string | null;
+  /** false 表示没有显式记录，按默认启用处理。 */
+  explicit: boolean;
+}
+
+export interface ModuleActivationInput {
+  status: ModuleActivationStatus;
+  expectedVersion?: number | undefined;
+  comment?: string | undefined;
+}
+
+/** AI 工具目录条目：只含元数据，不含调用密钥。 */
+export interface AiTool {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  endpointUrl: string;
+  inputSchema: string;
+  status: 'enabled' | 'disabled' | string;
+  rating?: number | null;
+  createdBy?: string;
+  ratedBy?: string | null;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RegisterAiToolInput {
+  code: string;
+  name: string;
+  description?: string;
+  endpointUrl: string;
+  inputSchema?: string;
+}
+
+/** 模块启停审计事件：只追加、不可修改。 */
+export interface ModuleActivationEvent {
+  id: string;
+  action: 'enable' | 'disable' | string;
+  fromStatus?: string | null;
+  toStatus?: string | null;
+  actor?: string | null;
+  comment?: string | null;
+  occurredAt: string;
 }
 
 export interface AppModuleInput {
@@ -975,6 +1052,8 @@ export interface AppModuleInput {
   applicableScope?: AppModuleScope | undefined;
   healthStatus?: AppModuleHealth | undefined;
   installStatus?: AppModuleInstallStatus | undefined;
+  routePath?: string | null | undefined;
+  apiPathPrefix?: string | null | undefined;
 }
 
 export type ModuleSuggestionStatus =
@@ -1353,6 +1432,21 @@ export interface ApiClient {
     input: AppModuleInput,
     options?: RequestOptions,
   ): Promise<AppModule>;
+  getModuleActivation(moduleId: string): Promise<ModuleActivation>;
+  setModuleActivation(
+    moduleId: string,
+    input: ModuleActivationInput,
+    options?: RequestOptions,
+  ): Promise<ModuleActivation>;
+  listModuleActivationEvents(moduleId: string): Promise<ModuleActivationEvent[]>;
+  listAiTools(): Promise<AiTool[]>;
+  registerAiTool(input: RegisterAiToolInput): Promise<AiTool>;
+  setAiToolStatus(
+    toolId: string,
+    status: 'enabled' | 'disabled',
+    expectedVersion?: number,
+  ): Promise<AiTool>;
+  rateAiTool(toolId: string, rating: number, expectedVersion?: number): Promise<AiTool>;
   listModuleSuggestions(scope?: 'mine' | 'all'): Promise<ModuleSuggestion[]>;
   getModuleSuggestion(suggestionId: string): Promise<ModuleSuggestionDetail>;
   createModuleSuggestion(
@@ -1976,6 +2070,33 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         { method: 'PUT', body: JSON.stringify(input) },
         requestOptions ?? {},
       ),
+    getModuleActivation: (moduleId) =>
+      request<ModuleActivation>(
+        `/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}/activation`,
+      ),
+    setModuleActivation: (moduleId, input, requestOptions) =>
+      request<ModuleActivation>(
+        `/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}/activation`,
+        { method: 'PUT', body: JSON.stringify(input) },
+        requestOptions ?? {},
+      ),
+    listModuleActivationEvents: (moduleId) =>
+      request<ModuleActivationEvent[]>(
+        `/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}/activation-events`,
+      ),
+    listAiTools: () => request<AiTool[]>('/api/v1/ai/tools'),
+    registerAiTool: (input) =>
+      request<AiTool>('/api/v1/ai/tools', { method: 'POST', body: JSON.stringify(input) }),
+    setAiToolStatus: (toolId, status, expectedVersion) =>
+      request<AiTool>(`/api/v1/ai/tools/${encodeURIComponent(toolId)}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status, expectedVersion }),
+      }),
+    rateAiTool: (toolId, rating, expectedVersion) =>
+      request<AiTool>(`/api/v1/ai/tools/${encodeURIComponent(toolId)}/rating`, {
+        method: 'PUT',
+        body: JSON.stringify({ rating, expectedVersion }),
+      }),
     listModuleSuggestions: (scope = 'mine') =>
       request<ModuleSuggestion[]>(
         `/api/v1/app-catalog/suggestions${queryString({ scope })}`,
