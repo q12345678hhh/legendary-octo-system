@@ -1,0 +1,69 @@
+﻿[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.081 s -- in com.acme.platform.db.ConnectionPoolTenantContextTest
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.419 s -- in com.acme.platform.platform.OutboxEventPublisherTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[WARNING] Tests run: 3, Failures: 0, Errors: 0, Skipped: 3, Time elapsed: 0.024 s -- in com.acme.platform.tenancy.retention.RetentionDbTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.313 s -- in com.acme.platform.tenancy.SupportAccessRulesTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.560 s -- in com.acme.platform.tenancy.TenantExecutionGateTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.acme.platform.tenancy.TenantLifecycleDbTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.acme.platform.tenancy.TenantStatusTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 4
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.304 s -- in com.acme.platform.organization.EffectiveDatingTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.001 s -- in com.acme.platform.organization.OrganizationDbTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in com.acme.platform.organization.OrganizationTreeTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.093 s -- in com.acme.platform.organization.OwnerReadinessTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.022 s -- in com.acme.platform.organization.ReportingGraphTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 1
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.021 s -- in com.acme.platform.identity.IdentityDbTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.984 s -- in com.acme.platform.identity.IdentityProviderServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.345 s -- in com.acme.platform.identity.PasswordPolicyTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.380 s -- in com.acme.platform.identity.SessionServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.021 s -- in com.acme.platform.identity.TokenHasherTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.126 s -- in com.acme.platform.identity.TotpTest
+[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 1
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.430 s -- in com.acme.platform.authorization.AuthorizationCacheTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.001 s -- in com.acme.platform.authorization.AuthorizationDbTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.acme.platform.authorization.AuthorizationSodDbTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.733 s -- in com.acme.platform.authorization.ConditionEvaluatorTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.195 s -- in com.acme.platform.authorization.FieldPolicyEvaluatorTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.097 s -- in com.acme.platform.authorization.SodRuleCatalogTest
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 2
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.445 s -- in com.acme.platform.worklog.device.WorkAssistantSigningTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+[INFO] /D:/Projects/temp_20261109_01/backend/boot-api/src/test/java/com/acme/platform/ModuleStructureTest.java: 某些输入文件使用或覆盖了已过时的 API。
+[INFO] /D:/Projects/temp_20261109_01/backend/boot-api/src/test/java/com/acme/platform/ModuleStructureTest.java: 有关详细信息, 请使用 -Xlint:deprecation 重新编译。
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.013 s -- in com.acme.platform.AccessReviewApiTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.456 s -- in com.acme.platform.AuthApiTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.799 s -- in com.acme.platform.AuthorizationApiTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.acme.platform.DeletionAnonymizeDbTest
+[INFO] Running com.acme.platform.DepartmentAuthzTest
+{"@timestamp":"2026-11-13T05:48:54.705858500Z","log":{"level":"INFO","logger":"org.springframework.test.context.support.AnnotationConfigContextLoaderUtils"},"process":{"pid":37780,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Could not detect default configuration classes for test class [com.acme.platform.DepartmentAuthzTest]: DepartmentAuthzTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T05:48:54.713421900Z","log":{"level":"INFO","logger":"org.springframework.boot.test.context.SpringBootTestContextBootstrapper"},"process":{"pid":37780,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Found @SpringBootConfiguration com.acme.platform.PlatformApiApplication for test class com.acme.platform.DepartmentAuthzTest","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T05:48:54.713934900Z","log":{"level":"INFO","logger":"org.springframework.test.context.support.AnnotationConfigContextLoaderUtils"},"process":{"pid":37780,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Could not detect default configuration classes for test class [com.acme.platform.DepartmentAuthzTest]: DepartmentAuthzTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T05:48:54.720065200Z","log":{"level":"INFO","logger":"org.springframework.boot.test.context.SpringBootTestContextBootstrapper"},"process":{"pid":37780,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Found @SpringBootConfiguration com.acme.platform.PlatformApiApplication for test class com.acme.platform.DepartmentAuthzTest","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T05:48:54.755530200Z","log":{"level":"INFO","logger":"com.acme.platform.DepartmentAuthzTest"},"process":{"pid":37780,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Starting DepartmentAuthzTest using Java 21.0.12.1 with PID 37780 (started by Administrator in D:\\Projects\\temp_20261109_01\\backend\\boot-api)","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T05:48:54.755530200Z","log":{"level":"INFO","logger":"com.acme.platform.DepartmentAuthzTest"},"process":{"pid":37780,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"No active profile set, falling back to 1 default profile: \"default\"","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+{"@timestamp":"2026-11-13T05:48:55.585108900Z","log":{"level":"INFO","logger":"com.acme.platform.DepartmentAuthzTest"},"process":{"pid":37780,"thread":{"name":"main"}},"service":{"name":"platform-api","node":{}},"message":"Started DepartmentAuthzTest in 0.859 seconds (process running for 12.881)","tags":["COMMONS-LOGGING"],"ecs":{"version":"8.11"}}
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.961 s -- in com.acme.platform.DepartmentAuthzTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.679 s -- in com.acme.platform.FileAccessApiTest
+[INFO] Running com.acme.platform.ModuleStructureTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.494 s -- in com.acme.platform.ModuleStructureTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.958 s -- in com.acme.platform.OrganizationApiTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.511 s -- in com.acme.platform.PeopleAccessApiTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.723 s -- in com.acme.platform.PlatformOperatorAuthApiTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.acme.platform.platformops.PlatformOpsDbTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.915 s -- in com.acme.platform.PlatformScreenAuthzTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.012 s -- in com.acme.platform.RequestContextBindingFilterTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.556 s -- in com.acme.platform.RetentionAuthzTest
+[WARNING] Tests run: 1, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0 s -- in com.acme.platform.security.CrossTenantAttackDbTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.368 s -- in com.acme.platform.StorageHealthIndicatorTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.369 s -- in com.acme.platform.SystemHealthControllerTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.436 s -- in com.acme.platform.TenantApiBoundaryTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.322 s -- in com.acme.platform.TenantHeaderMismatchTest
+[INFO] Tests run: 75, Failures: 0, Errors: 0, Skipped: 3
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.601 s -- in com.acme.platform.worker.outbox.OutboxDispatcherTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.331 s -- in com.acme.platform.testsupport.TestTenantTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Reactor Summary for Enterprise Application Platform 0.1.0-SNAPSHOT:
+[INFO] BUILD SUCCESS

@@ -50,13 +50,19 @@ public sealed class DeviceApiClient
     private readonly HttpClient http;
     private readonly string tenantId;
     private readonly string? subjectId;
+    private readonly string? sessionToken;
     private readonly DeviceIdentity identity;
 
-    public DeviceApiClient(HttpClient http, string tenantId, DeviceIdentity identity, string? subjectId = null)
+    public DeviceApiClient(HttpClient http, string tenantId, DeviceIdentity identity, string? subjectId = null,
+        string? sessionToken = null)
     {
         this.http = http;
         this.tenantId = tenantId;
         this.subjectId = subjectId;
+        // 联调/取证脚本通过环境变量注入会话，避免把令牌写进命令行
+        this.sessionToken = string.IsNullOrWhiteSpace(sessionToken)
+            ? Environment.GetEnvironmentVariable("PLATFORM_API_SESSION")
+            : sessionToken;
         this.identity = identity;
     }
 
@@ -174,6 +180,13 @@ public sealed class DeviceApiClient
         if (!string.IsNullOrWhiteSpace(subjectId))
         {
             request.Headers.Add("X-Subject-Id", subjectId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(sessionToken))
+        {
+            request.Headers.TryAddWithoutValidation("Cookie",
+                $"plt_session={sessionToken}; plt_csrf={sessionToken}");
+            request.Headers.TryAddWithoutValidation("X-CSRF-Token", sessionToken);
         }
     }
 
