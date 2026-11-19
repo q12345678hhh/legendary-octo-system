@@ -86,6 +86,15 @@ platform:
   idempotency:
     # 幂等记录保留一天：足够覆盖客户端重试窗口，又不会长期占表
     ttl: ${PLATFORM_IDEMPOTENCY_TTL:24h}
+  ai:
+    report:
+      # 未配置时周报直接降级为仅汇总时长，不阻塞员工提交
+      base-url: ${PLATFORM_REPORT_AI_BASE_URL:}
+      api-key: ${PLATFORM_REPORT_AI_API_KEY:}
+      model: ${PLATFORM_REPORT_AI_MODEL:gpt-4o-mini}
+      timeout: ${PLATFORM_REPORT_AI_TIMEOUT:20s}
+      max-input-chars: ${PLATFORM_REPORT_AI_MAX_INPUT_CHARS:8000}
+      prompt-version: ${PLATFORM_REPORT_AI_PROMPT_VERSION:wp04-02.v1}
   smoke:
     # 冒烟端点只在本地验证「请求 → outbox → Worker」链路时打开
     enabled: ${PLATFORM_SMOKE_ENABLED:false}
