@@ -7,8 +7,8 @@
 
 - WP03-06 与 WP03-07 的工程门禁全部通过。
 - 界面已统一为浅色侧栏 + 蓝色顶栏 + 浅灰底 + 白色圆角卡片的骨架。
-- G3 的**真实连续两周运行数据尚未产生**，本目录只提供演示环境与统计口径；
-  不得据此放宽 Phase 4–11 的进入条件。
+- G3 的交互指标（≤2 次点击到本人工作页）、合成部门关系数据与模块建议全流程已补齐；
+  **真实连续两周运行数据尚未产生**，本目录提供演示环境与统计口径。
 
 ## WP03-07 交付内容
 
@@ -41,13 +41,17 @@
 | `pnpm --filter @platform/web test` | 5 个测试文件、20 个用例通过 | `frontend-tests.txt` |
 | `pnpm --filter @platform/web typecheck` | 通过（exit 0） | `frontend-tests.txt` |
 | `mvn -B -pl modules/authorization test` | BUILD SUCCESS，10 个用例通过、2 个既有跳过 | 终端输出 |
+| `mvn -B -pl modules/department test` | BUILD SUCCESS（部门成员查询含兼岗行） | 终端输出 |
 | `mvn -B -pl boot-api test -Dtest=ModuleStructureTest` | 2 个用例通过（模块边界含 appcatalog） | 终端输出 |
 | `node contracts/tools/contract-check.mjs` | 8 份契约通过，3 类覆盖完整 | `contract-check.txt` |
 | Flyway 启动日志 | `Successfully applied 1 migration ... now at version v18` | API 日志（演示环境） |
 
 ## 演示与手工验证
 
-演示账号：`demo.manager@example.test`（租户 `aaaaaaaa-0000-0000-0000-000000000001`）。
+演示账号：
+- 主管：`demo.manager@example.test`
+- 老板/复核人：`demo.owner@example.test`（与主管同口令，仅演示环境）
+- 租户：`aaaaaaaa-0000-0000-0000-000000000001`
 
 | 操作 | 结果 |
 |---|---|
@@ -56,31 +60,84 @@
 | `POST /api/v1/app-catalog/suggestions` | 200，状态 `draft` |
 | `POST /suggestions/{id}/actions {"action":"submit"}` | 200，状态 `communicating` |
 | `POST /suggestions/{id}/actions {"action":"accept"}`（部门主管） | 403 `APP_SUGGESTION_REVIEWER_UNAVAILABLE`，符合「无老板不自动受理」 |
+| `submit-review`（主管）→ `accept` / `start-test` / `test-pass` / `approve`（老板） | 依次 `submitted → configuring → testing → pending_final_approval → enabled`，详情返回 8 条事件 |
+| 浏览器 `#/my-work` | 登录后 1 次点击到达本人工作页（侧栏「我的工作」） |
+| 浏览器 `#/departments/{产品研发部}` | 5 名成员（刘工兼岗显示为第 6 行），汇报层级 赵总 → 张主管 → 李工 → 陈专员，王工/刘工同级 |
 | 浏览器 `#/modules` | 侧栏、顶栏、面包屑、目录表格正常渲染 |
 
 截图（同目录，副本在 `c:\新建文件夹\temp_20261109_01\demo-shots\`）：
 
 - `demo-login.png`：登录页
 - `demo-after-login.png` / `demo-home.png`：登录后总览与全站骨架
+- `demo-my-work.png`：侧栏「我的工作」直达本人工作页
 - `demo-departments.png`：部门列表
+- `demo-departments-11111111-0000-4000-8000-000000000003.png`：产品研发部工作区（5 人、汇报层级）
 - `demo-workflow.png`：审批箱
+- `demo-workflow-*.png`：审批实例详情与认领/通过后的状态（演示数据）
 - `demo-modules.png`：模块中心（模块目录表格）
-- `demo-modules-suggestions.png`：模块中心（模块建议列表与「发起建议」入口）
+- `demo-modules-suggestions.png`：模块中心（模块建议列表，示例建议已启用）
+
+## G3 合成部门与关系数据
+
+数据脚本：`scripts/demo-g3-seed.sql`（可重复执行，仅作用于演示租户）。
+
+| 关系 | 演示数据 |
+|---|---|
+| 老板 | 赵总（`demo.owner@example.test`，`organization_owner_role` + `business-owner` 授权） |
+| 主管 | 张主管（产品研发部） |
+| 三级下属 | 赵总 → 张主管 → 李工 → 陈专员 |
+| 同级 | 王工、刘工与李工同级，均汇报张主管 |
+| 兼岗 | 刘工主岗研发工程师，兼岗市场部市场专员（`secondary`） |
+| 调动 | 刘工由市场部岗位调整至产品研发部岗位，`organization_change` 已生效 |
+| 项目成员 | 「客户成功试点」：张主管（owner）、李工、刘工 |
 
 ## G3 指标状态
 
-| 指标 | 当前状态 | 说明 |
+| 指标 | 真实运行状态 | 说明 |
 |---|---|---|
-| 到达本人工作页点击数 | 部门工作区 2 次；本人工作页 3 次 | **未达到 ≤2 次目标**；需在 Phase 4 增加「我的工作」一级入口 |
-| 工时提交率 | 样本不足 | 演示数据只有 1 条建议与既有审批待办，不能代表两周运行 |
-| 周报退回率 | 样本不足 | 无真实退回记录 |
-| 主管处理时效 | 样本不足 | 需连续两周记录审批箱处理时间 |
+| 到达本人工作页点击数 | **1 次**（登录后点侧栏「我的工作」） | 达标（目标 ≤2） |
+| 工时提交率 | 待真实数据 | 合成数据已跑通口径，见下节 |
+| 周报退回率 | 待真实数据 | 合成数据已跑通口径，见下节 |
+| 主管处理时效 | 待真实数据 | 合成数据已跑通口径，见下节 |
 
-结论：工程门禁已满足；G3 的业务指标必须以真实两周数据重算后，再决定 Phase 4–11 的投入。
+结论：交互指标与结构数据已补齐；G3 的提交率、退回率与处理时效必须以真实两周数据重算后，
+再决定 Phase 4–11 的投入，本次不据此放宽进入条件。
+
+## 两周数据集（**合成，仅用于验证口径与页面链路**）
+
+| 脚本 | 用途 |
+|---|---|
+| `scripts/demo-worklog-two-weeks.sql` | 生成 2026-10-26 ~ 2026-11-06 两个完整工作周的工时、日快照、审核与周报，另加 11-09 ~ 11-13 当前周的部分数据 |
+| `scripts/worklog-two-week-metrics.sql` | 指标查询，对真实数据与合成数据使用同一口径，可直接改窗口复用 |
+
+> **重要声明：本节数字由合成数据产生，不是真实员工的使用记录，不能作为 WP03-08
+> 「连续运行至少两周」的验收证据。** 真实两周数据仍需试点用户实际使用后补录。
+
+数据规模：5 名非老板员工 × 10 个工作日 = 50 个人日；人员缺勤按固定规则模拟。
+窗口指标（`worklog-two-week-metrics.sql` 实际输出）：
+
+| 指标 | 合成数据结果 |
+|---|---|
+| 应提交人日（工作日 × 非老板在职） | 50 |
+| 实际提交人日 | 46 |
+| 工时提交率 | 92.0% |
+| 发生退回的人日 | 4 |
+| 工时退回率 | 8.7% |
+| 审核动作数 | 49 |
+| 主管处理时效：平均 / 中位数 / P90 | 13.3h / 12.0h / 23.2h |
+| 应提交周报（人 × 周） | 10 |
+| 已提交周报 | 10 |
+| 周报退回率（首次通过前被退回） | 10.0% |
+| 周报最终通过率 | 100.0% |
+
+链路核对：每份非草稿周报的 `worklog_report_source` 合计分钟数与 `content.days` 逐项一致；
+接口实测 `GET /api/v1/me/work-page` 返回 `todayMinutes=180`、`dayState=draft`、
+本周周报 `draft / 1830 分钟`；`GET /api/v1/worklog/reviews` 返回 2 条待审核快照。
 
 ## 统计口径（供后续两周记录）
 
-- 工时提交率 = 已提交工时天数 / 应提交工作日；按部门与个人维度分别统计。
-- 周报退回率 = 被退回周报数 / 已提交周报数。
-- 主管处理时效 = 任务完成时间 − 任务创建时间，取中位数与 P90。
+- 工时提交率 = 已提交人日 /（窗口内工作日 × 在职非老板人数）；按部门与个人维度分别统计。
+- 工时退回率 = 发生过退回的人日 / 已提交人日（同一天退回后重提只计一次）。
+- 周报退回率 = 首次通过前被退回的周报数 / 已提交周报数。
+- 主管处理时效 = `reviewed_at − submitted_at`，统计所有审核动作，取平均、中位数与 P90。
 - 到达本人工作页点击数 = 登录成功后到「本人工作页」可见的最少点击次数。

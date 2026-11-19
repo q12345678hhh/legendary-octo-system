@@ -174,6 +174,7 @@ export function App({ apiClient }: AppProps) {
         {route === 'department' && params.orgUnitId && (
           <DepartmentWorkspaceView apiClient={apiClient} orgUnitId={params.orgUnitId} />
         )}
+        {route === 'myWork' && <WorkView apiClient={apiClient} />}
         {route === 'work' && params.personId && (
           <WorkView apiClient={apiClient} personId={params.personId} />
         )}

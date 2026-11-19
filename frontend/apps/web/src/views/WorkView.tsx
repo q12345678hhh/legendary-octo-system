@@ -14,11 +14,29 @@ const { Text } = Typography;
 
 export interface WorkViewProps {
   apiClient: ApiClient;
-  personId: string;
+  /** 省略时读取 /me/work-page；从部门进入时传入成员 personId。 */
+  personId?: string | undefined;
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  none: '未开始',
+  empty: '暂无',
+  draft: '草稿',
+  submitted: '已提交',
+  confirmed: '已确认',
+  reviewed: '已审阅',
+  returned: '已退回',
+};
+
+function statusTag(value: unknown) {
+  if (typeof value !== 'string') {
+    return '—';
+  }
+  return <Tag>{STATUS_LABEL[value] ?? value}</Tag>;
 }
 
 function SectionBody({ section }: { section: WorkPageSection }) {
@@ -29,9 +47,7 @@ function SectionBody({ section }: { section: WorkPageSection }) {
         <Descriptions.Item label="今日已确认">
           {typeof data.todayMinutes === 'number' ? `${data.todayMinutes} 分钟` : '—'}
         </Descriptions.Item>
-        <Descriptions.Item label="今日状态">
-          {typeof data.dayState === 'string' ? <Tag>{data.dayState}</Tag> : '—'}
-        </Descriptions.Item>
+        <Descriptions.Item label="今日状态">{statusTag(data.dayState)}</Descriptions.Item>
       </Descriptions>
     );
   }
@@ -41,9 +57,7 @@ function SectionBody({ section }: { section: WorkPageSection }) {
         <Descriptions.Item label="本周合计">
           {typeof data.totalMinutes === 'number' ? `${data.totalMinutes} 分钟` : '—'}
         </Descriptions.Item>
-        <Descriptions.Item label="周报状态">
-          {typeof data.state === 'string' ? <Tag>{data.state}</Tag> : '—'}
-        </Descriptions.Item>
+        <Descriptions.Item label="周报状态">{statusTag(data.state)}</Descriptions.Item>
       </Descriptions>
     );
   }
@@ -89,8 +103,10 @@ export function WorkView({ apiClient, personId }: WorkViewProps) {
   const load = useCallback(() => {
     setPhase('loading');
     setForbidden(false);
-    apiClient
-      .getPersonWorkPage(personId)
+    const request = personId
+      ? apiClient.getPersonWorkPage(personId)
+      : apiClient.getMyWorkPage();
+    request
       .then((value) => {
         setPage(value);
         setPhase(value.sections.length === 0 ? 'empty' : 'ready');

@@ -112,13 +112,21 @@ public class DepartmentSpaceStore {
                   LEFT JOIN organization_person mgr
                     ON mgr.id = me.person_id AND mgr.tenant_id = me.tenant_id
                   LEFT JOIN depth d ON d.employment_id = e.id
-                 WHERE pos.org_unit_id = ?
+                 WHERE e.id IN (
+                         SELECT a2.employment_id
+                           FROM organization_employment_assignment a2
+                           JOIN organization_position p2
+                             ON p2.id = a2.position_id AND p2.tenant_id = a2.tenant_id
+                          WHERE p2.org_unit_id = ?
+                            AND a2.effective_from <= ?
+                            AND (a2.effective_to IS NULL OR a2.effective_to > ?)
+                       )
                    AND a.effective_from <= ?
                    AND (a.effective_to IS NULL OR a.effective_to > ?)
                    AND e.status = 'active'
                    AND e.effective_from <= ?
                    AND (e.effective_to IS NULL OR e.effective_to > ?)
-                 ORDER BY a.assignment_type, pos.name, p.display_name
+                 ORDER BY p.display_name, a.assignment_type, pos.name
                 """, (rs, rowNum) -> new MemberRow(
                         rs.getObject("employment_id", UUID.class),
                         rs.getObject("person_id", UUID.class),
@@ -129,7 +137,7 @@ public class DepartmentSpaceStore {
                         rs.getString("manager_name"),
                         rs.getInt("depth")),
                 today, today, today, today, today, today, orgUnitId,
-                today, today, today, today);
+                today, today, today, today, today, today);
     }
 
     /** 部门设置；未显式配置时返回默认值。 */
