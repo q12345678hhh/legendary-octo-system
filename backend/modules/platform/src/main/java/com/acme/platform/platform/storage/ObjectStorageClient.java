@@ -11,10 +11,13 @@ import java.time.Instant;
 import org.springframework.stereotype.Component;
 
 /**
- * 对象存储的最小读写面：只做存在性检查与删除，禁止在应用里缓存文件字节。
+ * 对象存储的最小读写面：存在性检查、删除，以及一次性的受限下载。
  *
  * <p>HEAD/DELETE 使用请求头签名（不是查询签名），因为这两个动作由服务端发起，
  * 不经过浏览器；URI 里不带凭证，日志可以安全记录对象键。
+ *
+ * <p>{@link #download(String, long)} 只服务于「读一次就处理完」的场景（语音转写），
+ * 必须带硬上限，调用方不得把字节缓存到进程内共享结构或日志。
  */
 @Component
 public class ObjectStorageClient {
@@ -65,7 +68,51 @@ public class ObjectStorageClient {
         }
     }
 
+    /**
+     * 受限下载：最多读取 {@code maxBytes}，超过即失败。
+     *
+     * <p>只用于「读一次就转写」的音频，调用方不得保存或记录内容。
+     */
+    public byte[] download(String objectKey, long maxBytes) {
+        HttpRequest request = signedRequest("GET", objectKey, Duration.ofSeconds(30));
+        HttpResponse<java.io.InputStream> response;
+        try {
+            response = httpClient.send(request,
+                    HttpResponse.BodyHandlers.ofInputStream());
+        } catch (Exception e) {
+            throw new IllegalStateException("对象存储不可达：" + properties.baseUrl(), e);
+        }
+        if (response.statusCode() != 200) {
+            try {
+                response.body().close();
+            } catch (java.io.IOException ignored) {
+                // 关闭失败不影响错误语义
+            }
+            throw new IllegalStateException("对象存储 GET 返回 " + response.statusCode());
+        }
+        try (java.io.InputStream in = response.body();
+             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            long total = 0;
+            int read;
+            while ((read = in.read(buffer)) >= 0) {
+                total += read;
+                if (total > maxBytes) {
+                    throw new IllegalStateException("对象超过允许的下载上限");
+                }
+                out.write(buffer, 0, read);
+            }
+            return out.toByteArray();
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("读取对象存储失败", e);
+        }
+    }
+
     private HttpRequest signedRequest(String method, String objectKey) {
+        return signedRequest(method, objectKey, Duration.ofSeconds(5));
+    }
+
+    private HttpRequest signedRequest(String method, String objectKey, Duration timeout) {
         properties.requireCredentials();
         Instant now = Instant.now();
         String amzDate = AMZ_DATE.format(now);
@@ -87,7 +134,7 @@ public class ObjectStorageClient {
                 + ", SignedHeaders=" + signedHeaders + ", Signature=" + signature;
 
         return HttpRequest.newBuilder(URI.create(properties.baseUrl() + canonicalUri))
-                .timeout(Duration.ofSeconds(5))
+                .timeout(timeout)
                 .header("x-amz-date", amzDate)
                 .header("x-amz-content-sha256", SigV4.EMPTY_PAYLOAD_HASH)
                 .header("Authorization", authorization)

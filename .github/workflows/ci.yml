@@ -16,7 +16,6 @@ concurrency:
 env:
   JAVA_VERSION: '21'
   NODE_VERSION: '22'
-  DOTNET_VERSION: '8.0.x'
 
 jobs:
   # 秘密扫描：命中即失败，不接受「先上线后清理」
@@ -171,42 +170,6 @@ jobs:
             frontend/bom.cdx.json
           if-no-files-found: warn
 
-  desktop-agent:
-    name: desktop-agent
-    runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: desktop-agent
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-      - name: 构建（警告即错误）
-        run: dotnet build desktop-agent.sln -c Release
-      - name: 隐私边界行为自检
-        run: dotnet run --project privacy-engine/WorkAssistant.PrivacyEngine.Checks -c Release --no-build
-      - name: 托盘与设备离线自检
-        run: |
-          dotnet run --project device/WorkAssistant.Device.Checks -c Release --no-build
-          $self = Start-Process -FilePath windows-app/WorkAssistant.WindowsApp/bin/Release/net8.0-windows/WorkAssistant.WindowsApp.exe `
-            -ArgumentList '--self-check', '--report', 'self-check.txt' -Wait -PassThru
-          Get-Content self-check.txt
-          exit $self.ExitCode
-      - name: 依赖漏洞
-        run: dotnet list desktop-agent.sln package --vulnerable --include-transitive
-      - name: 生成 SBOM
-        run: |
-          dotnet tool install --global CycloneDX
-          dotnet CycloneDX desktop-agent.sln -o sbom
-      - name: 归档 SBOM
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: desktop-agent-artifacts
-          path: desktop-agent/sbom
-          if-no-files-found: warn
-
   plugin-runner:
     name: plugin-runner
     runs-on: ubuntu-latest
@@ -281,7 +244,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: '1'
           ignore-unfixed: true
-          skip-dirs: node_modules,frontend/node_modules,backend/target,desktop-agent/bin,desktop-agent/obj
+          skip-dirs: node_modules,frontend/node_modules,backend/target
       - name: 聚合依赖清单
         uses: aquasecurity/trivy-action@v0.36.0
         with:
@@ -289,7 +252,7 @@ jobs:
           scan-ref: .
           format: cyclonedx
           output: repository.cdx.json
-          skip-dirs: node_modules,frontend/node_modules,backend/target,desktop-agent/bin,desktop-agent/obj
+          skip-dirs: node_modules,frontend/node_modules,backend/target
       - uses: actions/upload-artifact@v4
         with:
           name: repository-sbom
@@ -297,7 +260,7 @@ jobs:
 
   artifacts:
     name: artifacts
-    needs: [backend, frontend, desktop-agent, contracts, tests]
+    needs: [backend, frontend, contracts, tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

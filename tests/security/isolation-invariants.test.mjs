@@ -2,9 +2,8 @@
  * 安全不变量：隔离与零采集是产品红线，改坏必须让 CI 失败。
  *
  * 这些断言只看「默认值是否还安全」，行为验证在
- *   - desktop-agent/privacy-engine/WorkAssistant.PrivacyEngine.Checks（14 项断言）
  *   - plugin-runner/smoke.mjs（7 项容器冒烟）
- * 中执行。
+ * 中执行。设备侧采集能力已在 WP04-01 全量移除，不再有独立客户端断言。
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,8 +18,6 @@ const authorizationDir = join(repoRoot, 'backend', 'modules', 'authorization', '
   'com', 'acme', 'platform', 'authorization');
 const platformModuleDir = join(repoRoot, 'backend', 'modules', 'platform', 'src', 'main', 'java',
   'com', 'acme', 'platform', 'platform');
-const worklogModuleDir = join(repoRoot, 'backend', 'modules', 'worklog', 'src', 'main', 'java',
-  'com', 'acme', 'platform', 'worklog');
 const workflowModuleDir = join(repoRoot, 'backend', 'modules', 'workflow', 'src', 'main', 'java',
   'com', 'acme', 'platform', 'workflow');
 
@@ -188,7 +185,6 @@ test('保留事件与删除墓碑在数据库层只允许追加', () => {
 test('恢复回收站条目不得重建授权或身份', () => {
   const targets = [
     join(platformModuleDir, 'file', 'FileRetentionTarget.java'),
-    join(worklogModuleDir, 'device', 'SegmentRetentionTarget.java'),
   ];
   for (const file of targets) {
     const source = readFileSync(file, 'utf8');
@@ -219,15 +215,5 @@ test('工作流状态日志只追加、发布不可变且不直读他模块表',
     const source = readFileSync(file, 'utf8');
     assert.doesNotMatch(source, forbidden,
       `${file} 直接读取了其他模块的表，必须走公开只读查询`);
-  }
-});
-
-test('隐私引擎仍强制排除社交软件', () => {
-  const policy = readFileSync(
-    join(repoRoot, 'desktop-agent', 'privacy-engine', 'WorkAssistant.PrivacyEngine', 'ForbiddenApplicationPolicy.cs'),
-    'utf8',
-  );
-  for (const name of ['WeChat', 'Weixin', 'QQ', 'TIM']) {
-    assert.match(policy, new RegExp(name, 'i'), `隐私引擎未排除 ${name}`);
   }
 });

@@ -13,7 +13,7 @@ const repoRoot = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const workflow = readFileSync(join(repoRoot, '.github', 'workflows', 'ci.yml'), 'utf8');
 
 test('六个构建任务全部存在', () => {
-  for (const job of ['backend', 'frontend', 'desktop-agent', 'plugin-runner', 'contracts', 'tests']) {
+  for (const job of ['backend', 'db', 'frontend', 'plugin-runner', 'contracts', 'tests']) {
     assert.match(workflow, new RegExp(`^\\s{2}${job}:`, 'm'), `缺少 CI 任务 ${job}`);
   }
 });
@@ -34,7 +34,6 @@ test('容器与依赖漏洞扫描以非零退出码阻断', () => {
   assert.match(workflow, /severity:\s*CRITICAL,HIGH/, '漏洞扫描未锁定严重级别');
   assert.match(workflow, /exit-code:\s*'1'/, '漏洞扫描未设置为阻断');
   assert.match(workflow, /pnpm audit --audit-level high/, '未对前端依赖做漏洞审查');
-  assert.match(workflow, /--vulnerable/, '未对 .NET 依赖做漏洞审查');
   assert.match(workflow, /dependency-check-maven/, '未对 Maven 依赖做漏洞审查');
 });
 

@@ -58,6 +58,8 @@ describe('contract-check', () => {
 
   it('阻断 OpenAPI 删除必填字段', () => {
     const root = sandbox();
+    // 仓库内的 approvals 会整体放行 openapi 的破坏性变更，这里必须清掉才能验证「未批准即阻断」
+    rmSync(join(root, 'baseline', 'approvals'), { recursive: true, force: true });
     edit(root, 'openapi/platform-api.v1.json', (document) => {
       delete document.components.schemas.SystemHealth.properties.service;
     });

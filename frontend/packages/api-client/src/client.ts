@@ -223,6 +223,7 @@ export interface WorklogEntryView {
   description: string;
   clientEntryId: string;
   draftVersion: number;
+  sourceType?: 'manual' | 'voice';
 }
 
 export interface WorklogEntryInput {
@@ -263,6 +264,40 @@ export interface WeeklyReport {
   status: 'draft' | 'submitted' | 'approved' | 'returned';
   content: Record<string, unknown>;
   submittedAt?: string | null;
+}
+
+export interface VoiceCapture {
+  id: string;
+  status: 'uploaded' | 'transcribed' | 'confirmed' | 'discarded' | 'failed';
+  uploadUrl?: string | null;
+  expiresAt?: string | null;
+  transcript?: string | null;
+  editedText?: string | null;
+  provider?: string | null;
+  model?: string | null;
+  confidence?: number | null;
+  transcribedAt?: string | null;
+  worklogEntryId?: string | null;
+  errorCode?: string | null;
+}
+
+export interface VoiceCaptureInput {
+  workDate: string;
+  contentType: string;
+  sizeBytes: number;
+  durationSeconds?: number | null;
+  clientRequestId: string;
+}
+
+export interface VoiceConfirmInput {
+  text: string;
+  durationMinutes?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  projectId?: string | null;
+  taskId?: string | null;
+  description?: string | null;
+  clientEntryId: string;
 }
 
 export interface CollabChannel {
@@ -718,6 +753,17 @@ export interface ApiClient {
   ): Promise<WorklogEntryView>;
   deleteWorklogEntry(entryId: string, options?: RequestOptions): Promise<void>;
   submitWorklogDay(date: string, options?: RequestOptions): Promise<WorklogSubmission>;
+  createVoiceCapture(
+    input: VoiceCaptureInput,
+    options?: RequestOptions,
+  ): Promise<VoiceCapture>;
+  transcribeVoiceCapture(captureId: string, options?: RequestOptions): Promise<VoiceCapture>;
+  confirmVoiceCapture(
+    captureId: string,
+    input: VoiceConfirmInput,
+    options?: RequestOptions,
+  ): Promise<{ entry: WorklogEntryView; audioDeleted: boolean }>;
+  discardVoiceCapture(captureId: string, options?: RequestOptions): Promise<void>;
   listPendingWorklogReviews(): Promise<WorklogSubmission[]>;
   reviewWorklogSubmission(
     submissionId: string,
@@ -1137,6 +1183,26 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     submitWorklogDay: (date, requestOptions) =>
       postJson<WorklogSubmission>(
         `/api/v1/worklog/days/${encodeURIComponent(date)}/submit`, {}, requestOptions),
+    createVoiceCapture: (input, requestOptions) =>
+      postJson<VoiceCapture>('/api/v1/worklog/voice/captures', input, requestOptions),
+    transcribeVoiceCapture: (captureId, requestOptions) =>
+      postJson<VoiceCapture>(
+        `/api/v1/worklog/voice/captures/${encodeURIComponent(captureId)}/transcription`,
+        {},
+        requestOptions,
+      ),
+    confirmVoiceCapture: (captureId, input, requestOptions) =>
+      postJson<{ entry: WorklogEntryView; audioDeleted: boolean }>(
+        `/api/v1/worklog/voice/captures/${encodeURIComponent(captureId)}/confirm`,
+        input,
+        requestOptions,
+      ),
+    discardVoiceCapture: (captureId, requestOptions) =>
+      request<void>(
+        `/api/v1/worklog/voice/captures/${encodeURIComponent(captureId)}`,
+        { method: 'DELETE' },
+        requestOptions ?? {},
+      ),
     listPendingWorklogReviews: () =>
       request<WorklogSubmission[]>('/api/v1/worklog/reviews'),
     reviewWorklogSubmission: (submissionId, action, comment, requestOptions) =>

@@ -1,0 +1,7 @@
+﻿login: HTTP 200 displayName=张主管
+create capture: HTTP 200 id=080cc1a5-8a18-4a1b-b2f6-b973340fa9c7 status=uploaded objectKey=aaaaaaaa-0000-0000-0000-000000000001/voice/583e350e-3fe8-4591-9a3b-a31a0c784282
+presigned PUT: HTTP 200 size=2048
+transcribe: HTTP 200 status=transcribed provider=openai-compatible model=fake-asr-1 text=整理两周工时数据并按统计口径核对（本地假 ASR）
+confirm: HTTP 200 audioDeleted=True entryId=e0239d92-ecd0-4086-813a-23a5b7119d27 minutes=1 sourceType=voice
+day re-read: state=draft entryFound=True sourceType=voice description=整理两周工时数据并按统计口径核对（本地假 ASR）
+captureId=080cc1a5-8a18-4a1b-b2f6-b973340fa9c7

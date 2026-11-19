@@ -29,7 +29,7 @@
 4. 已有生效回收站条目 → 直接返回原条目（幂等）。
 5. 写入回收站，`purge_after = 删除时间 + retention.recycle_bin_days`。
 
-当前接入的数据类：`file`（平台文件）与 `work_assistant_segment`（员工通过语音或文字录入的工时片段，`source_type` 仅 `voice` / `manual`；系统不做设备、屏幕或输入内容采集）。新增数据类时必须实现 `RetentionTarget` 并在此登记，否则删除会返回 `409 RETENTION_CLASS_UNSUPPORTED`。
+当前接入的数据类：`file`（平台文件）与 `worklog_entry`（员工主动录入的工时草稿）。系统不提供设备采集客户端，不采集屏幕、窗口标题、剪贴板或输入内容；语音音频只用于一次转写，确认后立即删除，不进回收站。新增数据类时必须实现 `RetentionTarget` 并在此登记，否则删除会返回 `409 RETENTION_CLASS_UNSUPPORTED`。
 
 回收站只存元数据快照（文件名、类型、大小、sha256、时间），不复制业务正文。
 
@@ -74,7 +74,7 @@ curl -X POST "$PLATFORM_HOST/platform/api/v1/retention/tombstones/replay?limit=1
 - 返回 `applied / skipped / failed` 三项计数；
 - 每条结果写入 `platform_tombstone_replay`，可重复执行；
 - `failed>0` 时按 `detail.error` 定位（通常是对象存储不可达），修复后重跑；
-- 重放只处理 `purged`（file / work_assistant_segment）与 `anonymized`（person）两类墓碑。
+- 重放只处理 `purged`（file / worklog_entry）与 `anonymized`（person）两类墓碑。
 
 **恢复验收标准**：重放后 `applied + skipped = 墓碑总数`，且 `failed = 0`。
 
