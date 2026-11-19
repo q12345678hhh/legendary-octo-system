@@ -1,10 +1,171 @@
 {
-  "frozenAt": "2026-11-13T07:31:49.813Z",
+  "frozenAt": "2026-11-13T09:46:37.429Z",
   "contracts": {
     "openapi/platform-api.v1.json": {
       "kind": "openapi",
-      "sha256": "5fde5e512e32dace0f81e753086407a3d27934197bf7c08e3815ce3611a0ce45",
+      "sha256": "05be005aa884699a3012c8840d5eaf318bac08f940a6debbf7db46aea21c4243",
       "tokens": {
+        "operation:GET /api/v1/app-catalog/modules": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/app-catalog/modules:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules:400": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/app-catalog/modules:query:q": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/app-catalog/modules:query:category": {
+          "required": false,
+          "type": "string"
+        },
+        "parameter:GET /api/v1/app-catalog/modules:query:health": {
+          "required": false,
+          "type": "string"
+        },
+        "operation:POST /api/v1/app-catalog/modules": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/app-catalog/modules:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/modules:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/modules:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/modules:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/modules:409": {
+          "defined": true
+        },
+        "operation:GET /api/v1/app-catalog/modules/{moduleId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/modules/{moduleId}:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/app-catalog/modules/{moduleId}:path:moduleId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:PUT /api/v1/app-catalog/modules/{moduleId}": {
+          "requestBodyRequired": false
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}:200": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}:400": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}:401": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}:403": {
+          "defined": true
+        },
+        "response:PUT /api/v1/app-catalog/modules/{moduleId}:404": {
+          "defined": true
+        },
+        "parameter:PUT /api/v1/app-catalog/modules/{moduleId}:path:moduleId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:GET /api/v1/app-catalog/suggestions": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/app-catalog/suggestions:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/suggestions:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/suggestions:403": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/app-catalog/suggestions:query:scope": {
+          "required": false,
+          "type": "string"
+        },
+        "operation:POST /api/v1/app-catalog/suggestions": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/app-catalog/suggestions:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/suggestions:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/suggestions:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/suggestions:403": {
+          "defined": true
+        },
+        "operation:GET /api/v1/app-catalog/suggestions/{suggestionId}": {
+          "requestBodyRequired": false
+        },
+        "response:GET /api/v1/app-catalog/suggestions/{suggestionId}:200": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/suggestions/{suggestionId}:401": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/suggestions/{suggestionId}:403": {
+          "defined": true
+        },
+        "response:GET /api/v1/app-catalog/suggestions/{suggestionId}:404": {
+          "defined": true
+        },
+        "parameter:GET /api/v1/app-catalog/suggestions/{suggestionId}:path:suggestionId": {
+          "required": true,
+          "type": "string"
+        },
+        "operation:POST /api/v1/app-catalog/suggestions/{suggestionId}/actions": {
+          "requestBodyRequired": false
+        },
+        "response:POST /api/v1/app-catalog/suggestions/{suggestionId}/actions:200": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/suggestions/{suggestionId}/actions:400": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/suggestions/{suggestionId}/actions:401": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/suggestions/{suggestionId}/actions:403": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/suggestions/{suggestionId}/actions:404": {
+          "defined": true
+        },
+        "response:POST /api/v1/app-catalog/suggestions/{suggestionId}/actions:409": {
+          "defined": true
+        },
+        "parameter:POST /api/v1/app-catalog/suggestions/{suggestionId}/actions:path:suggestionId": {
+          "required": true,
+          "type": "string"
+        },
         "operation:GET /api/v1/retention/bin": {
           "requestBodyRequired": false
         },

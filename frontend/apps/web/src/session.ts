@@ -1,6 +1,6 @@
 /**
- * 占位会话：租户与主体仅存于 sessionStorage，退出即清除。
- * 这是 WP01-04 的骨架实现，真实认证由 WP02-02 的会话服务替换。
+ * 页面会话：登录成功后把租户与 actor 主体存进 sessionStorage，用于请求头与路由刷新恢复。
+ * 真正的凭据是后端下发的 HttpOnly 会话 Cookie，这里不保存任何令牌。
  */
 export interface Session {
   tenantId: string;
@@ -10,7 +10,7 @@ export interface Session {
 const STORAGE_KEY = 'platform.session.v1';
 
 const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function isUuid(value: string): boolean {
   return UUID_PATTERN.test(value.trim());

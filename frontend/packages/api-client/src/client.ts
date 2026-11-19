@@ -17,10 +17,35 @@ export interface HealthResponse {
   service: string;
 }
 
-/** 占位认证身份：租户 + 主体，仅由页面会话提供，后续由真实登录替换。 */
+/** 当前登录身份：租户 + 主体，由真实登录返回后写入页面会话。 */
 export interface PlatformIdentity {
   tenantId: string;
   subjectId: string;
+}
+
+/** 登录成功后返回的会话主体；actorId 即后续请求头里的 subjectId。 */
+export interface SessionPrincipal {
+  tenantId: string;
+  actorId: string;
+  userId: string;
+  memberId: string;
+  sessionId?: string;
+  actorType?: string;
+  email?: string | null;
+  displayName?: string | null;
+  owner?: boolean;
+  admin?: boolean;
+}
+
+/** 登录结果：需要 MFA 时只返回票据，不签发会话 Cookie。 */
+export type LoginResult =
+  | { status: 'session'; principal: SessionPrincipal; sessionExpiresAt?: string | null }
+  | { status: 'mfa_required'; mfaToken: string };
+
+export interface SignInInput {
+  tenantId: string;
+  email: string;
+  password: string;
 }
 
 export interface ApiClientOptions {
@@ -553,8 +578,115 @@ export interface WorkflowException {
   createdAt: string;
 }
 
+export type AppModuleHealth = 'healthy' | 'degraded' | 'offline' | 'unknown';
+export type AppModuleInstallStatus = 'not_installed' | 'installed' | 'disabled';
+export type AppModuleScope = 'tenant' | 'department' | 'project' | 'person';
+
+export interface AppModule {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  description: string;
+  templateKey?: string | null;
+  ownerPersonId?: string | null;
+  version: string;
+  dependencies: string;
+  applicableScope: AppModuleScope;
+  healthStatus: AppModuleHealth;
+  installStatus: AppModuleInstallStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppModuleInput {
+  code: string;
+  name: string;
+  category?: string | undefined;
+  description?: string | undefined;
+  templateKey?: string | null | undefined;
+  ownerPersonId?: string | null | undefined;
+  version?: string | undefined;
+  dependencies?: string | undefined;
+  applicableScope?: AppModuleScope | undefined;
+  healthStatus?: AppModuleHealth | undefined;
+  installStatus?: AppModuleInstallStatus | undefined;
+}
+
+export type ModuleSuggestionStatus =
+  | 'draft'
+  | 'communicating'
+  | 'submitted'
+  | 'configuring'
+  | 'testing'
+  | 'rectifying'
+  | 'test_failed'
+  | 'pending_final_approval'
+  | 'rejected'
+  | 'withdrawn'
+  | 'enabled'
+  | 'special_pending_review'
+  | 'paused'
+  | 'closed'
+  | 'deprecated';
+
+export interface ModuleSuggestion {
+  id: string;
+  title: string;
+  requesterPersonId: string;
+  businessProblem: string;
+  goal: string;
+  scope: string;
+  dataScope: string;
+  permissionsNeeded: string;
+  costEstimate: string;
+  benefitEstimate: string;
+  suggestedOwnerPersonId?: string | null;
+  configOwnerPersonId?: string | null;
+  status: ModuleSuggestionStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ModuleSuggestionEvent {
+  id: string;
+  eventKind: 'transition' | 'comment' | 'notification';
+  fromStatus?: string | null;
+  toStatus?: string | null;
+  action: string;
+  actorPersonId?: string | null;
+  recipientPersonId?: string | null;
+  comment: string;
+  occurredAt: string;
+}
+
+export interface ModuleSuggestionDetail {
+  suggestion: ModuleSuggestion;
+  events: ModuleSuggestionEvent[];
+}
+
+export interface ModuleSuggestionInput {
+  title: string;
+  businessProblem: string;
+  goal?: string | undefined;
+  scope?: string | undefined;
+  dataScope?: string | undefined;
+  permissionsNeeded?: string | undefined;
+  costEstimate?: string | undefined;
+  benefitEstimate?: string | undefined;
+  suggestedOwnerPersonId?: string | null | undefined;
+}
+
+export interface ModuleSuggestionAction {
+  action: string;
+  comment?: string | undefined;
+  configOwnerPersonId?: string | null | undefined;
+}
+
 export interface ApiClient {
   request<T>(path: string, init?: RequestInit, options?: RequestOptions): Promise<T>;
+  signIn(input: SignInInput): Promise<LoginResult>;
+  signOut(): Promise<void>;
   getSystemHealth(): Promise<HealthResponse>;
   createJob(input: CreateJobInput, options?: RequestOptions): Promise<Job>;
   listJobs(limit?: number): Promise<Job[]>;
@@ -783,9 +915,55 @@ export interface ApiClient {
     input: { action: string; assigneePersonId?: string },
     options?: RequestOptions,
   ): Promise<WorkflowException>;
+  listAppModules(query?: {
+    q?: string | undefined;
+    category?: string | undefined;
+    health?: string | undefined;
+  }): Promise<AppModule[]>;
+  getAppModule(moduleId: string): Promise<AppModule>;
+  createAppModule(input: AppModuleInput, options?: RequestOptions): Promise<AppModule>;
+  updateAppModule(
+    moduleId: string,
+    input: AppModuleInput,
+    options?: RequestOptions,
+  ): Promise<AppModule>;
+  listModuleSuggestions(scope?: 'mine' | 'all'): Promise<ModuleSuggestion[]>;
+  getModuleSuggestion(suggestionId: string): Promise<ModuleSuggestionDetail>;
+  createModuleSuggestion(
+    input: ModuleSuggestionInput,
+    options?: RequestOptions,
+  ): Promise<ModuleSuggestion>;
+  actOnModuleSuggestion(
+    suggestionId: string,
+    input: ModuleSuggestionAction,
+    options?: RequestOptions,
+  ): Promise<ModuleSuggestionDetail>;
 }
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/** CSRF Cookie 与后端 `platform.identity.csrf-cookie-name` 默认值一致，非 HttpOnly。 */
+const CSRF_COOKIE_NAME = 'plt_csrf';
+const CSRF_HEADER = 'X-CSRF-Token';
+const TENANT_HEADER = 'X-Tenant-Id';
+
+function readCsrfToken(): string | null {
+  if (typeof document === 'undefined' || !document.cookie) {
+    return null;
+  }
+  for (const part of document.cookie.split(';')) {
+    const separator = part.indexOf('=');
+    if (separator < 0) {
+      continue;
+    }
+    if (part.slice(0, separator).trim() !== CSRF_COOKIE_NAME) {
+      continue;
+    }
+    const value = part.slice(separator + 1).trim();
+    return value ? decodeURIComponent(value) : null;
+  }
+  return null;
+}
 
 function queryString(params: Record<string, string | undefined>): string {
   const search = new URLSearchParams();
@@ -825,11 +1003,18 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
     const identity = options.identityProvider?.() ?? null;
     if (identity) {
-      headers.set('X-Tenant-Id', identity.tenantId);
+      headers.set(TENANT_HEADER, identity.tenantId);
       headers.set('X-Subject-Id', identity.subjectId);
     }
 
     const method = (init.method ?? 'GET').toUpperCase();
+    if (MUTATING_METHODS.has(method) && !headers.has(CSRF_HEADER)) {
+      // Cookie 会话的写操作必须双提交 CSRF；登录/登出没有会话时读不到 Cookie，自动跳过。
+      const csrf = readCsrfToken();
+      if (csrf) {
+        headers.set(CSRF_HEADER, csrf);
+      }
+    }
     if (
       MUTATING_METHODS.has(method) &&
       !requestOptions.skipIdempotencyKey &&
@@ -842,7 +1027,11 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       headers.set('Content-Type', 'application/json');
     }
 
-    const response = await fetchImpl(`${options.baseUrl}${path}`, { ...init, headers });
+    const response = await fetchImpl(`${options.baseUrl}${path}`, {
+      ...init,
+      headers,
+      credentials: 'include',
+    });
 
     if (!response.ok) {
       let problem: ProblemDetails | undefined;
@@ -873,6 +1062,18 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
   return {
     request,
+    signIn: (input) =>
+      request<LoginResult>(
+        '/api/v1/auth/login',
+        {
+          method: 'POST',
+          headers: { [TENANT_HEADER]: input.tenantId },
+          body: JSON.stringify({ email: input.email, password: input.password }),
+        },
+        { skipIdempotencyKey: true },
+      ),
+    signOut: () =>
+      request<void>('/api/v1/auth/logout', { method: 'POST' }, { skipIdempotencyKey: true }),
     getSystemHealth: () => request<HealthResponse>('/api/v1/system/health'),
     createJob: (input, requestOptions) =>
       postJson<Job>('/api/v1/system/jobs', input, requestOptions),
@@ -1248,6 +1449,40 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
         `/api/v1/workflow/exceptions/${encodeURIComponent(exceptionId)}/resolve`,
         { method: 'POST', body: JSON.stringify(input) },
         requestOptions ?? {},
+      ),
+    listAppModules: (query = {}) =>
+      request<AppModule[]>(
+        `/api/v1/app-catalog/modules${queryString({
+          q: query.q,
+          category: query.category,
+          health: query.health,
+        })}`,
+      ),
+    getAppModule: (moduleId) =>
+      request<AppModule>(`/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}`),
+    createAppModule: (input, requestOptions) =>
+      postJson<AppModule>('/api/v1/app-catalog/modules', input, requestOptions),
+    updateAppModule: (moduleId, input, requestOptions) =>
+      request<AppModule>(
+        `/api/v1/app-catalog/modules/${encodeURIComponent(moduleId)}`,
+        { method: 'PUT', body: JSON.stringify(input) },
+        requestOptions ?? {},
+      ),
+    listModuleSuggestions: (scope = 'mine') =>
+      request<ModuleSuggestion[]>(
+        `/api/v1/app-catalog/suggestions${queryString({ scope })}`,
+      ),
+    getModuleSuggestion: (suggestionId) =>
+      request<ModuleSuggestionDetail>(
+        `/api/v1/app-catalog/suggestions/${encodeURIComponent(suggestionId)}`,
+      ),
+    createModuleSuggestion: (input, requestOptions) =>
+      postJson<ModuleSuggestion>('/api/v1/app-catalog/suggestions', input, requestOptions),
+    actOnModuleSuggestion: (suggestionId, input, requestOptions) =>
+      postJson<ModuleSuggestionDetail>(
+        `/api/v1/app-catalog/suggestions/${encodeURIComponent(suggestionId)}/actions`,
+        input,
+        requestOptions,
       ),
   };
 }

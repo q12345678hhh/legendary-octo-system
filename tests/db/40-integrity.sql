@@ -139,9 +139,10 @@ BEGIN
                          'authorization_cache_version', 'authorization_decision_log',
                          'authorization_access_request', 'authorization_access_review',
                          'authorization_access_review_item', 'authorization_admin_action',
-                         'retention_bin_item', 'retention_legal_hold', 'retention_event');
-    IF policy_count <> 96 THEN
-        RAISE EXCEPTION 'V4–V17 未完整生效：应有 96 张租户表，实际 %', policy_count;
+                         'retention_bin_item', 'retention_legal_hold', 'retention_event',
+                         'app_module', 'app_module_suggestion', 'app_module_suggestion_event');
+    IF policy_count <> 99 THEN
+        RAISE EXCEPTION 'V4–V18 未完整生效：应有 99 张租户表，实际 %', policy_count;
     END IF;
 
     -- WP02-07：平台目录投影是设计内例外，必须不启用 RLS，且同步触发器存在
