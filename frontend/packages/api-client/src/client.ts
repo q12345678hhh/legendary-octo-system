@@ -329,6 +329,160 @@ export interface WeeklyReportContent {
   generation?: WeeklyReportGeneration;
 }
 
+export type ExpenseDocType = 'invoice' | 'receipt' | 'bill';
+
+export type ExpenseStatus = 'manual_review' | 'approved' | 'posted' | 'rejected' | 'voided';
+
+export type ExpenseOcrStatus =
+  | 'OK'
+  | 'UNAVAILABLE'
+  | 'TIMEOUT'
+  | 'INVALID'
+  | 'PDF_UNSUPPORTED'
+  | 'MANUAL';
+
+export interface ExpenseFinding {
+  code: string;
+  status: 'pass' | 'fail' | 'blocked' | 'skipped';
+  message: string;
+  actual?: string | null;
+  expected?: string | null;
+  confidence?: number | null;
+}
+
+export interface ExpenseExtractionSummary {
+  id: string;
+  status: ExpenseOcrStatus;
+  provider?: string | null;
+  model?: string | null;
+  errorCode?: string | null;
+  ocrText?: string | null;
+  createdAt: string;
+}
+
+export interface ExpenseDocument {
+  id: string;
+  uploaderPersonId: string;
+  fileId: string;
+  docType: ExpenseDocType;
+  status: ExpenseStatus;
+  currency?: string | null;
+  amount?: number | null;
+  invoiceCode?: string | null;
+  invoiceNo?: string | null;
+  vendorName?: string | null;
+  vendorTaxNo?: string | null;
+  occurredOn?: string | null;
+  category?: string | null;
+  findings: ExpenseFinding[];
+  confidence: Record<string, number>;
+  ruleVersion: string;
+  policyVersion: number;
+  extractionId?: string | null;
+  postedAt?: string | null;
+  postedBy?: string | null;
+  postActorKind?: 'ai' | 'employee' | null;
+  voidedAt?: string | null;
+  voidedBy?: string | null;
+  voidReason?: string | null;
+  createdAt: string;
+}
+
+export interface ExpenseDocumentView {
+  document: ExpenseDocument;
+  extraction?: ExpenseExtractionSummary | null;
+}
+
+export interface ExpenseAuditEvent {
+  id: string;
+  documentId?: string | null;
+  action: string;
+  actorPersonId?: string | null;
+  actorKind: 'employee' | 'reviewer' | 'poster' | 'ai' | 'system';
+  detail: Record<string, unknown>;
+  occurredAt: string;
+}
+
+export interface ExpensePolicy {
+  autoPostEnabled: boolean;
+  autoPostLimit: number;
+  windowDays: number;
+  legalTitle?: string | null;
+  taxId?: string | null;
+  vendorAllowlist: string[];
+  manualCategories: string[];
+  allowedCategories: string[];
+  minConfidence: number;
+  verifyRequired: boolean;
+  version: number;
+}
+
+export interface ExpensePolicyInput {
+  autoPostEnabled: boolean;
+  autoPostLimit: number;
+  windowDays: number;
+  legalTitle?: string;
+  taxId?: string;
+  vendorAllowlist: string[];
+  manualCategories: string[];
+  allowedCategories: string[];
+  minConfidence: number;
+  verifyRequired: boolean;
+}
+
+export type ExpenseBatchScope = 'vendor' | 'uploader' | 'amount';
+
+export interface ExpenseBatchHold {
+  id: string;
+  scopeType: ExpenseBatchScope;
+  scopeKey: string;
+  reason: string;
+  windowHours: number;
+  documentCount: number;
+  amountTotal?: number | null;
+  status: 'active' | 'released';
+  createdBy?: string | null;
+  createdAt: string;
+  releasedBy?: string | null;
+  releasedAt?: string | null;
+  releaseNote?: string | null;
+}
+
+export interface ExpenseLineItem {
+  description?: string | null;
+  amount?: number | null;
+}
+
+export interface ExpenseManualFields {
+  amount?: number | null;
+  currency?: string | null;
+  invoiceCode?: string | null;
+  invoiceNo?: string | null;
+  vendorName?: string | null;
+  vendorTaxNo?: string | null;
+  occurredOn?: string | null;
+  category?: string | null;
+  title?: string | null;
+  lines?: ExpenseLineItem[];
+}
+
+export interface CreateExpenseDocumentInput {
+  fileId: string;
+  docType: ExpenseDocType;
+  fields?: ExpenseManualFields | null;
+}
+
+export interface ExpenseReviewOverride {
+  ruleCode: string;
+  reason: string;
+}
+
+export interface ExpenseReviewInput {
+  decision: 'approve' | 'reject';
+  comment?: string;
+  overrides?: ExpenseReviewOverride[];
+}
+
 export interface VoiceCapture {
   id: string;
   status: 'uploaded' | 'transcribed' | 'confirmed' | 'discarded' | 'failed';
@@ -850,6 +1004,44 @@ export interface ApiClient {
     comment: string,
     options?: RequestOptions,
   ): Promise<WeeklyReport>;
+  createExpenseDocument(
+    input: CreateExpenseDocumentInput,
+    options?: RequestOptions,
+  ): Promise<ExpenseDocumentView>;
+  listExpenseDocuments(
+    params?: { status?: string; limit?: number },
+    options?: RequestOptions,
+  ): Promise<ExpenseDocumentView[]>;
+  getExpenseDocument(documentId: string): Promise<ExpenseDocumentView>;
+  listExpenseDocumentAudit(documentId: string): Promise<ExpenseAuditEvent[]>;
+  reviewExpenseDocument(
+    documentId: string,
+    input: ExpenseReviewInput,
+    options?: RequestOptions,
+  ): Promise<ExpenseDocumentView>;
+  postExpenseDocument(
+    documentId: string,
+    options?: RequestOptions,
+  ): Promise<ExpenseDocumentView>;
+  voidExpenseDocument(
+    documentId: string,
+    input: { reason: string },
+    options?: RequestOptions,
+  ): Promise<ExpenseDocumentView>;
+  getExpensePolicy(): Promise<ExpensePolicy>;
+  updateExpensePolicy(
+    input: ExpensePolicyInput,
+    options?: RequestOptions,
+  ): Promise<ExpensePolicy>;
+  listExpenseHolds(
+    status?: 'active' | 'released',
+    options?: RequestOptions,
+  ): Promise<ExpenseBatchHold[]>;
+  releaseExpenseHold(
+    holdId: string,
+    input: { note: string },
+    options?: RequestOptions,
+  ): Promise<ExpenseBatchHold>;
   listCollabChannels(limit?: number): Promise<CollabChannel[]>;
   createCollabChannel(
     input: { orgUnitId: string; scope: string; name: string; topic: string },
@@ -1297,6 +1489,52 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       postJson<WeeklyReport>(
         `/api/v1/worklog/reports/${encodeURIComponent(reportId)}/review`,
         { action, comment }, requestOptions),
+    createExpenseDocument: (input, requestOptions) =>
+      postJson<ExpenseDocumentView>('/api/v1/expense/documents', input, requestOptions),
+    listExpenseDocuments: (params, requestOptions) => {
+      const query = new URLSearchParams();
+      if (params?.status !== undefined) {
+        query.set('status', params.status);
+      }
+      if (params?.limit !== undefined) {
+        query.set('limit', String(params.limit));
+      }
+      const suffix = query.size > 0 ? `?${query.toString()}` : '';
+      return request<ExpenseDocumentView[]>(
+        `/api/v1/expense/documents${suffix}`, {}, requestOptions);
+    },
+    getExpenseDocument: (documentId) =>
+      request<ExpenseDocumentView>(
+        `/api/v1/expense/documents/${encodeURIComponent(documentId)}`),
+    listExpenseDocumentAudit: (documentId) =>
+      request<ExpenseAuditEvent[]>(
+        `/api/v1/expense/documents/${encodeURIComponent(documentId)}/audit`),
+    reviewExpenseDocument: (documentId, input, requestOptions) =>
+      postJson<ExpenseDocumentView>(
+        `/api/v1/expense/documents/${encodeURIComponent(documentId)}/review`,
+        input, requestOptions),
+    postExpenseDocument: (documentId, requestOptions) =>
+      postJson<ExpenseDocumentView>(
+        `/api/v1/expense/documents/${encodeURIComponent(documentId)}/post`,
+        {}, requestOptions),
+    voidExpenseDocument: (documentId, input, requestOptions) =>
+      postJson<ExpenseDocumentView>(
+        `/api/v1/expense/documents/${encodeURIComponent(documentId)}/void`,
+        input, requestOptions),
+    getExpensePolicy: () => request<ExpensePolicy>('/api/v1/expense/policy'),
+    updateExpensePolicy: (input, requestOptions) =>
+      request<ExpensePolicy>(
+        '/api/v1/expense/policy',
+        { method: 'PUT', body: JSON.stringify(input) },
+        requestOptions ?? {}),
+    listExpenseHolds: (status, requestOptions) =>
+      request<ExpenseBatchHold[]>(
+        `/api/v1/expense/holds${status ? `?status=${encodeURIComponent(status)}` : ''}`,
+        {}, requestOptions),
+    releaseExpenseHold: (holdId, input, requestOptions) =>
+      postJson<ExpenseBatchHold>(
+        `/api/v1/expense/holds/${encodeURIComponent(holdId)}/release`,
+        input, requestOptions),
     listCollabChannels: (limit) => {
       const query = limit === undefined ? '' : `?limit=${encodeURIComponent(String(limit))}`;
       return request<CollabChannel[]>(`/api/v1/collaboration/channels${query}`);

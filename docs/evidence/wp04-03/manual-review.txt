@@ -1,0 +1,58 @@
+# 转人工证据：OCR 不可用、PDF、超时、非法输出与规则阻断
+
+来源：`OpenAiCompatibleOcrExtractorTest`、`ExpenseRuleEngineTest`、`ExpenseServiceTest`、`ExpenseApiTest`。
+所有非正常路径都落 `manual_review`，不存在「默认通过」。
+
+## 1. 未配置 OCR
+
+`OcrProperties.configured()` 要求 base-url + api-key + model；缺一即 false。
+
+- 抽取器：返回 `status=UNAVAILABLE`、`errorCode=OCR_NOT_CONFIGURED`，不发起任何 HTTP 请求。
+- 服务层：不下载、不调用上游，直接写入 `expense_document_extraction.status=UNAVAILABLE`，
+  单据 `manual_review`，审计 `pre_review.completed` 记录 `extractionStatus=UNAVAILABLE`。
+- 断言：`unconfiguredReturnsUnavailableWithoutHttpCall`、
+  `ExpenseServiceTest.ocrUnavailableFallsToManualReview`（验证没有 `markPosted`）。
+
+## 2. PDF
+
+- 抽取器识别 `application/pdf` 后直接返回 `status=PDF_UNSUPPORTED`，
+  `pdfGoesToManualWithoutCallingUpstream` 断言假 HTTP 服务从未被调用。
+- 前端选择 PDF 时显示「PDF 不做自动 OCR」，提示手工填写金额、发票号等字段。
+- 手工字段以 `status=MANUAL`、置信度按 1.0 处理，但仍跑全部 13 条规则。
+
+## 3. 超时 / 上游失败 / 非法输出
+
+| 场景 | 结果 | 证据 |
+|---|---|---|
+| 上游超时（120ms 超时，服务端 sleep 400ms） | `TIMEOUT` / `OCR_TIMEOUT` | `timeoutMapsToTimeout` |
+| 上游返回 502 | `UNAVAILABLE` / `OCR_HTTP_502` | `upstreamFailureMapsToUnavailable` |
+| 返回非 JSON | `INVALID` / `OCR_OUTPUT_INVALID` | `invalidJsonMapsToInvalid` |
+| 返回 JSON 但字段全空 | `INVALID` / `OCR_OUTPUT_EMPTY` | 抽取器内部分支 |
+| 对象存储下载失败 | `UNAVAILABLE` / `STORAGE_UNAVAILABLE` | 服务层 `extract` 分支 |
+
+## 4. 规则阻断（转人工）
+
+| 场景 | 规则 | 结论 |
+|---|---|---|
+| 缺少金额/币种/日期/发票号/供应商 | R001 | fail |
+| 明细合计与票面不一致 | R002 | fail |
+| 抬头、税号与租户配置不一致 | R003 / R004 | fail |
+| 发生日期在未来或超出 90 天窗口 | R005 | fail |
+| 发票号已被占用 | R006 | fail |
+| 同哈希文件已提交 | R007 | fail |
+| 供应商不在白名单 | R008 | fail |
+| 金额超过自动入账上限 | R009 | blocked |
+| 关键字段置信度低于门槛 | R010 | blocked |
+| 科目命中必须人工复核清单 | R011 | blocked |
+| 验真开关打开（默认） | R012 | blocked |
+| 科目不在允许范围 | R013 | fail |
+
+`ExpenseRuleEngineTest.verifyRequiredBlocksAutoPostByDefault` 断言默认策略下 R012 为 blocked 且
+`autoPost=false`；`lowConfidenceAndManualCategoryBlock` 断言 R010/R011 同时阻断。
+
+## 5. 前端与接口
+
+- `ExpenseView.test.tsx`：详情显示「OCR 未配置或不可达，已转人工」与原因码；
+  PDF 选择后出现警示；列表显示未通过规则条数。
+- `ExpenseApiTest`：OCR 不可用路径返回 200 + `manual_review`，不返回 5xx，
+  员工可以看到可读原因而不是原始异常。

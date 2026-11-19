@@ -1,0 +1,46 @@
+# 重复报销拦截
+
+## 代码与数据约束
+
+1. `expense_invoice_claim` 上的唯一索引：
+
+   ```sql
+   CREATE UNIQUE INDEX expense_invoice_claim_active_unique
+       ON expense_invoice_claim (tenant_id, invoice_code, invoice_no)
+       WHERE released_at IS NULL;
+   ```
+
+   - 占用以 `INSERT ... ON CONFLICT DO NOTHING` 执行，插入成功才算未占用；
+   - 驳回或撤销时写 `released_at`，之后允许重新提交；
+   - 并发提交由数据库唯一索引兜底，冲突方进入 `manual_review`，不会 500。
+
+2. 规则 R006：发票号已被占用即 `fail`，单据转人工；R007：同租户同 `sha256` 文件已存在
+   非驳回/撤销单据即 `fail`。
+
+## 自动化断言
+
+`ExpenseRuleEngineTest.duplicateInvoiceAndFileForceManualReview`：
+
+```text
+Duplicates(invoiceClaimed=true, sameFileSubmitted=true)
+→ R006 = fail, R007 = fail, autoPost = false
+```
+
+`ExpenseServiceTest.duplicateInvoiceFallsToManualReview`：
+
+```text
+claimInvoice(...) 返回 false
+→ 单据 status = manual_review
+→ 从未调用 markPosted
+```
+
+## 数据库断言（db-verify 5n）
+
+```text
+INSERT expense_invoice_claim ... 88000011          → INSERT 0 1
+再次 INSERT 相同 (tenant, invoice_code, invoice_no) → unique_violation（被 DO 块捕获）
+UPDATE expense_invoice_claim SET released_at=now()  → 释放占用
+再次 INSERT 相同发票号                              → INSERT 0 1
+```
+
+输出以 `WP04-03 单据预审数据库断言通过` 结束。

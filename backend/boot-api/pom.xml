@@ -110,6 +110,10 @@
     </dependency>
     <dependency>
       <groupId>com.acme.platform</groupId>
+      <artifactId>expense</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.acme.platform</groupId>
       <artifactId>collaboration</artifactId>
     </dependency>
     <dependency>

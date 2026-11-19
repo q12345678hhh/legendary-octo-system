@@ -1,0 +1,43 @@
+WP04-04 权限码与越权安全事件证据
+=================================
+
+一、独立权限码（V21 已入目录，本 WP 验证）
+  expense.document.review  —— 人工复核与异常告警读取
+  expense.document.post    —— 入账与解除批次暂停
+  expense.document.submit  —— 提交单据
+  expense.document.void    —— 撤销已入账
+  expense.policy.manage    —— 租户策略
+
+  默认按角色授予（SystemRoleCatalog）：
+    管理员：read + review + post + void + policy.manage
+    部门主管：read + review
+    员工：read + submit
+  => 预审与入账是独立权限码，主管可复核但不能入账。
+
+二、越权 403 记录安全事件（ExpenseController）
+  requireActor 捕获 authorization.require 的 403 后：
+    security.record(tenantId, "incident", "medium",
+                    "越权访问被拒绝：<permission>",
+                    {permission, resourceId, personId, reason}, null)
+  记录使用 try/catch 包裹，安全中心故障不会覆盖原始 403。
+
+  用例：ExpenseApiTest.deniedReadNeverReachesService
+    GET /api/v1/expense/documents
+    -> 403 {"code":"EXPENSE_DOCUMENT_FORBIDDEN"}（服务层未调用）
+    verify security.record(TENANT, "incident", "medium",
+                           contains("expense.document.read"), any(), null)
+
+三、服务层 403（SOD）同样记录
+  review / post / void 端点捕获 ApiException 403 后调用同一记录方法。
+  用例：ExpenseApiTest.selfReviewIsRejectedAsSeparationOfDutyViolation
+    POST /api/v1/expense/documents/{id}/review
+    -> 403 {"code":"EXPENSE_SOD_VIOLATION"}
+    verify security.record(TENANT, "incident", "medium",
+                           contains("expense.document.review"), any(), null)
+
+四、安全事件摘要长度
+  "越权访问被拒绝：" + permission 恒在 4–500 字符内，满足
+  PlatformSecurityService.record 的校验。
+
+结论：越权请求返回 403 且在平台安全中心留下 incident 事件；
+      权限拒绝与业务拒绝均可追溯。

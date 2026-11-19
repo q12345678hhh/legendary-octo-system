@@ -58,6 +58,8 @@ public final class SystemRoleCatalog {
                 "authorization.access.approve", "authorization.review.manage",
                 "authorization.review.read", "authorization.review.decide",
                 "authorization.admin_action.read",
+                "expense.document.read", "expense.document.review", "expense.document.post",
+                "expense.document.void", "expense.policy.manage",
                 "department.workspace.manage", "workflow.definition.manage",
                 "workflow.instance.admin",
                 "appcatalog.module.read", "appcatalog.module.manage")));
@@ -93,6 +95,7 @@ public final class SystemRoleCatalog {
                 "authorization.review.read", "authorization.review.decide",
                 "worklog.time.read", "worklog.time.review",
                 "worklog.report.read", "worklog.report.review",
+                "expense.document.read", "expense.document.review",
                 "workflow.task.act", "workflow.instance.start",
                 "appcatalog.module.read")));
         map.put(MANAGER_UNIT, new RoleTemplate(MANAGER_UNIT, "部门主管（部门范围）", Set.of(
@@ -115,6 +118,7 @@ public final class SystemRoleCatalog {
                 "authorization.access.request", "business.work.read",
                 "worklog.time.read", "worklog.time.write",
                 "worklog.report.read", "worklog.report.submit",
+                "expense.document.read", "expense.document.submit",
                 "workflow.task.act", "appcatalog.module.read",
                 "appcatalog.suggestion.create")));
         map.put(PAYROLL_PREPARER, new RoleTemplate(PAYROLL_PREPARER, "薪酬制单", Set.of(

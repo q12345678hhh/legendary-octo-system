@@ -23,6 +23,7 @@ class ModuleStructureTest {
             "workflow",
             "hr",
             "worklog",
+            "expense",
             "collaboration",
             "integration",
             "plugin",
@@ -37,7 +38,7 @@ class ModuleStructureTest {
     }
 
     @Test
-    void exactlyTheFifteenBusinessModulesAreDetected() {
+    void exactlyTheBusinessModulesAreDetected() {
         List<String> detected = MODULES.stream().map(module -> module.getName()).sorted().toList();
 
         assertThat(detected).containsExactlyElementsOf(EXPECTED_MODULES.stream().sorted().toList());

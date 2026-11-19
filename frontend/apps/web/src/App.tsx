@@ -14,6 +14,7 @@ import { clearSession, readSession, type Session } from './session';
 import { CollaborationView } from './views/CollaborationView';
 import { DepartmentWorkspaceView } from './views/DepartmentWorkspaceView';
 import { DepartmentsView } from './views/DepartmentsView';
+import { ExpenseView } from './views/ExpenseView';
 import { FilesView } from './views/FilesView';
 import { HomeView } from './views/HomeView';
 import { InsightsView } from './views/InsightsView';
@@ -179,6 +180,9 @@ export function App({ apiClient }: AppProps) {
           <WorkView apiClient={apiClient} personId={params.personId} />
         )}
         {route === 'worklog' && <WorklogView apiClient={apiClient} />}
+        {route === 'expense' && (
+          <ExpenseView apiClient={apiClient} permissions={permissions} />
+        )}
         {route === 'insights' && <InsightsView apiClient={apiClient} />}
         {route === 'modules' && <ModulesView apiClient={apiClient} permissions={permissions} />}
         {route === 'collaboration' && <CollaborationView apiClient={apiClient} />}

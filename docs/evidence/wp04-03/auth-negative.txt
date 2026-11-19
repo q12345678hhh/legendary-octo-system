@@ -1,0 +1,33 @@
+# 授权负例与职责分离
+
+来源：`ExpenseApiTest`（6 个用例，全部通过）与 `ExpenseServiceTest`。
+
+## HTTP 边界
+
+| 场景 | 期望 | 用例 |
+|---|---|---|
+| 未携带会话访问单据列表 | 401 | `unauthenticatedRequestIsRejected` |
+| 缺少 `expense.document.read` | 403 `EXPENSE_DOCUMENT_FORBIDDEN`，服务层不会被调用 | `deniedReadNeverReachesService` |
+| 无 review 权限的列表 | 只按本人过滤（`list(personId, false, ...)`） | `listUsesSessionPersonAndHidesReviewScopeWithoutPermission` |
+| 提交单据返回预审结论 | 200，`document.status` 与金额可见 | `submitReturnsPreReviewConclusion` |
+| 提交人复核自己的单据 | 403 `EXPENSE_SOD_VIOLATION` | `selfReviewIsRejectedAsSeparationOfDutyViolation` |
+| 撤销不填原因 | 400 `EXPENSE_VOID_REASON_REQUIRED` | `voidRequiresReasonFromService` |
+
+控制器统一从会话解析 `personId` 与文件归属，请求体不能指定他人；
+文件归属校验失败返回 403 `EXPENSE_FILE_NOT_OWNED`。
+
+## 服务层
+
+- `ExpenseServiceTest.reviewerCannotReviewOwnDocument`：复核人 = 提交人 → 403 `EXPENSE_SOD_VIOLATION`。
+- `ExpenseServiceTest.rejectRequiresComment`：驳回空原因 → 400 `EXPENSE_REJECT_COMMENT_REQUIRED`。
+- `ExpenseServiceTest.voidRequiresReason`：撤销空白原因 → 400 `EXPENSE_VOID_REASON_REQUIRED`。
+- 复核、入账、撤销、策略分别使用独立权限码：
+  `expense.document.review`、`expense.document.post`、`expense.document.void`、`expense.policy.manage`。
+  内置角色授予：employee-self 仅 read/submit；manager read/review；tenant-owner 全部。
+
+## 实际测试输出
+
+```text
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 9.447 s -- in com.acme.platform.ExpenseApiTest
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.294 s -- in com.acme.platform.expense.app.ExpenseServiceTest
+```
