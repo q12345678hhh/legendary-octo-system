@@ -186,7 +186,10 @@ export function DepartmentWorkspaceView({
   const openEditKeyResult = (goal: Goal, keyResult: KeyResult) => {
     setKeyResultGoal(goal);
     setKeyResultEditing({ goal, keyResult });
-    keyResultForm.setFieldsValue({ currentValue: keyResult.currentValue });
+    keyResultForm.setFieldsValue({
+      title: keyResult.title,
+      currentValue: keyResult.currentValue,
+    });
     setGoalActionError(null);
     setKeyResultModalOpen(true);
   };
@@ -256,7 +259,10 @@ export function DepartmentWorkspaceView({
           keyResultEditing.goal.id,
           keyResultEditing.keyResult.id,
           orgUnitId,
-          Number(values.currentValue),
+          {
+            title: values.title ?? '',
+            currentValue: Number(values.currentValue),
+          },
           keyResultEditing.keyResult.version,
         );
       } else if (keyResultGoal) {
@@ -428,7 +434,7 @@ export function DepartmentWorkspaceView({
                               type="link"
                               onClick={() => openEditKeyResult(goal, keyResult)}
                             >
-                              更新当前值
+                              编辑
                             </Button>
                             <Button
                               size="small"
@@ -515,7 +521,7 @@ export function DepartmentWorkspaceView({
       </Modal>
 
       <Modal
-        title={keyResultEditing ? '更新关键结果当前值' : '添加关键结果'}
+        title={keyResultEditing ? '编辑关键结果' : '添加关键结果'}
         open={keyResultModalOpen}
         onCancel={() => setKeyResultModalOpen(false)}
         onOk={() => void submitKeyResult()}
@@ -524,15 +530,15 @@ export function DepartmentWorkspaceView({
         cancelText="取消"
       >
         <Form form={keyResultForm} layout="vertical">
+          <Form.Item
+            name="title"
+            label="关键结果"
+            rules={[{ required: true, message: '请填写关键结果标题' }]}
+          >
+            <Input maxLength={120} placeholder="例如：签约客户数" />
+          </Form.Item>
           {keyResultEditing ? null : (
             <>
-              <Form.Item
-                name="title"
-                label="关键结果"
-                rules={[{ required: true, message: '请填写关键结果标题' }]}
-              >
-                <Input maxLength={120} placeholder="例如：签约客户数" />
-              </Form.Item>
               <Form.Item
                 name="targetValue"
                 label="目标值"

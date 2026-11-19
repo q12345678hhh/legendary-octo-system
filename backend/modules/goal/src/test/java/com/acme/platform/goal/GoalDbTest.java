@@ -68,14 +68,16 @@ class GoalDbTest {
         assertThat(as(transactions, tenantA, () -> store.listByUnit(unitId))).hasSize(1);
         assertThat(as(transactions, tenantA, () -> store.findKeyResult(keyResultId))).isPresent();
         assertThat(as(transactions, tenantA,
-                () -> store.updateKeyResultCurrent(keyResultId, BigDecimal.valueOf(2), 1L)))
+                () -> store.updateKeyResultDetails(keyResultId, "签约客户",
+                        BigDecimal.valueOf(2), 1L)))
                 .isTrue();
 
         // 另一租户：不可见、不可改、不可删
         assertThat(as(transactions, tenantB, () -> store.listByUnit(unitId))).isEmpty();
         assertThat(as(transactions, tenantB, () -> store.findKeyResult(keyResultId))).isEmpty();
         assertThat(as(transactions, tenantB,
-                () -> store.updateKeyResultCurrent(keyResultId, BigDecimal.TEN, 2L))).isFalse();
+                () -> store.updateKeyResultDetails(keyResultId, "越权改名",
+                        BigDecimal.TEN, 2L))).isFalse();
         assertThat(as(transactions, tenantB, () -> store.deleteKeyResult(keyResultId))).isFalse();
 
         // 用 B 的上下文直插 A 的租户数据：WITH CHECK 拒绝

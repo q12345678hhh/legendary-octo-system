@@ -148,9 +148,16 @@ public class GoalService {
         });
     }
 
+    /** 关键结果支持改标题与当前值，至少提供一项；目标值/单位仍走删除重建。 */
     public KeyResultView updateKeyResult(UUID goalId, UUID keyResultId, UUID orgUnitId,
-                                         BigDecimal requestedCurrent, Long expectedVersion) {
-        BigDecimal current = currentValue(requestedCurrent);
+                                         String requestedTitle, BigDecimal requestedCurrent,
+                                         Long expectedVersion) {
+        if (requestedTitle == null && requestedCurrent == null) {
+            throw ApiException.badRequest("KEY_RESULT_UPDATE_EMPTY",
+                    "至少提供关键结果标题或当前值");
+        }
+        String title = requestedTitle == null ? null : requireKeyResultTitle(requestedTitle);
+        BigDecimal current = requestedCurrent == null ? null : currentValue(requestedCurrent);
         return transactions.inTenant(context -> {
             requireTeamGoal(goalId, orgUnitId);
             GoalStore.KeyResultRow row = requireKeyResult(keyResultId);
@@ -160,7 +167,10 @@ public class GoalService {
             if (expectedVersion != null && expectedVersion != row.version()) {
                 throw keyResultVersionConflict();
             }
-            if (!store.updateKeyResultCurrent(keyResultId, current, row.version())) {
+            String targetTitle = title == null ? row.title() : title;
+            BigDecimal targetCurrent = current == null ? row.currentValue() : current;
+            if (!store.updateKeyResultDetails(keyResultId, targetTitle, targetCurrent,
+                    row.version())) {
                 throw keyResultVersionConflict();
             }
             return keyResultView(requireKeyResult(keyResultId));
