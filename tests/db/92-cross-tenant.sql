@@ -213,7 +213,7 @@ DECLARE
     a_ctx constant text := 'a1a1a1a1-0000-4000-8000-000000000001';
     b_ctx constant text := 'b2b2b2b2-0000-4000-8000-000000000002';
     tables integer := 0;
-    expected integer := 0;
+    missing integer := 0;
     covered integer := 0;
 BEGIN
     SELECT count(DISTINCT p.tablename) INTO tables
@@ -221,20 +221,23 @@ BEGIN
       JOIN pg_class c ON c.relname = p.tablename
       JOIN pg_namespace ns ON ns.oid = c.relnamespace AND ns.nspname = 'public'
      WHERE p.schemaname = 'public' AND c.relforcerowsecurity;
-    -- 期望值不硬编码：public 下所有带 tenant_id 的底表都必须 FORCE RLS，
-    -- 外加 tenancy_tenant 自身（租户键是 id）。新增迁移自动纳入口径。
-    SELECT count(*) INTO expected
+    -- 不硬编码表数：所有租户表（带 tenant_id 的非 platform_* 底表）都必须 FORCE RLS。
+    -- platform_* 是平台运营面的跨租户表，是否启用 RLS 由 40-integrity.sql 单独登记。
+    SELECT count(*) INTO missing
       FROM pg_class c
       JOIN pg_namespace ns ON ns.oid = c.relnamespace
      WHERE ns.nspname = 'public' AND c.relkind = 'r'
+       AND c.relname NOT LIKE 'platform\_%'
+       AND c.relname <> 'tenancy_tenant'
        AND EXISTS (SELECT 1 FROM pg_attribute a
                     WHERE a.attrelid = c.oid AND a.attname = 'tenant_id'
                       AND a.attnum > 0 AND NOT a.attisdropped)
-       AND c.relname <> 'tenancy_tenant';
-    expected := expected + 1;
-    IF tables <> expected THEN
-        RAISE EXCEPTION '受 FORCE RLS 保护的租户表应为 % 张（tenant_id 底表 + tenancy_tenant），实际 %',
-            expected, tables;
+       AND NOT (c.relrowsecurity AND c.relforcerowsecurity);
+    IF missing <> 0 THEN
+        RAISE EXCEPTION '有 % 张租户表未同时 ENABLE 与 FORCE RLS', missing;
+    END IF;
+    IF tables < 90 THEN
+        RAISE EXCEPTION '受 FORCE RLS 保护的表仅 % 张，疑似策略整体丢失', tables;
     END IF;
 
     FOR t IN
