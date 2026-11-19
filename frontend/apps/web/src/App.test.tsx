@@ -103,6 +103,8 @@ function fakeClient(overrides: Partial<ApiClient> = {}): ApiClient {
     transferWorkflowTask: vi.fn(),
     listWorkflowExceptions: vi.fn(async () => []),
     resolveWorkflowException: vi.fn(),
+    listExpenseDocuments: vi.fn(async () => []),
+    listExpenseHolds: vi.fn(async () => []),
   };
   return { ...base, ...overrides } as unknown as ApiClient;
 }
