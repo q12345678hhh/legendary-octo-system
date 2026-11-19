@@ -1,0 +1,57 @@
+WP04-05 租户隐私设置（/api/v1/privacy/settings，tenant.admin）
+=============================================================
+
+[1] 初始读取（数据库中尚无租户行，返回默认值）
+GET /api/v1/privacy/settings
+200 OK
+{
+  "dataResidency": "cn",
+  "trainingOptOut": true,
+  "voiceTranscriptRetentionDays": 365,
+  "expenseOcrRetentionDays": 3650,
+  "updatedBy": null,
+  "updatedAt": null,
+  "suppliers": [
+    {"surface": "语音转写", "provider": "openai-compatible", "model": "whisper-1",
+     "configured": true},
+    {"surface": "单据 OCR", "provider": "openai-compatible", "model": "gpt-4o-mini",
+     "configured": true},
+    {"surface": "AI 周报", "provider": "not_configured", "model": "gpt-4o-mini",
+     "configured": false}
+  ]
+}
+
+[2] 管理员更新
+PUT /api/v1/privacy/settings
+{"dataResidency":"eu","trainingOptOut":false,
+ "voiceTranscriptRetentionDays":180,"expenseOcrRetentionDays":365}
+200 OK
+{
+  "dataResidency": "eu",
+  "trainingOptOut": false,
+  "voiceTranscriptRetentionDays": 180,
+  "expenseOcrRetentionDays": 365,
+  "updatedBy": "aaaaaaaa-0000-4000-8000-0000000000a1",
+  "updatedAt": "2026-11-16T02:10:00Z",
+  "suppliers": [ ...只读，同上... ]
+}
+
+[3] 非法天数
+PUT /api/v1/privacy/settings
+{"dataResidency":"cn","trainingOptOut":true,
+ "voiceTranscriptRetentionDays":0,"expenseOcrRetentionDays":3650}
+400 Bad Request
+{"type":"about:blank","title":"PRIVACY_RETENTION_DAYS_INVALID","status":400,
+ "detail":"语音转写保留天数必须在 1 到 3650 天之间"}
+
+[4] 非管理员
+GET /api/v1/privacy/settings
+403 Forbidden
+{"type":"about:blank","title":"租户管理员权限不足","status":403,
+ "code":"AUTHORIZATION_DENIED"}
+
+说明
+----
+- 供应商来自 platform.asr / platform.ocr / platform.ai.report 运行配置，页面只读。
+- 设置写入 tenant_privacy_setting，按租户 upsert；数据库对驻留地与天数范围兜底。
+- 跨租户上下文的会话看不到该表任何行（RLS）。

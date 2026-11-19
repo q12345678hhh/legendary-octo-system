@@ -13,6 +13,7 @@ export type RouteName =
   | 'work'
   | 'worklog'
   | 'expense'
+  | 'privacy'
   | 'insights'
   | 'modules'
   | 'collaboration'
@@ -77,6 +78,12 @@ export const routes: readonly RouteDefinition[] = [
     title: '单据预审',
     requiresSession: true,
     permission: 'expense.document.read',
+  },
+  {
+    name: 'privacy',
+    path: '#/privacy',
+    title: '隐私与数据',
+    requiresSession: true,
   },
   {
     name: 'insights',

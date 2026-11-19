@@ -15,7 +15,7 @@ public class VoiceCaptureStore {
     private static final String COLUMNS = """
             id, person_id, employment_id, work_date, object_key, content_type, size_bytes,
             duration_seconds, status, transcript_text, edited_text, provider, model, confidence,
-            error_code, worklog_entry_id, transcribed_at, audio_deleted_at
+            error_code, worklog_entry_id, transcribed_at, audio_deleted_at, created_at
             """;
 
     private final JdbcTemplate jdbcTemplate;
@@ -40,16 +40,56 @@ public class VoiceCaptureStore {
     }
 
     public Optional<VoiceCapture> find(UUID id) {
-        return jdbcTemplate.query("SELECT " + COLUMNS + " FROM worklog_voice_capture WHERE id = ?",
+        return jdbcTemplate.query("SELECT " + COLUMNS + " FROM worklog_voice_capture"
+                + " WHERE id = ? AND recycled_at IS NULL",
                 VoiceCaptureStore::map, id).stream().findFirst();
     }
 
     public Optional<VoiceCapture> findByClientRequest(UUID personId, String clientRequestId) {
         return jdbcTemplate.query("""
                         SELECT %s FROM worklog_voice_capture
-                         WHERE person_id = ? AND client_request_id = ?
+                         WHERE person_id = ? AND client_request_id = ? AND recycled_at IS NULL
                         """.formatted(COLUMNS), VoiceCaptureStore::map,
                 personId, clientRequestId).stream().findFirst();
+    }
+
+    /** 含回收站中的记录，供数据主体删除校验归属。 */
+    public Optional<VoiceCapture> findIncludingRecycled(UUID id) {
+        return jdbcTemplate.query("SELECT " + COLUMNS + " FROM worklog_voice_capture"
+                + " WHERE id = ?", VoiceCaptureStore::map, id).stream().findFirst();
+    }
+
+    /** 本人员工可见的语音记录（不含已进回收站的）。 */
+    public java.util.List<VoiceCapture> listByPerson(UUID personId, int limit) {
+        return jdbcTemplate.query("SELECT " + COLUMNS + " FROM worklog_voice_capture"
+                + " WHERE person_id = ? AND recycled_at IS NULL"
+                + " ORDER BY created_at DESC LIMIT ?",
+                VoiceCaptureStore::map, personId, limit);
+    }
+
+    public void markRecycled(UUID id) {
+        jdbcTemplate.update("""
+                UPDATE worklog_voice_capture SET recycled_at = now()
+                 WHERE id = ? AND recycled_at IS NULL
+                """, id);
+    }
+
+    public void restore(UUID id) {
+        jdbcTemplate.update("""
+                UPDATE worklog_voice_capture SET recycled_at = NULL
+                 WHERE id = ?
+                """, id);
+    }
+
+    public void delete(UUID id) {
+        jdbcTemplate.update("DELETE FROM worklog_voice_capture WHERE id = ?", id);
+    }
+
+    public Optional<String> objectKey(UUID id) {
+        return jdbcTemplate.query(
+                        "SELECT object_key FROM worklog_voice_capture WHERE id = ?",
+                        (rs, rowNum) -> rs.getString("object_key"), id)
+                .stream().findFirst();
     }
 
     public void markTranscribed(UUID id, String transcriptText, String provider, String model,
@@ -113,6 +153,7 @@ public class VoiceCaptureStore {
                 rs.getString("error_code"),
                 rs.getObject("worklog_entry_id", UUID.class),
                 rs.getObject("transcribed_at", OffsetDateTime.class),
-                rs.getObject("audio_deleted_at", OffsetDateTime.class));
+                rs.getObject("audio_deleted_at", OffsetDateTime.class),
+                rs.getObject("created_at", OffsetDateTime.class));
     }
 }

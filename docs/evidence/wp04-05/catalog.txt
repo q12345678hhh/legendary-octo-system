@@ -1,0 +1,30 @@
+WP04-05 数据分类注册表（GET /api/v1/privacy/data-classes，tenant.admin）
+=====================================================================
+
+200 OK
+[
+  {"dataClass":"file","purpose":"业务附件与单据原文件","retentionDays":30,
+   "retentionNote":"删除后进入回收站，到期物理清理","accessRoles":["file.read"]},
+  {"dataClass":"worklog_entry","purpose":"手工与语音确认后的工时","retentionDays":3650,
+   "retentionNote":"工时作为绩效与合规依据长期保留","accessRoles":["worklog.time.read"]},
+  {"dataClass":"worklog_weekly_report","purpose":"周报正文与提交版本","retentionDays":3650,
+   "retentionNote":"周报随审批链长期保留","accessRoles":["worklog.report.read"]},
+  {"dataClass":"worklog_voice_capture","purpose":"语音转写文本；音频在确认后立即删除",
+   "retentionDays":365,"retentionNote":"转写保留天数可由租户调整",
+   "accessRoles":["worklog.time.read","本人"]},
+  {"dataClass":"expense_document","purpose":"报销单/发票/账单结构化字段","retentionDays":3650,
+   "retentionNote":"已入账单据不可删除，只能匿名化",
+   "accessRoles":["expense.document.read","expense.document.review","本人"]},
+  {"dataClass":"expense_extraction","purpose":"OCR 原文与抽取字段","retentionDays":3650,
+   "retentionNote":"OCR 保留天数可由租户调整，已入账只匿名化",
+   "accessRoles":["expense.document.read","expense.document.review"]},
+  {"dataClass":"audit","purpose":"授权、单据与保留审计记录","retentionDays":2555,
+   "retentionNote":"审计只读，按合规下限保留","accessRoles":["authorization.audit.read"]}
+]
+
+说明
+----
+- 语音与 OCR 的 retentionDays 随租户设置变化，其余取保留策略默认值。
+- 访问角色中的「本人」表示员工可经 /api/v1/privacy/my-data 查看自己的记录，
+  不代表拥有该数据类的管理权限码。
+- 员工访问该端点返回 403（缺少 tenant.admin）。
