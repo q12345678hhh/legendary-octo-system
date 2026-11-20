@@ -170,6 +170,24 @@ jobs:
             frontend/bom.cdx.json
           if-no-files-found: warn
 
+  # WP04-01 已退役桌面端（设备采集移除）。该 job 作为门禁占位：
+  # 确认桌面端源码没有被悄悄带回，同时保证分支保护的 desktop-agent 必需检查始终有结论。
+  desktop-agent:
+    name: desktop-agent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 校验桌面端保持退役
+        run: |
+          set -euo pipefail
+          found=$(git ls-files desktop-agent | grep -Ec '\.(sln|csproj|cs)$' || true)
+          if [ "$found" -ne 0 ]; then
+            echo "::error::desktop-agent 已在 WP04-01 退役，但发现 $found 个桌面端源码文件；恢复前请先同步设计文档与数据迁移。"
+            git ls-files desktop-agent | grep -E '\.(sln|csproj|cs)$'
+            exit 1
+          fi
+          echo "desktop-agent 保持退役状态（无 .sln/.csproj/.cs 源码）。"
+
   plugin-runner:
     name: plugin-runner
     runs-on: ubuntu-latest
@@ -260,7 +278,7 @@ jobs:
 
   artifacts:
     name: artifacts
-    needs: [backend, frontend, contracts, tests]
+    needs: [backend, frontend, desktop-agent, contracts, tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
